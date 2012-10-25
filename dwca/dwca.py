@@ -57,7 +57,7 @@ class DwcALine:
                 # else, we have to look in core file
                 self.coredata[f['term']] = fields[int(f['index'])]
 
-class DwcA:
+class DwcAReader:
     def __init__(self, path):
         """Opens the file, reads all metadata and store it in self.meta (BeautifulStoneSoup obj.) 
         Also already open the core file so we've a file descriptor for further access."""
@@ -125,5 +125,5 @@ class DwcA:
      
     def each_line(self):
         for line in self._core_fhandler:
-	    yield DwcALine(line, self._metaxml.core)
+            yield DwcALine(line, self._metaxml.core)
 
