@@ -12,6 +12,12 @@ source_path = os.path.join(os.path.dirname(__file__),
 # Create the object and open the DwC-A file
 dwca = DwCAReader(source_path)
 
+# You can read scientific metadata (EML) thru a BeautifulStoneSoup object
+print dwca.metadata
+
+# You can get inspect archive to discover what is the core type:
+print "Core type is: %s" % dwca.get_core_type()
+
 # Check if a Darwin Core term in present in the core file
 if dwca.core_contains_term('http://rs.tdwg.org/dwc/terms/locality'):
     print "This archive contains the 'locality' term in its core file."
@@ -28,4 +34,11 @@ else:
 # Iterate over each line
 for line in dwca.each_line():
     # line is an instance of DwCALine
+
+    # You can use print for debugging purposes...
     print line
+
+    # You can get the value of a specific Darwin Core term:
+    print "Locality for this line is: %s" % line.get(terms['LOCALITY'])
+
+
