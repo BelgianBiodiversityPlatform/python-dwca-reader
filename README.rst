@@ -33,7 +33,7 @@ In the meantime, just copy it to your PYTHONPATH. It also requires BeautifulSoup
 Use
 ---
 
-A basic example is provided in dwca/example.py    
+A basic example is provided in dwca/example.py.    
 
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
 .. _IPT: https://code.google.com/p/gbif-providertoolkit/

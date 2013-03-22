@@ -1,5 +1,7 @@
 # TODO: Complete list
 
+# TODO: Make it case-insensitive ?
+
 # Some shortcuts to avoid having to use the long URL to reference a DarwinCore term.
 terms = {
     'OCCURRENCE':       'http://rs.tdwg.org/dwc/terms/Occurrence',
