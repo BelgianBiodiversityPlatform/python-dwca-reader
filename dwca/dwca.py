@@ -8,13 +8,6 @@ import codecs
 import os
 import xml.etree.ElementTree as xml
 
-DWC_TERMS = {
-    'OCCURRENCE':       'http://rs.tdwg.org/dwc/terms/Occurrence',
-    'KINGDOM':          'http://rs.tdwg.org/dwc/terms/kingdom',
-    'DECIMALLATITUDE':  'http://rs.tdwg.org/dwc/terms/decimalLatitude',
-    'DECIMALLONGITUDE':  'http://rs.tdwg.org/dwc/terms/decimalLongitude'
-}
-
 
 class DwCALine:
     def __str__(self):
