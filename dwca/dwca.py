@@ -119,8 +119,6 @@ class DwCAReader:
         return unzipped_folder
 
     def cleanup_temporary_folder(self):
-        #TODO: directory empty but still seems to be present
-        #(and undeletable if I add rmdir on the next line, investigate.
         rmtree(self._unzipped_folder, False)
 
     def get_core_type(self):

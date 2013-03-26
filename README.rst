@@ -37,3 +37,11 @@ A basic example is provided in dwca/example.py.
 
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
 .. _IPT: https://code.google.com/p/gbif-providertoolkit/
+
+Run the test suite
+------------------
+
+::
+    
+    $ pip install nose
+    $ nosetests
