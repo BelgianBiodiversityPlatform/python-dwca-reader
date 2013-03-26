@@ -61,6 +61,13 @@ class DwCALine:
 
 
 class DwCAReader:
+    # Define __enter__ and __exit__ to be used with the 'with' statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.cleanup_temporary_folder()
+
     def __init__(self, path):
         """Opens the file, reads all metadata and store it in self.meta
         (BeautifulStoneSoup obj.) Also already open the core file so we've
