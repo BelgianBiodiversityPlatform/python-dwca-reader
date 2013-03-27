@@ -15,7 +15,7 @@ source_path = os.path.join(os.path.dirname(__file__),
 with DwCAReader(source_path) as dwca:
 
     # You can read scientific metadata (EML) thru a BeautifulStoneSoup object
-    print dwca.metadata
+    print dwca.metadata.prettify()
 
     # You can get inspect archive to discover what is the core type:
     print "Core type is: %s" % dwca.core_type

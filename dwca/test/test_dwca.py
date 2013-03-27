@@ -1,6 +1,8 @@
 import unittest
 import os
 
+from BeautifulSoup import BeautifulStoneSoup
+
 from ..dwca import DwCAReader
 from ..dwterms import terms
 
@@ -41,6 +43,20 @@ class Test(unittest.TestCase):
             self.assertEqual(dwca.core_type, 'http://rs.tdwg.org/dwc/terms/Occurrence')
             # Check that shortcuts also work
             self.assertEqual(dwca.core_type, terms['OCCURRENCE'])
+
+    def test_metadata(self):
+        """A few basic tests on the metadata attribute
+
+        TODO: split
+        """
+
+        with DwCAReader(self.SOURCE_PATH) as dwca:
+            # Assert metadata is an instance of BeautifulStoneSoup
+            self.assertIsInstance(dwca.metadata, BeautifulStoneSoup)
+
+            # Assert we can read basic fields from EML:
+            self.assertEqual(dwca.metadata.dataset.creator.individualname.givenname.contents[0],
+                            'Nicolas')        
 
 
 if __name__ == "__main__":
