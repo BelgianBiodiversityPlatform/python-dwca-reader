@@ -3,7 +3,7 @@ import os
 
 from BeautifulSoup import BeautifulStoneSoup
 
-from ..dwca import DwCAReader
+from ..dwca import DwCAReader, DwCALine
 from ..dwterms import terms
 
 
@@ -63,8 +63,9 @@ class Test(unittest.TestCase):
             self.assertIsInstance(dwca.metadata, BeautifulStoneSoup)
 
             # Assert we can read basic fields from EML:
-            self.assertEqual(dwca.metadata.dataset.creator.individualname.givenname.contents[0],
-                            'Nicolas')
+            self.assertEqual(dwca.metadata.dataset.creator.
+                             individualname.givenname.contents[0],
+                             'Nicolas')
 
     def test_core_contains_term(self):
         """Test the core_contains_term method."""
@@ -88,6 +89,23 @@ class Test(unittest.TestCase):
             # This file has two real lines, without headers
             # (nothing specified in meta.xml)
             self.assertEqual(2, len([l for l in dwca.each_line()]))
+
+    def test_iterate_dwcalines(self):
+        """Test the each_line() method allows iterating over DwCALines"""
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+            for line in dwca.each_line():
+                self.assertIsInstance(line, DwCALine)
+
+    def test_read_core_value(self):
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+            lines = list(dwca.each_line())
+
+            # Check basic locality values from sample file
+            self.assertEqual('Borneo', lines[0].get(terms['LOCALITY']))
+            self.assertEqual('Mumbai', lines[1].get(terms['LOCALITY']))
+
+    # TODO: Test with default values
+
 
 if __name__ == "__main__":
     unittest.main()
