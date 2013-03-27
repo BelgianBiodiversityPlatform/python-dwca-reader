@@ -56,7 +56,15 @@ class Test(unittest.TestCase):
 
             # Assert we can read basic fields from EML:
             self.assertEqual(dwca.metadata.dataset.creator.individualname.givenname.contents[0],
-                            'Nicolas')        
+                            'Nicolas')
+
+    def test_core_contains_term(self):
+        """Test the core_contains_term method."""
+
+        # Example file contains locality but no country
+        with DwCAReader(self.SOURCE_PATH) as dwca:
+            self.assertTrue(dwca.core_contains_term(terms['LOCALITY']))
+            self.assertFalse(dwca.core_contains_term(terms['COUNTRY']))        
 
 
 if __name__ == "__main__":
