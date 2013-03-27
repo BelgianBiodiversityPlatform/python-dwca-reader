@@ -18,7 +18,7 @@ with DwCAReader(source_path) as dwca:
     print dwca.metadata
 
     # You can get inspect archive to discover what is the core type:
-    print "Core type is: %s" % dwca.get_core_type()
+    print "Core type is: %s" % dwca.core_type
 
     # Check if a Darwin Core term in present in the core file
     if dwca.core_contains_term('http://rs.tdwg.org/dwc/terms/locality'):

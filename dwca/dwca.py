@@ -66,7 +66,7 @@ class DwCAReader:
         return self
 
     def __exit__(self, type, value, traceback):
-        self.cleanup_temporary_folder()
+        self.close()
 
     def __init__(self, path):
         """Opens the file, reads all metadata and store it in self.meta
@@ -80,6 +80,7 @@ class DwCAReader:
         # Load the (scientific) metadata file and store its representation
         # in metadata attribute for future use.
         self.metadata = self._parse_metadata_file()
+        self.core_type = self._get_core_type()
 
         self._core_fhandler = codecs.open(self._get_core_filename(),
                                           mode='r',
@@ -118,10 +119,13 @@ class DwCAReader:
         ZipFile(self.archive_path, 'r').extractall(unzipped_folder)
         return unzipped_folder
 
-    def cleanup_temporary_folder(self):
+    def close(self):
+        self._cleanup_temporary_folder()
+
+    def _cleanup_temporary_folder(self):
         rmtree(self._unzipped_folder, False)
 
-    def get_core_type(self):
+    def _get_core_type(self):
         return self._metaxml.core['rowtype']
 
     def core_contains_term(self, term_url):
