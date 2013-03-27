@@ -82,6 +82,9 @@ class DwCAReader:
         self.metadata = self._parse_metadata_file()
         self.core_type = self._get_core_type()
 
+        self._core_lines_to_ignore = self._get_lines_to_ignore()
+
+        self.reset_line_iterator()
         self._core_fhandler = codecs.open(self._get_core_filename(),
                                           mode='r',
                                           encoding=self._get_core_encoding(),
@@ -128,6 +131,12 @@ class DwCAReader:
     def _get_core_type(self):
         return self._metaxml.core['rowtype']
 
+    def _get_lines_to_ignore(self):
+        try:
+            return int(self._metaxml.core['ignoreheaderlines'])
+        except KeyError:
+            return 0
+
     def core_contains_term(self, term_url):
         """Takes a tdwg URL as a parameter and check if field exists for
         this concept in the core file"""
@@ -148,8 +157,14 @@ class DwCAReader:
         return self._metaxml.core['encoding']
 
     def reset_line_iterator(self):
-        self._core_fhandler.seek(0)
+        self._core_line_pointer = 0
 
     def each_line(self):
         for line in self._core_fhandler:
-            yield DwCALine(line, self._metaxml.core)
+            self._core_line_pointer += 1
+
+            # Skip the necessary lines
+            if (self._core_line_pointer <= self._core_lines_to_ignore):
+                continue
+            else:
+                yield DwCALine(line, self._metaxml.core)
