@@ -4,7 +4,7 @@ import os
 from BeautifulSoup import BeautifulStoneSoup
 
 from ..dwca import DwCAReader, DwCALine
-from ..dwterms import terms
+from ..darwincore import qualname as qn
 
 
 # Helpers
@@ -18,6 +18,7 @@ class Test(unittest.TestCase):
     BASIC_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive.zip')
     NOHEADERS1_PATH = _sample_data_path('dwca-noheaders-1.zip')
     NOHEADERS2_PATH = _sample_data_path('dwca-noheaders-2.zip')
+    DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
 
     def test_cleanup(self):
         """Test no temporary files are left after execution"""
@@ -50,7 +51,7 @@ class Test(unittest.TestCase):
             self.assertEqual(dwca.core_type,
                              'http://rs.tdwg.org/dwc/terms/Occurrence')
             # Check that shortcuts also work
-            self.assertEqual(dwca.core_type, terms['OCCURRENCE'])
+            self.assertEqual(dwca.core_type, qn('Occurrence'))
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute
@@ -72,8 +73,8 @@ class Test(unittest.TestCase):
 
         # Example file contains locality but no country
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
-            self.assertTrue(dwca.core_contains_term(terms['LOCALITY']))
-            self.assertFalse(dwca.core_contains_term(terms['COUNTRY']))
+            self.assertTrue(dwca.core_contains_term(qn('locality')))
+            self.assertFalse(dwca.core_contains_term(qn('country')))
 
     def test_ignore_header_lines(self):
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
@@ -97,14 +98,36 @@ class Test(unittest.TestCase):
                 self.assertIsInstance(line, DwCALine)
 
     def test_read_core_value(self):
+        """Retrieve a simple value from core file"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
             lines = list(dwca.each_line())
 
             # Check basic locality values from sample file
-            self.assertEqual('Borneo', lines[0].get(terms['LOCALITY']))
-            self.assertEqual('Mumbai', lines[1].get(terms['LOCALITY']))
+            self.assertEqual('Borneo', lines[0].get(qn('locality')))
+            self.assertEqual('Mumbai', lines[1].get(qn('locality')))
 
-    # TODO: Test with default values
+    def test_read_core_value_default(self):
+        """Retrieve a (default) value from core
+
+        Test similar to test_read_core_value(), but the retrieved data
+        comes from a default value (in meta.xml) instead of from the core
+        text file. This is part of the standard and was produced by IPT
+        prior to version 2.0.3.
+        """
+        with DwCAReader(self.DEFAULT_VAL_PATH) as dwca:
+            for l in dwca.each_line():
+                self.assertEqual('Belgium', l.get(qn('country')))
+
+    def test_qn(self):
+        """Test the qn (shortcut generator) helper"""
+
+        # Test success
+        self.assertEqual("http://rs.tdwg.org/dwc/terms/Occurrence",
+                         qn("Occurrence"))
+
+        # Test failure
+        with self.assertRaises(StopIteration):
+            qn('dsfsdfsdfsdfsdfsd')
 
 
 if __name__ == "__main__":

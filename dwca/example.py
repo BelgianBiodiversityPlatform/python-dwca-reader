@@ -4,7 +4,7 @@
 import os
 
 from dwca import DwCAReader
-from dwterms import terms
+from darwincore import qualname as qn
 
 source_path = os.path.join(os.path.dirname(__file__),
                            './test/sample_files/dwca-simple-test-archive.zip')
@@ -26,9 +26,10 @@ with DwCAReader(source_path) as dwca:
     else:
         print "Locality term is not present."
 
-    # Shortcuts for Darwin Core terms are available:
-    # We can use terms['COUNTRY'] instead of the full URL
-    if dwca.core_contains_term(terms['COUNTRY']):
+    # Terms should be expressed as full qualnames,
+    # such as : http://rs.tdwg.org/dwc/terms/country
+    # The qn function can help transform short term to qualname: qn('country')
+    if dwca.core_contains_term(qn('country')):
         print "This archive contains the 'country' term in its core file."
     else:
         print "'Country' term is not present."
@@ -41,4 +42,4 @@ with DwCAReader(source_path) as dwca:
         print line
 
         # You can get the value of a specific Darwin Core term:
-        print "Locality for this line is: %s" % line.get(terms['LOCALITY'])
+        print "Locality for this line is: %s" % line.get(qn('locality'))
