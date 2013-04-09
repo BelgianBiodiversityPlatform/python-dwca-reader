@@ -59,4 +59,7 @@ with DwCAReader(star_path) as dwca:
     for e in lines[0].extensions:
         print e
 
+    print "We can ask a line where it's coming from: "
+    print lines[0].from_core()
+
 
