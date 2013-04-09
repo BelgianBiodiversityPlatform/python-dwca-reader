@@ -9,6 +9,9 @@ from darwincore import qualname as qn
 source_path = os.path.join(os.path.dirname(__file__),
                            './test/sample_files/dwca-simple-test-archive.zip')
 
+star_source_path = os.path.join(os.path.dirname(__file__),
+                           './test/sample_files/dwca-star-test-archive.zip')
+
 # Create the object and open the DwC-A file
 # You should use the with statement to have automatic cleanup of
 # temporary files
@@ -43,3 +46,17 @@ with DwCAReader(source_path) as dwca:
 
         # You can get the value of a specific Darwin Core term:
         print "Locality for this line is: %s" % line.get(qn('locality'))
+
+star_path = os.path.join(os.path.dirname(__file__),
+                         './test/sample_files/dwca-star-test-archive.zip')
+
+print "Now, let's show an Archive that use an extension (VernacularNames)"
+with DwCAReader(star_path) as dwca:
+    lines = list(dwca.each_line())
+    print lines[0]
+
+    print "Extension lines are accessible through 'extensions' (list):"
+    for e in lines[0].extensions:
+        print e
+
+

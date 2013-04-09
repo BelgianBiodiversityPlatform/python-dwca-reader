@@ -131,7 +131,7 @@ class Test(unittest.TestCase):
             qn('dsfsdfsdfsdfsdfsd')
 
     # Testing of DwcA extension features
-    def test_correct_extension_lines_per_core(self):
+    def test_correct_extension_lines_per_core_line(self):
         """Test we have correct number of extensions l. per core line"""
 
         # This one has no extension, so line.extensions should be an empty list
@@ -141,7 +141,6 @@ class Test(unittest.TestCase):
 
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             lines = list(star_dwca.each_line())
-            import pdb; pdb.set_trace()
 
             # 3 vernacular names are given for Struthio Camelus...
             self.assertEqual(3, len(lines[0].extensions))
@@ -151,6 +150,8 @@ class Test(unittest.TestCase):
             self.assertEqual(0, len(lines[2].extensions))
             self.assertEqual(0, len(lines[3].extensions))
 
+        # TODO: test the same thing with 2 different extensions reffering to
+        # the line
 
 
 if __name__ == "__main__":
