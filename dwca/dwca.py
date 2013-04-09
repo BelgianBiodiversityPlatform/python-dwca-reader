@@ -6,58 +6,86 @@ from shutil import rmtree
 from BeautifulSoup import BeautifulStoneSoup
 import codecs
 import os
-import xml.etree.ElementTree as xml
 
 
 class DwCALine:
     def __str__(self):
-        txt = 'Line #' + self.id + "\n"
-        txt += "\nCore elements:\n"
-        for k, v in self.coredata.items():
+        txt = ""
+        try:
+            txt += 'Line #' + self.id + "\n"
+        except AttributeError:
+            pass
+
+        try:
+            txt += 'Core id: ' + self.core_id + "\n"
+        except AttributeError:
+            pass
+
+        txt += "\nElements:\n"
+        for k, v in self.linedata.items():
             txt += "\t" + k + ' : ' + v + "\n"
 
         return txt
 
     def get(self, attr_name):
-        return self.coredata[attr_name]
+        return self.linedata[attr_name]
 
-    def to_xml(self):
-        e = xml.Element('line')
-        e.attrib['id'] = self.id
-        c = xml.SubElement(e, 'coreelements')
-        for k, v in self.coredata.items():
-            ce = xml.SubElement(c, 'elem')
-            ce.attrib['url'] = k
-            ce.attrib['shortname'] = k.split('/')[-1]
-            ce.attrib['value'] = v
+    def __init__(self, line, is_core, metadata, unzipped_folder=None):
+        # line is the raw line data, directly from file
+        # is_core is a flag:
+        #   if True:
+        #        - metadata contains the whole metaxml
+        #        - it will also recursively load the related lines
+        #          in the 'extensions' attribute (and unzipped_folder
+        #          should be provided for this)
+        #   else:
+        #        - metadata contains only the <extension> section about our
+        #          file
+        #        - we don't load other lines recursively
 
-        return e
+        if is_core:
+            meta = metadata.core
+        else:
+            meta = metadata
 
-    def __init__(self, core_line, core_meta):
-        # Core line is the data as returned from for...in file
-        # core_meta is a beautifulsoup object containing the <core> node
-        # (and content) from the metaxml
-        separator = core_meta['fieldsterminatedby'].decode("string-escape")
+        separator = meta['fieldsterminatedby'].decode("string-escape")
 
         # fields is list of the line's content
-        fields = core_line.split(separator)
+        fields = line.split(separator)
 
         # TODO: Consistency chek ?? fields length should be :
         # num of fields described in core_meta + 2 (id and \n)
 
-        self.id = fields[int(core_meta.id['index'])]
+        # If core, we have an id; if extension a coreid
+        # TODO: ensure in the norm this is always true
+        if is_core:
+            self.id = fields[int(meta.id['index'])]
+        else:
+            self.core_id = fields[int(meta.coreid['index'])]
 
-        self.coredata = {}
-        self.extensionsdata = {}  # For future use
+        self.linedata = {}
 
-        for f in core_meta.findAll('field'):
+        for f in meta.findAll('field'):
             # if field by default, we can find its value directly in <field>
             # attribute
             if f.has_key('default'):
-                self.coredata[f['term']] = f['default']
+                self.linedata[f['term']] = f['default']
             else:
                 # else, we have to look in core file
-                self.coredata[f['term']] = fields[int(f['index'])]
+                self.linedata[f['term']] = fields[int(f['index'])]
+
+        # Core line: we also need to store related (extension) lines in the
+        # extensions attribute
+
+        self.extensions = []
+
+        if is_core:
+            for ext_meta in metadata.findAll('extension'):
+                csv = DwCACSVIterator(ext_meta, unzipped_folder)
+                for l in csv.lines():
+                    tmp = DwCALine(l, False, ext_meta)
+                    if tmp.core_id == self.id:
+                        self.extensions.append(tmp)
 
 
 class DwCAReader:
@@ -82,13 +110,8 @@ class DwCAReader:
         self.metadata = self._parse_metadata_file()
         self.core_type = self._get_core_type()
 
-        self._core_lines_to_ignore = self._get_lines_to_ignore()
-
-        self.reset_line_iterator()
-        self._core_fhandler = codecs.open(self._get_core_filename(),
-                                          mode='r',
-                                          encoding=self._get_core_encoding(),
-                                          errors='replace')
+        self._datafile = DwCACSVIterator(self._metaxml.core,
+                                         self._unzipped_folder)
 
     def _create_temporary_folder(self):
         return mkdtemp()[1]
@@ -131,12 +154,6 @@ class DwCAReader:
     def _get_core_type(self):
         return self._metaxml.core['rowtype']
 
-    def _get_lines_to_ignore(self):
-        try:
-            return int(self._metaxml.core['ignoreheaderlines'])
-        except KeyError:
-            return 0
-
     def core_contains_term(self, term_url):
         """Takes a tdwg URL as a parameter and check if field exists for
         this concept in the core file"""
@@ -149,22 +166,49 @@ class DwCAReader:
     def _get_metadata_filename(self):
         return self._metaxml.archive['metadata']
 
-    def _get_core_filename(self):
-        return (self._unzipped_folder + '/' +
-                self._metaxml.core.files.location.string)
-
-    def _get_core_encoding(self):
-        return self._metaxml.core['encoding']
-
-    def reset_line_iterator(self):
-        self._core_line_pointer = 0
-
     def each_line(self):
-        for line in self._core_fhandler:
-            self._core_line_pointer += 1
+        for line in self._datafile.lines():
+            yield DwCALine(line, True, self._metaxml, self._unzipped_folder)
 
-            # Skip the necessary lines
-            if (self._core_line_pointer <= self._core_lines_to_ignore):
+
+# Simple, internal use class used to iterate on a DwcA-enclosed CSV file
+# It initializes itself with the <core> or <extension> section of meta.xml
+class DwCACSVIterator:
+    def __init__(self, metadata_section, unzipped_folder):
+        # metadata_section: <core> or <extension> section of metaxml for
+        # the file we want to iterate on
+        self._metadata_section = metadata_section
+        self._unzipped_folder = unzipped_folder
+
+        self._reset_line_iterator()
+
+        self._core_fhandler = codecs.open(self._get_filepath(),
+                                          mode='r',
+                                          encoding=self._get_encoding(),
+                                          errors='replace')
+
+    def lines(self):
+        for line in self._core_fhandler:
+            self._line_pointer += 1
+
+            if (self._line_pointer <= self._get_lines_to_ignore()):
                 continue
             else:
-                yield DwCALine(line, self._metaxml.core)
+                yield line
+
+    def _get_filepath(self):
+        # TODO: Replace by os.path.join
+        return (self._unzipped_folder + '/' +
+                self._metadata_section.files.location.string)
+
+    def _get_encoding(self):
+        return self._metadata_section['encoding']
+
+    def _reset_line_iterator(self):
+        self._line_pointer = 0
+
+    def _get_lines_to_ignore(self):
+        try:
+            return int(self._metadata_section['ignoreheaderlines'])
+        except KeyError:
+            return 0

@@ -19,6 +19,7 @@ class Test(unittest.TestCase):
     NOHEADERS1_PATH = _sample_data_path('dwca-noheaders-1.zip')
     NOHEADERS2_PATH = _sample_data_path('dwca-noheaders-2.zip')
     DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
+    EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
 
     def test_cleanup(self):
         """Test no temporary files are left after execution"""
@@ -128,6 +129,28 @@ class Test(unittest.TestCase):
         # Test failure
         with self.assertRaises(StopIteration):
             qn('dsfsdfsdfsdfsdfsd')
+
+    # Testing of DwcA extension features
+    def test_correct_extension_lines_per_core(self):
+        """Test we have correct number of extensions l. per core line"""
+
+        # This one has no extension, so line.extensions should be an empty list
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
+            for l in simple_dwca.each_line():
+                self.assertEqual(0, len(l.extensions))
+
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            lines = list(star_dwca.each_line())
+            import pdb; pdb.set_trace()
+
+            # 3 vernacular names are given for Struthio Camelus...
+            self.assertEqual(3, len(lines[0].extensions))
+            # ... 1 vernacular name for Alectoris chukar ...
+            self.assertEqual(1, len(lines[1].extensions))
+            # ... and none for the last two lines
+            self.assertEqual(0, len(lines[2].extensions))
+            self.assertEqual(0, len(lines[3].extensions))
+
 
 
 if __name__ == "__main__":
