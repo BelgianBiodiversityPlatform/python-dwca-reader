@@ -153,6 +153,18 @@ class Test(unittest.TestCase):
         # TODO: test the same thing with 2 different extensions reffering to
         # the line
 
+    def test_line_knows_its_source(self):
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            for line in star_dwca.each_line():
+                # These first DwCALines we access comes from the Core file
+                self.assertTrue(line.from_core())
+                self.assertFalse(line.from_extension())
+
+                # But the extensions are... extensions (hum)
+                for an_extension in line.extensions:
+                    self.assertFalse(an_extension.from_core())
+                    self.assertTrue(an_extension.from_extension())
+
 
 if __name__ == "__main__":
     unittest.main()

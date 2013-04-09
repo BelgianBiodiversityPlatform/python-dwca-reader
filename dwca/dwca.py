@@ -27,10 +27,19 @@ class DwCALine:
 
         return txt
 
+    def from_core(self):
+        """Returns Boolean value"""
+        return self._line_type_core
+
+    def from_extension(self):
+        """Returns Boolean value"""
+        return not self.from_core()
+
+
     def get(self, attr_name):
         return self.linedata[attr_name]
 
-    def __init__(self, line, is_core, metadata, unzipped_folder=None):
+    def __init__(self, line, is_core_type, metadata, unzipped_folder=None):
         # line is the raw line data, directly from file
         # is_core is a flag:
         #   if True:
@@ -42,8 +51,9 @@ class DwCALine:
         #        - metadata contains only the <extension> section about our
         #          file
         #        - we don't load other lines recursively
+        self._line_type_core = is_core_type
 
-        if is_core:
+        if self.from_core():
             meta = metadata.core
         else:
             meta = metadata
@@ -58,7 +68,7 @@ class DwCALine:
 
         # If core, we have an id; if extension a coreid
         # TODO: ensure in the norm this is always true
-        if is_core:
+        if self.from_core():
             self.id = fields[int(meta.id['index'])]
         else:
             self.core_id = fields[int(meta.coreid['index'])]
@@ -79,7 +89,7 @@ class DwCALine:
 
         self.extensions = []
 
-        if is_core:
+        if self.from_core():
             for ext_meta in metadata.findAll('extension'):
                 csv = DwCACSVIterator(ext_meta, unzipped_folder)
                 for l in csv.lines():
