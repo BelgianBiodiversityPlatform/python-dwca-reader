@@ -12,12 +12,14 @@ class DwCALine:
     # TODO: test string representation
     # TODO: Hmmm, \n is printed after next field in source (this sould also ba a problem when accessing the field through get() or linedata...
     def __str__(self):
-        txt = ""
-        
+        txt = "--\n"
+
+        txt += "Rowtype: " + self.rowtype + "\n"
+
         if self.from_core:
-            txt += "Line source: Core file\n"
+            txt += "Source: Core file\n"
         else:
-            txt += "Line source: Extension file\n"
+            txt += "Source: Extension file\n"
 
         try:
             txt += 'Line ID: ' + self.id + "\n"
@@ -29,11 +31,9 @@ class DwCALine:
         except AttributeError:
             pass
 
-        txt += "Elements:\n"
-        for k, v in self.data.items():
-            txt += "\t" + k + ' : ' + v + "\n"
+        txt += "Data: " + str(self.data)
 
-        txt += '------------------------------'
+        txt += '\n--'
         return txt
 
     def __init__(self, line, is_core_type, metadata, unzipped_folder=None):

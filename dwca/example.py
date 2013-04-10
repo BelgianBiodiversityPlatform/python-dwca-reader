@@ -12,6 +12,9 @@ source_path = os.path.join(os.path.dirname(__file__),
 star_path = os.path.join(os.path.dirname(__file__),
                          './test/sample_files/dwca-star-test-archive.zip')
 
+multiext_path = os.path.join(os.path.dirname(__file__),
+                             './test/sample_files/dwca-2extensions.zip')
+
 # Create the object and open the DwC-A file
 # You should use the with statement to have automatic cleanup of
 # temporary files
@@ -70,6 +73,27 @@ with DwCAReader(star_path) as dwca:
 
     print "... and what its rowtype is:"
     print lines[0].rowtype
+
+# And now, an archive with multiple extensions
+with DwCAReader(multiext_path) as dwca:
+    lines = list(dwca.each_line())
+    ostrich = lines[0]
+
+    print "You'll find below all extensions line reffering to Ostrich"
+    print "There should be 3 verncaular names and 2 taxon description"
+    for ext in ostrich.extensions:
+        print ext
+
+    print "We can then simply filter by type..."
+    for ext in ostrich.extensions:
+        if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
+            print ext    
+
+    print "We can also use list comprehensions for this:"
+    description_ext = [e for e in ostrich.extensions if e.rowtype == 'http://rs.gbif.org/terms/1.0/Description']
+    for ext in description_ext:
+        print ext
+
 
 
 

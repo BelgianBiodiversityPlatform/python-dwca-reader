@@ -20,6 +20,7 @@ class Test(unittest.TestCase):
     NOHEADERS2_PATH = _sample_data_path('dwca-noheaders-2.zip')
     DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
     EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
+    MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
 
     def test_cleanup(self):
         """Test no temporary files are left after execution"""
@@ -55,17 +56,26 @@ class Test(unittest.TestCase):
             self.assertEqual(dwca.core_rowtype, qn('Occurrence'))
 
     def test_extensions_rowtype(self):
+        vn = 'http://rs.gbif.org/terms/1.0/VernacularName'
+        td = 'http://rs.gbif.org/terms/1.0/Description'
+
         # This archive has no extension, we should get an empty list
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
             self.assertEqual([], dwca.extensions_rowtype)
 
         # This archive only contains the VernacularName extension
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as dwca:
-            self.assertEqual(dwca.extensions_rowtype[0],
-                             'http://rs.gbif.org/terms/1.0/VernacularName')
+            self.assertEqual(dwca.extensions_rowtype[0], vn)
             self.assertEqual(1, len(dwca.extensions_rowtype))
 
         # TODO: test with more complex archive
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            # 2 extensions are in use : vernacular names and taxon descriptions
+            self.assertEqual(2, len(dwca.extensions_rowtype))
+            # USe of frozenset to lose ordering
+            supposed_extensions = frozenset([vn, td])
+            self.assertEqual(supposed_extensions,
+                             frozenset(dwca.extensions_rowtype))
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute
@@ -164,6 +174,16 @@ class Test(unittest.TestCase):
 
         # TODO: test the same thing with 2 different extensions reffering to
         # the line
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as multi_dwca:
+            lines = list(multi_dwca.each_line())
+
+            # 3 vernacular names + 2 taxon descriptions
+            self.assertEqual(5, len(lines[0].extensions))
+            # 1 Vernacular name, no taxon description
+            self.assertEqual(1, len(lines[1].extensions))
+            # No extensions for this core line
+            self.assertEqual(0, len(lines[2].extensions))
+            # No vernacular name, 1 taxon description
 
     def test_line_rowtype(self):
         """Test the rowtype attribute of DwCALine
