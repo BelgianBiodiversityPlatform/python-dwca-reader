@@ -108,14 +108,15 @@ class DwCAReader:
         (BeautifulStoneSoup obj.) Also already open the core file so we've
         a file descriptor for further access."""
         self.archive_path = path
-        self._unzipped_folder = self._unzip()
 
+        self._unzipped_folder = self._unzip()
         self._metaxml = self._parse_metaxml_file()
 
         # Load the (scientific) metadata file and store its representation
         # in metadata attribute for future use.
         self.metadata = self._parse_metadata_file()
         self.core_rowtype = self._get_core_type()
+        self.extensions_rowtype = self._get_extensions_types()
 
         self._datafile = DwCACSVIterator(self._metaxml.core,
                                          self._unzipped_folder)
@@ -160,6 +161,9 @@ class DwCAReader:
 
     def _get_core_type(self):
         return self._metaxml.core['rowtype']
+
+    def _get_extensions_types(self):
+        return [e['rowtype'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
         """Takes a tdwg URL as a parameter and check if field exists for

@@ -53,6 +53,10 @@ star_path = os.path.join(os.path.dirname(__file__),
 
 print "Now, let's show an Archive that use an extension (VernacularNames)"
 with DwCAReader(star_path) as dwca:
+
+    # Let's ask the archive what kind of extensions are in use:
+    print "Extensions in use: %s" % dwca.extensions_rowtype
+
     lines = list(dwca.each_line())
     print lines[0]
 

@@ -54,6 +54,19 @@ class Test(unittest.TestCase):
             # Check that shortcuts also work
             self.assertEqual(dwca.core_rowtype, qn('Occurrence'))
 
+    def test_extensions_rowtype(self):
+        # This archive has no extension, we should get an empty list
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+            self.assertEqual([], dwca.extensions_rowtype)
+
+        # This archive only contains the VernacularName extension
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as dwca:
+            self.assertEqual(dwca.extensions_rowtype[0],
+                             'http://rs.gbif.org/terms/1.0/VernacularName')
+            self.assertEqual(1, len(dwca.extensions_rowtype))
+
+        # TODO: test with more complex archive
+
     def test_metadata(self):
         """A few basic tests on the metadata attribute
 
@@ -130,7 +143,6 @@ class Test(unittest.TestCase):
         with self.assertRaises(StopIteration):
             qn('dsfsdfsdfsdfsdfsd')
 
-    # Testing of DwcA extension features
     def test_correct_extension_lines_per_core_line(self):
         """Test we have correct number of extensions l. per core line"""
 
