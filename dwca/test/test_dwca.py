@@ -157,13 +157,13 @@ class Test(unittest.TestCase):
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             for line in star_dwca.each_line():
                 # These first DwCALines we access comes from the Core file
-                self.assertTrue(line.from_core())
-                self.assertFalse(line.from_extension())
+                self.assertTrue(line.from_core)
+                self.assertFalse(line.from_extension)
 
                 # But the extensions are... extensions (hum)
                 for an_extension in line.extensions:
-                    self.assertFalse(an_extension.from_core())
-                    self.assertTrue(an_extension.from_extension())
+                    self.assertFalse(an_extension.from_core)
+                    self.assertTrue(an_extension.from_extension)
 
 
 if __name__ == "__main__":

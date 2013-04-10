@@ -9,32 +9,32 @@ import os
 
 
 class DwCALine:
+    # TODO: test string representation
+    # TODO: Hmmm, \n is printed after next field in source (this sould also ba a problem when accessing the field through get() or linedata...
     def __str__(self):
         txt = ""
+        
+        if self.from_core:
+            txt += "Line source: Core file\n"
+        else:
+            txt += "Line source: Extension file\n"
+
         try:
-            txt += 'Line #' + self.id + "\n"
+            txt += 'Line ID: ' + self.id + "\n"
         except AttributeError:
             pass
 
         try:
-            txt += 'Core id: ' + self.core_id + "\n"
+            txt += 'Core ID: ' + self.core_id + "\n"
         except AttributeError:
             pass
 
-        txt += "\nElements:\n"
+        txt += "Elements:\n"
         for k, v in self.linedata.items():
             txt += "\t" + k + ' : ' + v + "\n"
 
+        txt += '------------------------------'
         return txt
-
-    def from_core(self):
-        """Returns Boolean value"""
-        return self._line_type_core
-
-    def from_extension(self):
-        """Returns Boolean value"""
-        return not self.from_core()
-
 
     def get(self, attr_name):
         return self.linedata[attr_name]
@@ -51,9 +51,11 @@ class DwCALine:
         #        - metadata contains only the <extension> section about our
         #          file
         #        - we don't load other lines recursively
-        self._line_type_core = is_core_type
 
-        if self.from_core():
+        self.from_core = is_core_type
+        self.from_extension = not self.from_core
+
+        if self.from_core:
             meta = metadata.core
         else:
             meta = metadata
@@ -68,7 +70,7 @@ class DwCALine:
 
         # If core, we have an id; if extension a coreid
         # TODO: ensure in the norm this is always true
-        if self.from_core():
+        if self.from_core:
             self.id = fields[int(meta.id['index'])]
         else:
             self.core_id = fields[int(meta.coreid['index'])]
@@ -89,7 +91,7 @@ class DwCALine:
 
         self.extensions = []
 
-        if self.from_core():
+        if self.from_core:
             for ext_meta in metadata.findAll('extension'):
                 csv = DwCACSVIterator(ext_meta, unzipped_folder)
                 for l in csv.lines():
