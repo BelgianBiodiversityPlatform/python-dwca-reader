@@ -10,7 +10,6 @@ import os
 
 class DwCALine:
     # TODO: test string representation
-    # TODO: Hmmm, \n is printed after next field in source (this sould also ba a problem when accessing the field through get() or linedata...
     def __str__(self):
         txt = "--\n"
 
@@ -60,7 +59,9 @@ class DwCALine:
         self.rowtype = my_meta['rowtype']
 
         # fields is a list of the line's content
-        fields = line.split(my_meta['fieldsterminatedby'].decode("string-escape"))
+        line_ending = my_meta['linesterminatedby'].decode("string-escape")
+        field_ending = my_meta['fieldsterminatedby'].decode("string-escape")
+        fields = line.rstrip(line_ending).split(field_ending)
 
         # TODO: Consistency chek ?? fields length should be :
         # num of fields described in core_meta + 2 (id and \n)

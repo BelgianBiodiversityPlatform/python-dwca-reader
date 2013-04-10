@@ -153,6 +153,17 @@ class Test(unittest.TestCase):
         with self.assertRaises(StopIteration):
             qn('dsfsdfsdfsdfsdfsd')
 
+    def test_no_cr_left(self):
+        """Test no carriage return characters are left at end of line"""
+
+        # We know we have no \n in our test archive, so if we fine one
+        # It's probably a character that was left by error when parsin
+        # line
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
+            for l in simple_dwca.each_line():
+                for k, v in l.data.iteritems():
+                    self.assertFalse(v.endswith("\n"))
+
     def test_correct_extension_lines_per_core_line(self):
         """Test we have correct number of extensions l. per core line"""
 
