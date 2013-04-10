@@ -57,6 +57,8 @@ class DwCALine:
         else:
             my_meta = metadata
 
+        self.rowtype = my_meta['rowtype']
+
         # fields is a list of the line's content
         fields = line.split(my_meta['fieldsterminatedby'].decode("string-escape"))
 

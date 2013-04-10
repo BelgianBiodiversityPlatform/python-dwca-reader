@@ -68,4 +68,8 @@ with DwCAReader(star_path) as dwca:
     print lines[0].from_core
     print lines[0].extensions[0].from_extension
 
+    print "... and what its rowtype is:"
+    print lines[0].rowtype
+
+
 

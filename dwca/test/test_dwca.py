@@ -165,6 +165,24 @@ class Test(unittest.TestCase):
         # TODO: test the same thing with 2 different extensions reffering to
         # the line
 
+    def test_line_rowtype(self):
+        """Test the rowtype attribute of DwCALine
+
+        (on core and extension lines)
+        """
+
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            taxon_qn = "http://rs.tdwg.org/dwc/terms/Taxon"
+            vernacular_qn = "http://rs.gbif.org/terms/1.0/VernacularName"
+
+            for i, line in enumerate(star_dwca.each_line()):
+                # All ine instance accessed here are core:
+                self.assertEqual(taxon_qn, line.rowtype)
+
+                if i == 0:
+                    # First line has an extension, and only vn are in use
+                    self.assertEqual(vernacular_qn, line.extensions[0].rowtype)
+
     def test_line_knows_its_source(self):
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             for line in star_dwca.each_line():
