@@ -11,10 +11,9 @@ It is currently considered pre-alpha quality. It helped its author a couple of t
 Major limitations
 -----------------
 
-- If the archive contains Darwin Core Extensions, it's (currently) not able to access this data. Only (EML) metadata and Core data file are readable. This limitation should be removed soon.
+- Only preliminary support for DwC-A .
 - It sometimes assumes the file has been produced by GBIF's IPT_. For example, only zip compression is curently supported, even tough the Darwin Core Archive allows other compression formats.
 - No write support.
-- Need a solid test suite.
 
 Tiny tutorial
 =============
