@@ -44,8 +44,9 @@ with DwCAReader(source_path) as dwca:
         # You can use print for debugging purposes...
         print line
 
-        # You can get the value of a specific Darwin Core term:
-        print "Locality for this line is: %s" % line.get(qn('locality'))
+        # You can get the value of a specific Darwin Core term through
+        # the "data" dict:
+        print "Locality for this line is: %s" % line.data[qn('locality')]
 
 star_path = os.path.join(os.path.dirname(__file__),
                          './test/sample_files/dwca-star-test-archive.zip')

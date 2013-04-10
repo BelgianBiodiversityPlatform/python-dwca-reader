@@ -104,8 +104,8 @@ class Test(unittest.TestCase):
             lines = list(dwca.each_line())
 
             # Check basic locality values from sample file
-            self.assertEqual('Borneo', lines[0].get(qn('locality')))
-            self.assertEqual('Mumbai', lines[1].get(qn('locality')))
+            self.assertEqual('Borneo', lines[0].data[qn('locality')])
+            self.assertEqual('Mumbai', lines[1].data[qn('locality')])
 
     def test_read_core_value_default(self):
         """Retrieve a (default) value from core
@@ -117,7 +117,7 @@ class Test(unittest.TestCase):
         """
         with DwCAReader(self.DEFAULT_VAL_PATH) as dwca:
             for l in dwca.each_line():
-                self.assertEqual('Belgium', l.get(qn('country')))
+                self.assertEqual('Belgium', l.data[qn('country')])
 
     def test_qn(self):
         """Test the qn (shortcut generator) helper"""

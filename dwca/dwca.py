@@ -30,14 +30,11 @@ class DwCALine:
             pass
 
         txt += "Elements:\n"
-        for k, v in self.linedata.items():
+        for k, v in self.data.items():
             txt += "\t" + k + ' : ' + v + "\n"
 
         txt += '------------------------------'
         return txt
-
-    def get(self, attr_name):
-        return self.linedata[attr_name]
 
     def __init__(self, line, is_core_type, metadata, unzipped_folder=None):
         # line is the raw line data, directly from file
@@ -56,14 +53,12 @@ class DwCALine:
         self.from_extension = not self.from_core
 
         if self.from_core:
-            meta = metadata.core
+            my_meta = metadata.core
         else:
-            meta = metadata
+            my_meta = metadata
 
-        separator = meta['fieldsterminatedby'].decode("string-escape")
-
-        # fields is list of the line's content
-        fields = line.split(separator)
+        # fields is a list of the line's content
+        fields = line.split(my_meta['fieldsterminatedby'].decode("string-escape"))
 
         # TODO: Consistency chek ?? fields length should be :
         # num of fields described in core_meta + 2 (id and \n)
@@ -71,20 +66,20 @@ class DwCALine:
         # If core, we have an id; if extension a coreid
         # TODO: ensure in the norm this is always true
         if self.from_core:
-            self.id = fields[int(meta.id['index'])]
+            self.id = fields[int(my_meta.id['index'])]
         else:
-            self.core_id = fields[int(meta.coreid['index'])]
+            self.core_id = fields[int(my_meta.coreid['index'])]
 
-        self.linedata = {}
+        self.data = {}
 
-        for f in meta.findAll('field'):
+        for f in my_meta.findAll('field'):
             # if field by default, we can find its value directly in <field>
             # attribute
             if f.has_key('default'):
-                self.linedata[f['term']] = f['default']
+                self.data[f['term']] = f['default']
             else:
                 # else, we have to look in core file
-                self.linedata[f['term']] = fields[int(f['index'])]
+                self.data[f['term']] = fields[int(f['index'])]
 
         # Core line: we also need to store related (extension) lines in the
         # extensions attribute
