@@ -9,8 +9,8 @@ from darwincore import qualname as qn
 source_path = os.path.join(os.path.dirname(__file__),
                            './test/sample_files/dwca-simple-test-archive.zip')
 
-star_source_path = os.path.join(os.path.dirname(__file__),
-                           './test/sample_files/dwca-star-test-archive.zip')
+star_path = os.path.join(os.path.dirname(__file__),
+                         './test/sample_files/dwca-star-test-archive.zip')
 
 # Create the object and open the DwC-A file
 # You should use the with statement to have automatic cleanup of
