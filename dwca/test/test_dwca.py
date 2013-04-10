@@ -44,15 +44,15 @@ class Test(unittest.TestCase):
 
         self.assertEqual(num_files_before, num_files_during-1)
 
-    def test_core_type(self):
-        """Test that the core_type returns the Archive Core Type"""
+    def test_core_rowtype(self):
+        """Test that the core_rowtype property returns the Archive Core Type"""
 
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
             # dwca-simple-test-archive.zip should be of Occurrence type
-            self.assertEqual(dwca.core_type,
+            self.assertEqual(dwca.core_rowtype,
                              'http://rs.tdwg.org/dwc/terms/Occurrence')
             # Check that shortcuts also work
-            self.assertEqual(dwca.core_type, qn('Occurrence'))
+            self.assertEqual(dwca.core_rowtype, qn('Occurrence'))
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute

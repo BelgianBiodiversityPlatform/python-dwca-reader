@@ -115,7 +115,7 @@ class DwCAReader:
         # Load the (scientific) metadata file and store its representation
         # in metadata attribute for future use.
         self.metadata = self._parse_metadata_file()
-        self.core_type = self._get_core_type()
+        self.core_rowtype = self._get_core_type()
 
         self._datafile = DwCACSVIterator(self._metaxml.core,
                                          self._unzipped_folder)
