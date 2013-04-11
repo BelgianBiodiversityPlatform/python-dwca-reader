@@ -6,12 +6,12 @@ A simple Python class to read `Darwin Core Archive`_ (DwC-A) files.
 Status
 ======
 
-It is currently considered pre-alpha quality. It helped its author a couple of times, but should be improved and tested before widespread use.
+It is currently considered alpha quality. It helped its author a couple of times, but should be improved and tested before widespread use.
 
 Major limitations
 -----------------
 
-- Only preliminary support for DwC-A .
+- Early support for DwC-A extensions.
 - It sometimes assumes the file has been produced by GBIF's IPT_. For example, only zip compression is curently supported, even tough the Darwin Core Archive allows other compression formats.
 - No write support.
 
