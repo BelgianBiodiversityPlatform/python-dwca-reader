@@ -121,6 +121,40 @@ class Test(unittest.TestCase):
             for line in dwca.each_line():
                 self.assertIsInstance(line, DwCALine)
 
+    def test_iterate_multiple_calls(self):
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            self.assertEqual(4, len([l for l in dwca.each_line()]))
+            # The second time, we can still find 4 lines...
+            self.assertEqual(4, len([l for l in dwca.each_line()]))
+
+    def test_get_line_by_id_string(self):
+        genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
+
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            # Number can be passed as a string....
+            l = dwca.get_line('3')
+            self.assertEqual('Peliperdix', l.data[genus_qn])
+
+    def test_get_line_by_id_multiple_calls(self):
+        genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
+
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            l = dwca.get_line('3')
+            self.assertEqual('Peliperdix', l.data[genus_qn])
+
+            # If iterator is not properly reset, None will be returned
+            # the second time
+            l = dwca.get_line('3')
+            self.assertEqual('Peliperdix', l.data[genus_qn])
+
+    def test_get_line_by_id_other(self):
+        genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
+
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            # .Passed as an integer, conversion will be tried...
+            l = dwca.get_line(3)
+            self.assertEqual('Peliperdix', l.data[genus_qn])
+
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:

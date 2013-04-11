@@ -78,6 +78,9 @@ class DwCALine:
         for f in my_meta.findAll('field'):
             # if field by default, we can find its value directly in <field>
             # attribute
+
+            # f is a BeautifulSoup object, not a dict 
+            # => has_key is NOT deprecated here
             if f.has_key('default'):
                 self.data[f['term']] = f['default']
             else:
@@ -123,6 +126,13 @@ class DwCAReader:
 
         self._datafile = DwCACSVIterator(self._metaxml.core,
                                          self._unzipped_folder)
+
+    def get_line(self, line_id):
+        for line in self.each_line():
+            if line.id == str(line_id):
+                return line
+        else:
+            return None
 
     def _create_temporary_folder(self):
         return mkdtemp()[1]
@@ -181,6 +191,7 @@ class DwCAReader:
         return self._metaxml.archive['metadata']
 
     def each_line(self):
+        self._datafile.reset_line_iterator()
         for line in self._datafile.lines():
             yield DwCALine(line, True, self._metaxml, self._unzipped_folder)
 
@@ -194,12 +205,11 @@ class DwCACSVIterator:
         self._metadata_section = metadata_section
         self._unzipped_folder = unzipped_folder
 
-        self._reset_line_iterator()
-
         self._core_fhandler = codecs.open(self._get_filepath(),
                                           mode='r',
                                           encoding=self._get_encoding(),
                                           errors='replace')
+        self.reset_line_iterator()
 
     def lines(self):
         for line in self._core_fhandler:
@@ -218,7 +228,8 @@ class DwCACSVIterator:
     def _get_encoding(self):
         return self._metadata_section['encoding']
 
-    def _reset_line_iterator(self):
+    def reset_line_iterator(self):
+        self._core_fhandler.seek(0, 0)
         self._line_pointer = 0
 
     def _get_lines_to_ignore(self):
