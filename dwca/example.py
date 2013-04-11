@@ -60,7 +60,8 @@ with DwCAReader(star_path) as dwca:
     # Let's ask the archive what kind of extensions are in use:
     print "Extensions in use: %s" % dwca.extensions_rowtype
 
-    lines = list(dwca.each_line())
+    # We can easily get a list of core lines instead of iterating manually:
+    lines = dwca.lines
     print lines[0]
 
     print "Extension lines are accessible through 'extensions' (list):"
@@ -97,4 +98,4 @@ with DwCAReader(multiext_path) as dwca:
 
     print "We can retrieve a specific line by its id:"
     peliperdix = dwca.get_line(3)
-    print peliperdix
+    print peliperdix.__dict__

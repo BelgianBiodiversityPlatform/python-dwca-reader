@@ -260,6 +260,21 @@ class Test(unittest.TestCase):
                     self.assertFalse(an_extension.from_core)
                     self.assertTrue(an_extension.from_extension)
 
+    # TODO: Also test we return an empty list on empty archive
+    def test_lines_property(self):
+        """Test that DwCAReader expose a list of all core lines in 'lines'
+
+        The content of this 'lines' property is equivalent to iterating and
+        storing result in a list.
+        """
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            by_iteration = []
+            for l in star_dwca.each_line():
+                by_iteration.append(l)
+
+            self.assertEqual(by_iteration, star_dwca.lines)
+
+
 
 if __name__ == "__main__":
     unittest.main()

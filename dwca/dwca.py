@@ -7,8 +7,17 @@ from BeautifulSoup import BeautifulStoneSoup
 import codecs
 import os
 
+# TODO: I don't like the fact we don't see this import is from the same 
+# package...
+# Create a top level package so we can clearly show: 
+# import python_dwca_reader.utils ?
+from utils import CommonEqualityMixin
 
-class DwCALine:
+
+# Two lines are considered equals if both are instances of DwCALine and
+# share the same properties
+class DwCALine(CommonEqualityMixin):
+    # TODO: if core line: display the number of related extension lines ?
     # TODO: test string representation
     def __str__(self):
         txt = "--\n"
@@ -79,7 +88,7 @@ class DwCALine:
             # if field by default, we can find its value directly in <field>
             # attribute
 
-            # f is a BeautifulSoup object, not a dict 
+            # f is a BeautifulSoup object, not a dict
             # => has_key is NOT deprecated here
             if f.has_key('default'):
                 self.data[f['term']] = f['default']
@@ -127,7 +136,14 @@ class DwCAReader:
         self._datafile = DwCACSVIterator(self._metaxml.core,
                                          self._unzipped_folder)
 
+    @property
+    #TODO: decide, test and document what we guarantee about ordering
+    def lines(self):
+        """Get a list containing all (core) lines of the archive"""
+        return list(self.each_line())
+
     def get_line(self, line_id):
+        """Get the line whose id is line_id"""
         for line in self.each_line():
             if line.id == str(line_id):
                 return line
@@ -190,6 +206,9 @@ class DwCAReader:
     def _get_metadata_filename(self):
         return self._metaxml.archive['metadata']
 
+    #TODO: decide, test and document what we guarantee about ordering
+    # We'll have to edit test_lines_property() if we don't guarantee the
+    # same order
     def each_line(self):
         self._datafile.reset_line_iterator()
         for line in self._datafile.lines():
