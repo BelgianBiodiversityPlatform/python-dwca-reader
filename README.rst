@@ -34,9 +34,6 @@ Use
 
 A basic example is provided in dwca/example.py.    
 
-.. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
-.. _IPT: https://code.google.com/p/gbif-providertoolkit/
-
 Run the test suite
 ------------------
 
@@ -44,3 +41,27 @@ Run the test suite
     
     $ pip install nose
     $ nosetests
+
+Test coverage can easily be obtained after installing `coverage.py`_
+
+::
+
+    $ nosetests --with-coverage --cover-erase --cover-package=dwca
+    ....................
+    Name              Stmts   Miss  Cover   Missing
+    -----------------------------------------------
+    dwca                  0      0   100%
+    dwca.darwincore       3      0   100%
+    dwca.dwca           130     17    87%   23-45, 151
+    dwca.utils            5      1    80%   12
+    -----------------------------------------------
+    TOTAL               138     18    87%
+    ----------------------------------------------------------------------
+    Ran 20 tests in 0.669s
+
+    OK
+
+
+.. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
+.. _IPT: https://code.google.com/p/gbif-providertoolkit/
+.. _coverage.py: http://nedbatchelder.com/code/coverage/
