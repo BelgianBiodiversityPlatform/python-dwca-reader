@@ -87,13 +87,14 @@ with DwCAReader(multiext_path) as dwca:
     print "We can then simply filter by type..."
     for ext in ostrich.extensions:
         if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
-            print ext    
+            print ext
 
     print "We can also use list comprehensions for this:"
-    description_ext = [e for e in ostrich.extensions if e.rowtype == 'http://rs.gbif.org/terms/1.0/Description']
+    description_ext = [e for e in ostrich.extensions if
+                       e.rowtype == 'http://rs.gbif.org/terms/1.0/Description']
     for ext in description_ext:
         print ext
 
-
-
-
+    print "We can retrieve a specific line by its id:"
+    peliperdix = dwca.get_line(3)
+    print peliperdix
