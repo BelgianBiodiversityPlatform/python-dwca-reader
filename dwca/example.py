@@ -4,7 +4,7 @@
 import os
 
 from dwca import DwCAReader
-from darwincore import qualname as qn
+from darwincore.utils import qualname as qn
 
 source_path = os.path.join(os.path.dirname(__file__),
                            './test/sample_files/dwca-simple-test-archive.zip')

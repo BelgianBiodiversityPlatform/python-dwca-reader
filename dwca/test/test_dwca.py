@@ -4,7 +4,7 @@ import os
 from BeautifulSoup import BeautifulStoneSoup
 
 from ..dwca import DwCAReader, DwCALine
-from ..darwincore import qualname as qn
+from ..darwincore.utils import qualname as qn
 
 
 # Helpers
