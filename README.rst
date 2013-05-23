@@ -15,13 +15,13 @@ Major limitations
 - It sometimes assumes the file has been produced by GBIF's IPT_. For example, only zip compression is curently supported, even tough the Darwin Core Archive allows other compression formats.
 - No write support.
 
-Tiny tutorial
-=============
+Tutorial
+========
 
 Installation
 ------------
 
-A proper Python package will be provided as soon as the code is considered beta quality.
+A proper Python package will be provided very soon.
 
 In the meantime, just copy it to your PYTHONPATH. It also requires BeautifulSoup (v3), so
 
@@ -29,10 +29,127 @@ In the meantime, just copy it to your PYTHONPATH. It also requires BeautifulSoup
     
     $ pip install BeautifulSoup
 
-Use
----
+Example use
+-----------
 
-A basic example is provided in dwca/example.py.    
+1. Basic use, access to metadata and "Core lines"
+
+.. code:: python
+
+    from dwca import DwCAReader
+    from darwincore.utils import qualname as qn
+
+    # Let's open our archive...
+    # Using the with statement ensure that resources will be properly freed/cleaned after use.
+    with DwCAReader('my_archive.zip') as dwca:
+        # We can now interact with the 'dwca' object
+
+        # We can read scientific metadata (EML) through a BeautifulStoneSoup object in the 'metadata' attribute
+        # BeautifulStoneSoup is provided by BS3: http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html
+        print dwca.metadata.prettify()
+
+        # We can get inspect archive to discover what is the Core Type (Occurrence, Taxon, ...):
+        print "Core type is: %s" % dwca.core_rowtype
+        # => http://rs.tdwg.org/dwc/terms/Occurrence
+
+        # Check if a Darwin Core term in present in the core file
+        if dwca.core_contains_term('http://rs.tdwg.org/dwc/terms/locality'):
+            print "This archive contains the 'locality' term in its core file."
+        else:
+            print "Locality term is not present."
+
+        # Using full qualnames for DarwincCore terms (such as 'http://rs.tdwg.org/dwc/terms/country') is verbose...
+        # The qualname() helper function make life easy for common terms.
+        # (here, it has been imported as 'qn'):
+        qn('locality')
+        # => http://rs.tdwg.org/dwc/terms/country
+
+        # Combined with previous examples, this can be used to things more clear:
+        # For example:
+        if dwca.core_contains_term(qn('locality')):
+            pass
+
+        # Or:
+        if dwca.core_rowtype == qn('occurrence'):
+            pass
+
+        # Finally, let's iterate over the archive lines and get the data:
+        for line in dwca.each_line():
+            # line is an instance of DwCALine
+
+            # Print can be used for debugging purposes...
+            print line
+
+            # You can get the value of a specific Darwin Core term through
+            # the "data" dict:
+            print "Locality for this line is: %s" % line.data[qn('locality')]
+
+        # Alternatively, we can get a list of core lines instead of using each_line():
+        lines = dwca.lines
+
+        # Or retrieve a specific line by its id:
+        occurrence_number_three = dwca.get_line(3)
+
+2. Use of Darwin Core Archives using extensions (star schema)
+
+.. code:: python
+
+    from dwca import DwCAReader
+    from darwincore.utils import qualname as qn
+
+    with DwCAReader('archive_with_vernacularnames_extension') as dwca:
+        # Let's ask the archive what kind of extensions are in use:
+        print dwca.extensions_rowtype
+        # => [u'http://rs.gbif.org/terms/1.0/VernacularName']
+
+        # For convenience
+        core_lines = dwca.lines
+
+        # a) Data access
+        # Extension lines are accessible as a list of DwcALine instances in the 'extensions' attribute:
+        for e in core_lines[0].extensions:
+            # Display all extensions line that refers to the first Core line
+            print e
+
+        # b) We can now see in a given archive, a DwcALine can come from multiple sources...
+        # Se we can ask it where it's from:
+        print core_lines[0].from_core
+        => True
+        print core_lines[0].extensions[0].from_extension
+        => True
+
+        print "... and what its rowtype is:"
+        print core_lines[0].rowtype
+        => http://rs.tdwg.org/dwc/terms/Taxon
+
+3. Another example with multiple extensions (no new API here):
+
+.. code:: python
+
+    from dwca import DwCAReader
+    from darwincore.utils import qualname as qn
+
+    with DwCAReader('multiext_archive.zip') as dwca:
+        lines = list(dwca.each_line())
+        ostrich = lines[0]
+
+        print "You'll find below all extensions line reffering to Ostrich"
+        print "There should be 3 verncaular names and 2 taxon description"
+        for ext in ostrich.extensions:
+            print ext
+
+        print "We can then simply filter by type..."
+        for ext in ostrich.extensions:
+            if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
+                print ext
+
+        print "We can also use list comprehensions for this:"
+        description_ext = [e for e in ostrich.extensions if
+                       e.rowtype == 'http://rs.gbif.org/terms/1.0/Description']
+        
+        for ext in description_ext:
+            print ext
+
 
 Run the test suite
 ------------------

@@ -1,5 +1,8 @@
 # This is a temporary file used to demonstrate and test the API
-# It will be replaced by proper test and documentation.
+# It will be replaced by proper tests and documentation.
+
+# TODO: Remove very soon, once test and tutorial have been a little more
+# confronted to reality.
 
 import os
 
@@ -68,7 +71,7 @@ with DwCAReader(star_path) as dwca:
     for e in lines[0].extensions:
         print e
 
-    print "We can ask a line where it's coming from: "
+    print "We can ask a DwcALine where it's coming from: "
     print lines[0].from_core
     print lines[0].extensions[0].from_extension
 

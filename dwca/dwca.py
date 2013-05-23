@@ -7,9 +7,9 @@ from BeautifulSoup import BeautifulStoneSoup
 import codecs
 import os
 
-# TODO: I don't like the fact we don't see this import is from the same 
+# TODO: I don't like the fact we don't see this import is from the same
 # package...
-# Create a top level package so we can clearly show: 
+# Create a top level package so we can clearly show:
 # import python_dwca_reader.utils ?
 from utils import CommonEqualityMixin
 
