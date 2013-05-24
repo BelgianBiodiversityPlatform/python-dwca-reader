@@ -50,7 +50,7 @@ Example use
 
         # We can get inspect archive to discover what is the Core Type (Occurrence, Taxon, ...):
         print "Core type is: %s" % dwca.core_rowtype
-        # => http://rs.tdwg.org/dwc/terms/Occurrence
+        # => Core type is: http://rs.tdwg.org/dwc/terms/Occurrence
 
         # Check if a Darwin Core term in present in the core file
         if dwca.core_contains_term('http://rs.tdwg.org/dwc/terms/locality'):
@@ -62,7 +62,7 @@ Example use
         # The qualname() helper function make life easy for common terms.
         # (here, it has been imported as 'qn'):
         qn('locality')
-        # => http://rs.tdwg.org/dwc/terms/country
+        # => u'http://rs.tdwg.org/dwc/terms/locality'
 
         # Combined with previous examples, this can be used to things more clear:
         # For example:
@@ -70,7 +70,7 @@ Example use
             pass
 
         # Or:
-        if dwca.core_rowtype == qn('occurrence'):
+        if dwca.core_rowtype == qn('Occurrence'):
             pass
 
         # Finally, let's iterate over the archive lines and get the data:
@@ -80,9 +80,18 @@ Example use
             # Print can be used for debugging purposes...
             print line
 
+            # => --
+            # => Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence
+            # => Source: Core file
+            # => Line ID:
+            # => Data: {u'http://rs.tdwg.org/dwc/terms/basisOfRecord': u'Observation', u'http://rs.tdwg.org/dwc/terms/family': # => u'Tetraodontidae', u'http://rs.tdwg.org/dwc/terms/locality': u'Borneo', u'http://rs.tdwg.# 
+            # => org/dwc/terms/scientificName': u'tetraodon fluviatilis'}
+            # => --
+
             # You can get the value of a specific Darwin Core term through
             # the "data" dict:
             print "Locality for this line is: %s" % line.data[qn('locality')]
+            # => Locality for this line is: Mumbai
 
         # Alternatively, we can get a list of core lines instead of using each_line():
         lines = dwca.lines
