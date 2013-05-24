@@ -155,6 +155,11 @@ class Test(unittest.TestCase):
             l = dwca.get_line(3)
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
+    def test_get_inexistent_line(self):
+        """ Ensure get_line() returns None if we ask it an unexistent line. """
+        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            self.assertEqual(None, dwca.get_line(8000))
+
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
