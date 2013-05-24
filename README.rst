@@ -118,7 +118,7 @@ Example use
         print core_lines[0].extensions[0].from_extension
         => True
 
-        print "... and what its rowtype is:"
+        # ... and what its rowtype is:
         print core_lines[0].rowtype
         => http://rs.tdwg.org/dwc/terms/Taxon
 
