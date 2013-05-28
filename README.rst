@@ -106,7 +106,7 @@ Example use
     from dwca import DwCAReader
     from darwincore.utils import qualname as qn
 
-    with DwCAReader('archive_with_vernacularnames_extension') as dwca:
+    with DwCAReader('archive_with_vernacularnames_extension.zip') as dwca:
         # Let's ask the archive what kind of extensions are in use:
         print dwca.extensions_rowtype
         # => [u'http://rs.gbif.org/terms/1.0/VernacularName']
@@ -123,13 +123,13 @@ Example use
         # b) We can now see in a given archive, a DwcALine can come from multiple sources...
         # Se we can ask it where it's from:
         print core_lines[0].from_core
-        => True
+        # => True
         print core_lines[0].extensions[0].from_extension
-        => True
+        # => True
 
         # ... and what its rowtype is:
         print core_lines[0].rowtype
-        => http://rs.tdwg.org/dwc/terms/Taxon
+        # => http://rs.tdwg.org/dwc/terms/Taxon
 
 3. Another example with multiple extensions (no new API here):
 
@@ -139,7 +139,7 @@ Example use
     from darwincore.utils import qualname as qn
 
     with DwCAReader('multiext_archive.zip') as dwca:
-        lines = list(dwca.each_line())
+        lines = dwca.lines
         ostrich = lines[0]
 
         print "You'll find below all extensions line reffering to Ostrich"
