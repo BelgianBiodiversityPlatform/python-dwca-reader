@@ -21,13 +21,11 @@ Tutorial
 Installation
 ------------
 
-A proper Python package will be provided very soon.
-
-In the meantime, just copy it to your PYTHONPATH. It also requires BeautifulSoup (v3), so
+Quite simply:
 
 ::
     
-    $ pip install BeautifulSoup
+    $ pip install python-dwca-reader
 
 Example use
 -----------
@@ -173,17 +171,19 @@ Test coverage can easily be obtained after installing `coverage.py`_
 ::
 
     $ nosetests --with-coverage --cover-erase --cover-package=dwca
-    ....................
-    Name              Stmts   Miss  Cover   Missing
-    -----------------------------------------------
-    dwca                  0      0   100%
-    dwca.darwincore       3      0   100%
-    dwca.dwca           130     17    87%   23-45, 151
-    dwca.utils            5      1    80%   12
-    -----------------------------------------------
-    TOTAL               138     18    87%
+    .....................
+    Name                    Stmts   Miss  Cover   Missing
+    -----------------------------------------------------
+    dwca                        0      0   100%
+    dwca.darwincore             0      0   100%
+    dwca.darwincore.terms       1      0   100%
+    dwca.darwincore.utils       3      0   100%
+    dwca.dwca                 130     16    88%   23-45
+    dwca.utils                  5      1    80%   12
+    -----------------------------------------------------
+    TOTAL                     139     17    88%
     ----------------------------------------------------------------------
-    Ran 20 tests in 0.669s
+    Ran 21 tests in 0.830s
 
     OK
 
