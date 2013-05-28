@@ -35,7 +35,7 @@ Example use
 .. code:: python
 
     from dwca import DwCAReader
-    from darwincore.utils import qualname as qn
+    from dwca.darwincore.utils import qualname as qn
 
     # Let's open our archive...
     # Using the with statement ensure that resources will be properly freed/cleaned after use.
@@ -102,7 +102,7 @@ Example use
 .. code:: python
 
     from dwca import DwCAReader
-    from darwincore.utils import qualname as qn
+    from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('archive_with_vernacularnames_extension.zip') as dwca:
         # Let's ask the archive what kind of extensions are in use:
@@ -134,7 +134,7 @@ Example use
 .. code:: python
 
     from dwca import DwCAReader
-    from darwincore.utils import qualname as qn
+    from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('multiext_archive.zip') as dwca:
         lines = dwca.lines
