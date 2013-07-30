@@ -56,7 +56,6 @@ class DwCALine(CommonEqualityMixin):
         #        - metadata contains only the <extension> section about our
         #          file
         #        - we don't load other lines recursively
-
         self.from_core = is_core_type
         self.from_extension = not self.from_core
 
@@ -213,6 +212,10 @@ class DwCAReader:
         self._datafile.reset_line_iterator()
         for line in self._datafile.lines():
             yield DwCALine(line, True, self._metaxml, self._unzipped_folder)
+
+
+class GBIFResultsReader(DwCAReader):
+    pass
 
 
 # Simple, internal use class used to iterate on a DwcA-enclosed CSV file

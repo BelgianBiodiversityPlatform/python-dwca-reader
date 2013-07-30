@@ -3,7 +3,7 @@ import os
 
 from BeautifulSoup import BeautifulStoneSoup
 
-from ..dwca import DwCAReader, DwCALine
+from ..dwca import DwCAReader, GBIFResultsReader, DwCALine
 from ..darwincore.utils import qualname as qn
 
 
@@ -12,8 +12,20 @@ def _sample_data_path(filename):
     return os.path.join(os.path.dirname(__file__), 'sample_files', filename)
 
 
-class Test(unittest.TestCase):
-    """Unit tests for python-dwca-reader."""
+class TestGBIFResultsReader(unittest.TestCase):
+    """Unit tests for GBIFResultsReader class."""
+
+    GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
+
+    def test_dwcareader_features(self):
+        """ Ensure we didn't break basic DwCAReader features."""
+
+        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+            self.assertEqual(1000, len(results_dwca.lines))
+
+
+class TestDwCAReader(unittest.TestCase):
+    """Unit tests for DwCAReader class."""
 
     BASIC_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive.zip')
     NOHEADERS1_PATH = _sample_data_path('dwca-noheaders-1.zip')
