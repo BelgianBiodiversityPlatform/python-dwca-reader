@@ -109,7 +109,7 @@ class DwCALine(CommonEqualityMixin):
                         self.extensions.append(tmp)
 
 
-class DwCAReader:
+class DwCAReader(object):
     # Define __enter__ and __exit__ to be used with the 'with' statement
     def __enter__(self):
         return self
@@ -218,9 +218,24 @@ class DwCAReader:
 
 
 class GBIFResultsReader(DwCAReader):
+    def __init__(self, path):
+        super(GBIFResultsReader, self).__init__(path)
+
+        self.source_metadata = self._dataset_metadata_to_dict('dataset')
+
     # Compared to a standard DwC-A, GBIF results export contains
     # two additional files to give details about IP rights and citations
     # We make them accessible trough two simples properties
+    def _dataset_metadata_to_dict(self, folder):
+        dataset_dir = os.path.join(self._unzipped_folder, folder)
+
+        r = {}
+        for f in os.listdir(dataset_dir):
+            if os.path.isfile(os.path.join(dataset_dir, f)):
+                key = os.path.splitext(f)[0]
+                r[key] = self._parse_xml_included_file(os.path.join(folder, f))
+
+        return r
 
     @property
     def citations(self):

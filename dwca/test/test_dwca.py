@@ -27,22 +27,44 @@ Rights as supplied: Not supplied"""
         """Ensure we didn't break basic DwCAReader features."""
         with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(158, len(results_dwca.lines))
-            self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence', 
+            self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
                              results_dwca.core_rowtype)
-            
+
             line1 = results_dwca.lines[0]
             self.assertEqual('Tetraodontidae', line1.data[qn('family')])
             self.assertEqual([], line1.extensions)
 
+    # Specific GBIFResultsReader feature
     def test_citations_access(self):
-        """Check the content of citations.txt is accessible"""
+        """Check the content of citations.txt is accessible."""
         with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(self.CITATIONS_CONTENT, results_dwca.citations)
 
     def test_rights_access(self):
-        """Check the content of rights.txt is accessible"""
+        """Check the content of rights.txt is accessible."""
         with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(self.RIGHTS_CONTENT, results_dwca.rights)
+
+    def test_source_metadata(self):
+        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results:
+            # We have 23 EML files in dataset/
+            self.assertEqual(23, len(results.source_metadata))
+            # Assert a key is present
+            self.assertTrue('eccf4b09-f0c8-462d-a48c-41a7ce36815a' in
+                            results.source_metadata)
+            # Assert it's a BeautifulStoneSoup object
+            self.assertFalse('incorrect-UUID' in results.source_metadata)
+
+            # Assert it's the correct EML file (content!)
+            sm = results.source_metadata
+            metadata = sm['eccf4b09-f0c8-462d-a48c-41a7ce36815a']
+
+            self.assertIsInstance(metadata, BeautifulStoneSoup)
+
+            # Assert we can read basic fields from EML:
+            self.assertEqual(metadata.dataset.creator.
+                             individualname.givenname.contents[0],
+                             'Rob')
 
 
 class TestDwCAReader(unittest.TestCase):
