@@ -4,7 +4,7 @@ from tempfile import mkdtemp
 from zipfile import ZipFile
 from shutil import rmtree
 from BeautifulSoup import BeautifulStoneSoup
-import codecs
+import io
 import os
 
 # TODO: I don't like the fact we don't see this import is from the same
@@ -224,10 +224,11 @@ class DwCACSVIterator:
         self._metadata_section = metadata_section
         self._unzipped_folder = unzipped_folder
 
-        self._core_fhandler = codecs.open(self._get_filepath(),
-                                          mode='r',
-                                          encoding=self._get_encoding(),
-                                          errors='replace')
+        self._core_fhandler = io.open(self._get_filepath(),
+                                      mode='r',
+                                      encoding=self._get_encoding(),
+                                      newline=self._get_newline_str(),
+                                      errors='replace')
         self.reset_line_iterator()
 
     def lines(self):
@@ -246,6 +247,9 @@ class DwCACSVIterator:
 
     def _get_encoding(self):
         return self._metadata_section['encoding']
+
+    def _get_newline_str(self):
+        return self._metadata_section['linesterminatedby'].decode("string-escape")
 
     def reset_line_iterator(self):
         self._core_fhandler.seek(0, 0)
