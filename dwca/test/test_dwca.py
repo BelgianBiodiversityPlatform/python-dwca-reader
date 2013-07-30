@@ -16,6 +16,7 @@ class TestGBIFResultsReader(unittest.TestCase):
     """Unit tests for GBIFResultsReader class."""
 
     GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
+    MISSINGMETA_PATH = _sample_data_path('gbif-results-lacks-s-metadata.zip')
 
     CITATIONS_CONTENT = """Please cite this data as follows, and pay attention
  to the rights documented in the rights.txt: blablabla"""
@@ -65,6 +66,30 @@ Rights as supplied: Not supplied"""
             self.assertEqual(metadata.dataset.creator.
                              individualname.givenname.contents[0],
                              'Rob')
+
+    def test_line_source_metadata(self):
+        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results:
+            first_line = results.get_line('607759330')
+            m = first_line.source_metadata
+
+            self.assertIsInstance(m, BeautifulStoneSoup)
+            self.assertEqual(m.dataset.creator.
+                             individualname.givenname.contents[0],
+                             'Stanley')
+
+            last_line = results.get_line('782700656')
+            m = last_line.source_metadata
+
+            self.assertIsInstance(m, BeautifulStoneSoup)
+            self.assertEqual(m.dataset.language.contents[0],
+                             'en')
+
+    def test_line_source_missing_metadata(self):
+        with GBIFResultsReader(self.MISSINGMETA_PATH) as results:
+            # We have source metadata, but not for all datasets/line...
+            # We sould have None in this cases
+            first_line = results.get_line('607759330')
+            self.assertEqual(None, first_line.source_metadata)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -351,6 +376,11 @@ class TestDwCAReader(unittest.TestCase):
             # (61 - and probably an IndexError - if errrors)
             self.assertEqual(64, len(lines[0].data))
 
+    def test_line_source_metadata(self):
+        # For normal DwC-A, it should always be none (NO source data
+        # available in archive.)
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            self.assertEqual(None, star_dwca.lines[0].source_metadata)
 
 
 if __name__ == "__main__":

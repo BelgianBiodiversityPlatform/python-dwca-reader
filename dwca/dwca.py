@@ -44,7 +44,8 @@ class DwCALine(CommonEqualityMixin):
         txt += '\n--'
         return txt
 
-    def __init__(self, line, is_core_type, metadata, unzipped_folder=None):
+    def __init__(self, line, is_core_type, metadata, unzipped_folder=None,
+                 archive_source_metadata=None):
         # line is the raw line data, directly from file
         # is_core is a flag:
         #   if True:
@@ -56,6 +57,10 @@ class DwCALine(CommonEqualityMixin):
         #        - metadata contains only the <extension> section about our
         #          file
         #        - we don't load other lines recursively
+        #
+        # source metadata: dict of all the source metadata available in the
+        # archive (if applicable)
+
         self.from_core = is_core_type
         self.from_extension = not self.from_core
 
@@ -107,6 +112,25 @@ class DwCALine(CommonEqualityMixin):
                     tmp = DwCALine(l, False, ext_meta)
                     if tmp.core_id == self.id:
                         self.extensions.append(tmp)
+
+        # If we have additional metadata about the dataset we're originally 
+        # from (AKA source/line-level metadata), make it accessible trough
+        # the source_metadata attribute
+
+        # If this data is not available
+        # (because the archive don't provide source metadata or because it
+        # provide some, but not for this dataset, it will be None)
+        field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
+
+        if (archive_source_metadata and (field_name in self.data)):
+            try:
+                m = archive_source_metadata[self.data[field_name]]
+            except KeyError:
+                m = None
+        else:
+            m = None
+
+        self.source_metadata = m
 
 
 class DwCAReader(object):
@@ -213,8 +237,16 @@ class DwCAReader(object):
     # same order
     def each_line(self):
         self._datafile.reset_line_iterator()
+
+        # Some Archives (Currently GBIF Results) have line-level (source data)
+        # In that case, we'll pass all of them to the line.
+        try:
+            sm = self.source_metadata
+        except AttributeError:
+            sm = None
+
         for line in self._datafile.lines():
-            yield DwCALine(line, True, self._metaxml, self._unzipped_folder)
+            yield DwCALine(line, True, self._metaxml, self._unzipped_folder, sm)
 
 
 class GBIFResultsReader(DwCAReader):
