@@ -8,3 +8,4 @@ Description of sample DwcA
 * dwca-star-test-archive.zip: basic star archive: Taxon is at its core, vernacularnames extension
 * dwca-2extensions.zip: idem dwca-star-test-archive, but added the "taxon description" extension
 * gbif-results.zip: obtained by downloading occurrences from the new GBIF data portal (DwC-A unofficial variation)
+* dwca-utf8-eol-test.zip: For regression test of https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/20

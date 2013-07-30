@@ -33,6 +33,7 @@ class TestDwCAReader(unittest.TestCase):
     DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
     EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
     MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
+    UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
 
     def test_cleanup(self):
         """Test no temporary files are left after execution"""
@@ -290,6 +291,22 @@ class TestDwCAReader(unittest.TestCase):
                 by_iteration.append(l)
 
             self.assertEqual(by_iteration, star_dwca.lines)
+
+    # TODO: Add more test to ensure that the specified EOL sequence 
+    # (and ONLY this sequence!) is used to split lines.
+
+    # Code should be already fine, but tests lacking
+    def test_utf8_eol_ignored(self):
+        """Ensure we don't split lines based on the x85 utf8 EOL char.
+
+        (only the EOL string specified in meta.xml should be used).
+         """
+
+        with DwCAReader(self.UTF8EOL_ARCHIVE_PATH) as dwca:
+            lines = dwca.lines
+            # If line properly splitted => 64 rows.
+            # (61 - and probably an IndexError - if errrors)
+            self.assertEqual(64, len(lines[0].data))
 
 
 
