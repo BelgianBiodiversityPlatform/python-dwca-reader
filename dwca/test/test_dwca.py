@@ -17,9 +17,14 @@ class TestGBIFResultsReader(unittest.TestCase):
 
     GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
 
-    def test_dwcareader_features(self):
-        """ Ensure we didn't break basic DwCAReader features."""
+    CITATIONS_CONTENT = """Please cite this data as follows, and pay attention
+ to the rights documented in the rights.txt: blablabla"""
 
+    RIGHTS_CONTENT = """Dataset: Collection Pisces SMF
+Rights as supplied: Not supplied"""
+
+    def test_dwcareader_features(self):
+        """Ensure we didn't break basic DwCAReader features."""
         with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(158, len(results_dwca.lines))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence', 
@@ -28,6 +33,16 @@ class TestGBIFResultsReader(unittest.TestCase):
             line1 = results_dwca.lines[0]
             self.assertEqual('Tetraodontidae', line1.data[qn('family')])
             self.assertEqual([], line1.extensions)
+
+    def test_citations_access(self):
+        """Check the content of citations.txt is accessible"""
+        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+            self.assertEqual(self.CITATIONS_CONTENT, results_dwca.citations)
+
+    def test_rights_access(self):
+        """Check the content of rights.txt is accessible"""
+        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+            self.assertEqual(self.RIGHTS_CONTENT, results_dwca.rights)
 
 
 class TestDwCAReader(unittest.TestCase):

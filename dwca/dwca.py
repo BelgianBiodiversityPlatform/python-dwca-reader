@@ -149,6 +149,11 @@ class DwCAReader:
         else:
             return None
 
+    def _read_additional_file(self, relative_path):
+        """Read an additional file in the archive and return its content."""
+        path = os.path.join(self._unzipped_folder, relative_path)
+        return open(path).read()
+
     def _create_temporary_folder(self):
         return mkdtemp()[1]
 
@@ -170,9 +175,7 @@ class DwCAReader:
     def _parse_xml_included_file(self, relative_path):
         """Loads, parse with BeautifulSoup and returns XML file located
         at relative_path"""
-        xml_path = os.path.join(self._unzipped_folder, relative_path)
-        xml_string = open(xml_path).read()
-        return BeautifulStoneSoup(xml_string)
+        return BeautifulStoneSoup(self._read_additional_file(relative_path))
 
     def _unzip(self):
         unzipped_folder = self._create_temporary_folder()
@@ -215,7 +218,17 @@ class DwCAReader:
 
 
 class GBIFResultsReader(DwCAReader):
-    pass
+    # Compared to a standard DwC-A, GBIF results export contains
+    # two additional files to give details about IP rights and citations
+    # We make them accessible trough two simples properties
+
+    @property
+    def citations(self):
+        return self._read_additional_file('citations.txt')
+
+    @property
+    def rights(self):
+        return self._read_additional_file('rights.txt')
 
 
 # Simple, internal use class used to iterate on a DwcA-enclosed CSV file
