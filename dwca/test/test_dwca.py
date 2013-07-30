@@ -21,7 +21,13 @@ class TestGBIFResultsReader(unittest.TestCase):
         """ Ensure we didn't break basic DwCAReader features."""
 
         with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
-            self.assertEqual(1000, len(results_dwca.lines))
+            self.assertEqual(158, len(results_dwca.lines))
+            self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence', 
+                             results_dwca.core_rowtype)
+            
+            line1 = results_dwca.lines[0]
+            self.assertEqual('Tetraodontidae', line1.data[qn('family')])
+            self.assertEqual([], line1.extensions)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -292,7 +298,7 @@ class TestDwCAReader(unittest.TestCase):
 
             self.assertEqual(by_iteration, star_dwca.lines)
 
-    # TODO: Add more test to ensure that the specified EOL sequence 
+    # TODO: Add more test to ensure that the specified EOL sequence
     # (and ONLY this sequence!) is used to split lines.
 
     # Code should be already fine, but tests lacking
