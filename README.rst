@@ -1,7 +1,7 @@
 What is it ?
 ============
 
-A simple Python class to read `Darwin Core Archive`_ (DwC-A) files.
+A simple Python class to read `Darwin Core Archive`_ (DwC-A) files. It can also read exports (Occurrences downloads) from the new GBIF Data Portal (to be released later in 2013).
 
 Status
 ======
@@ -11,7 +11,6 @@ It is currently considered alpha quality. It helped its author a couple of times
 Major limitations
 -----------------
 
-- Early support for DwC-A extensions.
 - It sometimes assumes the file has been produced by GBIF's IPT_. For example, only zip compression is curently supported, even tough the Darwin Core Archive allows other compression formats.
 - No write support.
 
@@ -156,6 +155,42 @@ Example use
         
         for ext in description_ext:
             print ext
+
+4. GBIF Data Portal exports
+
+The new version of the GBIF Data Portal (to be released later this year) will allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ that can also be read with this library in two different ways:
+
+- As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard data.
+- Via the specific ``GBIFResultsReader``, see example below:
+
+.. code:: python
+
+    from dwca import GBIFResultsReader
+
+    with GBIFResultsReader('results.zip') as results:
+        # GBIFResultsReader being a subclass of DwCAReader, all previously described features will work the same.
+        #
+        # But there's more:
+        #
+        # 1) GBIF Portal downloads include citation and IP rights information about the resultset. They can be accessed via specific attributes:
+
+        results.citations
+        # => "Please cite this data as follows, and pay attention to the rights documented in the rights.txt: ..."
+
+        results.rights
+        # => "Dataset: [Name and license of source datasets for this resultset]"
+
+        # 2) In addition to the dataset-wide metadata (EML) file, these archives also include the source metadata for all datasets whose lines are part of the resultset.
+
+        # 2.1) At the archive level, they can be accessed as a dict:
+        results.source_metadata
+        # {'dataset1_UUID': <dataset1 EML (BeautifulStoneSoup instance)>,
+        #  'dataset2_UUID': <dataset2 EML (BeautifulStoneSoup instance)>, ...}
+
+        # 2.2 From a DwCALine instance, we can get back to the metadata of its source dataset:
+        first_line = results.line[0]
+        first_line.source_metadata
+        => <Source dataset EML (BeautifulStoneSoup instance)>
 
 
 Run the test suite

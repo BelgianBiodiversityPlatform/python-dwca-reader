@@ -113,7 +113,7 @@ class DwCALine(CommonEqualityMixin):
                     if tmp.core_id == self.id:
                         self.extensions.append(tmp)
 
-        # If we have additional metadata about the dataset we're originally 
+        # If we have additional metadata about the dataset we're originally
         # from (AKA source/line-level metadata), make it accessible trough
         # the source_metadata attribute
 
