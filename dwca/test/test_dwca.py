@@ -382,6 +382,32 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             self.assertEqual(None, star_dwca.lines[0].source_metadata)
 
+    def test_core_terms(self):
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            # The Core file contains tjhe following rows
+            # <field index="1" term="http://rs.tdwg.org/dwc/terms/family"/>
+            # <field index="2" term="http://rs.tdwg.org/dwc/terms/phylum"/>
+            # <field index="3" term="http://rs.tdwg.org/dwc/terms/order"/>
+            # <field index="4" term="http://rs.tdwg.org/dwc/terms/genus"/>
+            # <field index="5" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+            # <field index="6" term="http://rs.tdwg.org/dwc/terms/class"/>
+
+            # It also contains an id column (should not appear here)
+            # There's an extension with 3 fields, should not appear here.
+
+            # Assert correct size
+            self.assertEqual(6, len(star_dwca.core_terms))
+
+            # Assert correct content (should be a set, so unordered)
+            fields = set([u'http://rs.tdwg.org/dwc/terms/kingdom',
+                         u'http://rs.tdwg.org/dwc/terms/order',
+                         u'http://rs.tdwg.org/dwc/terms/class',
+                         u'http://rs.tdwg.org/dwc/terms/genus',
+                         u'http://rs.tdwg.org/dwc/terms/family',
+                         u'http://rs.tdwg.org/dwc/terms/phylum'])
+
+            self.assertEqual(fields, star_dwca.core_terms)
+
 
 if __name__ == "__main__":
     unittest.main()

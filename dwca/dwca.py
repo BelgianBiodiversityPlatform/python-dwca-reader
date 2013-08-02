@@ -166,7 +166,7 @@ class DwCAReader(object):
         return list(self.each_line())
 
     def get_line(self, line_id):
-        """Get the line whose id is line_id"""
+        """Get the line whose id is line_id."""
         for line in self.each_line():
             if line.id == str(line_id):
                 return line
@@ -183,7 +183,7 @@ class DwCAReader(object):
 
     def _parse_metadata_file(self):
         """Loads the archive (scientific) Metadata file, parse it with
-        BeautifulSoup and return its content"""
+        BeautifulSoup and return its content."""
 
         # This method should be called only after ._metaxml attribute is set
         # because the name/path to metadat file is stored in the "metadata"
@@ -193,12 +193,12 @@ class DwCAReader(object):
 
     def _parse_metaxml_file(self):
         """Loads the meta.xml, parse it with BeautifulSoup and return its
-        content"""
+        content."""
         return self._parse_xml_included_file('meta.xml')
 
     def _parse_xml_included_file(self, relative_path):
         """Loads, parse with BeautifulSoup and returns XML file located
-        at relative_path"""
+        at relative_path."""
         return BeautifulStoneSoup(self._read_additional_file(relative_path))
 
     def _unzip(self):
@@ -221,13 +221,13 @@ class DwCAReader(object):
         return [e['rowtype'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
-        """Takes a tdwg URL as a parameter and check if field exists for
-        this concept in the core file"""
-        fields = self._metaxml.core.findAll('field')
-        for i in fields:
-            if i['term'] == term_url:
-                return True
-        return False  # If we end up there, the term was not found.
+        return term_url in self.core_terms
+
+    @property
+    def core_terms(self):
+        """Returns a set of all the terms (URL) contained in Core file."""
+        term_names = [f['term'] for f in self._metaxml.core.findAll('field')]
+        return set(term_names)
 
     def _get_metadata_filename(self):
         return self._metaxml.archive['metadata']
