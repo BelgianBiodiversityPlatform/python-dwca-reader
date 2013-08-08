@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from BeautifulSoup import BeautifulStoneSoup
+from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader, DwCALine
 from ..darwincore.utils import qualname as qn
@@ -53,18 +53,18 @@ Rights as supplied: Not supplied"""
             # Assert a key is present
             self.assertTrue('eccf4b09-f0c8-462d-a48c-41a7ce36815a' in
                             results.source_metadata)
-            # Assert it's a BeautifulStoneSoup object
+            
             self.assertFalse('incorrect-UUID' in results.source_metadata)
 
             # Assert it's the correct EML file (content!)
             sm = results.source_metadata
             metadata = sm['eccf4b09-f0c8-462d-a48c-41a7ce36815a']
 
-            self.assertIsInstance(metadata, BeautifulStoneSoup)
+            self.assertIsInstance(metadata, BeautifulSoup)
 
             # Assert we can read basic fields from EML:
             self.assertEqual(metadata.dataset.creator.
-                             individualname.givenname.contents[0],
+                             individualName.givenName.contents[0],
                              'Rob')
 
     def test_line_source_metadata(self):
@@ -72,15 +72,15 @@ Rights as supplied: Not supplied"""
             first_line = results.get_line('607759330')
             m = first_line.source_metadata
 
-            self.assertIsInstance(m, BeautifulStoneSoup)
+            self.assertIsInstance(m, BeautifulSoup)
             self.assertEqual(m.dataset.creator.
-                             individualname.givenname.contents[0],
+                             individualName.givenName.contents[0],
                              'Stanley')
 
             last_line = results.get_line('782700656')
             m = last_line.source_metadata
 
-            self.assertIsInstance(m, BeautifulStoneSoup)
+            self.assertIsInstance(m, BeautifulSoup)
             self.assertEqual(m.dataset.language.contents[0],
                              'en')
 
@@ -124,7 +124,7 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(self.BASIC_ARCHIVE_PATH):
             num_files_during = len(os.listdir('.'))
 
-        self.assertEqual(num_files_before, num_files_during-1)
+        self.assertEqual(num_files_before, num_files_during - 1)
 
     def test_core_rowtype(self):
         """Test that the core_rowtype property returns the Archive Core Type"""
@@ -165,12 +165,12 @@ class TestDwCAReader(unittest.TestCase):
         """
 
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
-            # Assert metadata is an instance of BeautifulStoneSoup
-            self.assertIsInstance(dwca.metadata, BeautifulStoneSoup)
+            # Assert metadata is an instance of BeautifulSoup
+            self.assertIsInstance(dwca.metadata, BeautifulSoup)
 
             # Assert we can read basic fields from EML:
             self.assertEqual(dwca.metadata.dataset.creator.
-                             individualname.givenname.contents[0],
+                             individualName.givenName.contents[0],
                              'Nicolas')
 
     def test_core_contains_term(self):

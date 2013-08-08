@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-
+import io
+import os
 from tempfile import mkdtemp
 from zipfile import ZipFile
 from shutil import rmtree
-from BeautifulSoup import BeautifulStoneSoup
-import io
-import os
 
-# TODO: I don't like the fact we don't see this import is from the same
-# package...
-# Create a top level package so we can clearly show:
-# import python_dwca_reader.utils ?
-from utils import CommonEqualityMixin
+from bs4 import BeautifulSoup
+
+from .utils import CommonEqualityMixin
 
 
 # Two lines are considered equals if both are instances of DwCALine and
@@ -69,11 +65,11 @@ class DwCALine(CommonEqualityMixin):
         else:
             my_meta = metadata
 
-        self.rowtype = my_meta['rowtype']
+        self.rowtype = my_meta['rowType']
 
         # fields is a list of the line's content
-        line_ending = my_meta['linesterminatedby'].decode("string-escape")
-        field_ending = my_meta['fieldsterminatedby'].decode("string-escape")
+        line_ending = my_meta['linesTerminatedBy'].decode("string-escape")
+        field_ending = my_meta['fieldsTerminatedBy'].decode("string-escape")
         fields = line.rstrip(line_ending).split(field_ending)
 
         # TODO: Consistency chek ?? fields length should be :
@@ -92,9 +88,7 @@ class DwCALine(CommonEqualityMixin):
             # if field by default, we can find its value directly in <field>
             # attribute
 
-            # f is a BeautifulSoup object, not a dict
-            # => has_key is NOT deprecated here
-            if f.has_key('default'):
+            if f.has_attr('default'):
                 self.data[f['term']] = f['default']
             else:
                 # else, we have to look in core file
@@ -143,7 +137,7 @@ class DwCAReader(object):
 
     def __init__(self, path):
         """Opens the file, reads all metadata and store it in self.meta
-        (BeautifulStoneSoup obj.) Also already open the core file so we've
+        (BeautifulSoup obj.) Also already open the core file so we've
         a file descriptor for further access."""
         self.archive_path = path
 
@@ -199,7 +193,7 @@ class DwCAReader(object):
     def _parse_xml_included_file(self, relative_path):
         """Loads, parse with BeautifulSoup and returns XML file located
         at relative_path."""
-        return BeautifulStoneSoup(self._read_additional_file(relative_path))
+        return BeautifulSoup(self._read_additional_file(relative_path), "xml")
 
     def _unzip(self):
         unzipped_folder = self._create_temporary_folder()
@@ -215,10 +209,10 @@ class DwCAReader(object):
         rmtree(self._unzipped_folder, False)
 
     def _get_core_type(self):
-        return self._metaxml.core['rowtype']
+        return self._metaxml.core['rowType']
 
     def _get_extensions_types(self):
-        return [e['rowtype'] for e in self._metaxml.findAll('extension')]
+        return [e['rowType'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
         return term_url in self.core_terms
@@ -312,7 +306,7 @@ class DwCACSVIterator:
         return self._metadata_section['encoding']
 
     def _get_newline_str(self):
-        return self._metadata_section['linesterminatedby'].decode("string-escape")
+        return self._metadata_section['linesTerminatedBy'].decode("string-escape")
 
     def reset_line_iterator(self):
         self._core_fhandler.seek(0, 0)
@@ -320,6 +314,6 @@ class DwCACSVIterator:
 
     def _get_lines_to_ignore(self):
         try:
-            return int(self._metadata_section['ignoreheaderlines'])
+            return int(self._metadata_section['ignoreHeaderLines'])
         except KeyError:
             return 0

@@ -23,7 +23,7 @@ multiext_path = os.path.join(os.path.dirname(__file__),
 # temporary files
 with DwCAReader(source_path) as dwca:
 
-    # You can read scientific metadata (EML) thru a BeautifulStoneSoup object
+    # You can read scientific metadata (EML) thru a BeautifulSoup object
     print dwca.metadata.prettify()
 
     # You can get inspect archive to discover what is the core type:

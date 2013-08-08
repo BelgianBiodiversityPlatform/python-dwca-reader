@@ -7,9 +7,8 @@
 #                               source_data/dwc_taxon.xml > terms.py
 
 import argparse
-import pickle
 
-from BeautifulSoup import BeautifulStoneSoup
+from bs4 import BeautifulSoup
 
 parser = argparse.ArgumentParser(description="Generate a list of qualnames "
                                              "of Darwin Core terms from XML "
@@ -24,7 +23,7 @@ args = parser.parse_args()
 qualnames = set()
 
 for source_file in args.source_xml:
-    soup = BeautifulStoneSoup(source_file)
+    soup = BeautifulSoup(source_file, "xml")
     # First, extract the RowType itself... (Occcurrence, Taxon, ...)
     qualnames.add(soup.find('extension')['rowtype'])
 

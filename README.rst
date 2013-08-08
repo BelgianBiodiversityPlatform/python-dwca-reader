@@ -41,8 +41,8 @@ Example use
     with DwCAReader('my_archive.zip') as dwca:
         # We can now interact with the 'dwca' object
 
-        # We can read scientific metadata (EML) through a BeautifulStoneSoup object in the 'metadata' attribute
-        # BeautifulStoneSoup is provided by BS3: http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html
+        # We can read scientific metadata (EML) through a BeautifulSoup object in the 'metadata' attribute
+        # See BeautifulSoup 4 documentation: http://www.crummy.com/software/BeautifulSoup/bs4/doc
         print dwca.metadata.prettify()
 
         # We can get inspect archive to discover what is the Core Type (Occurrence, Taxon, ...):
@@ -184,13 +184,13 @@ The new version of the GBIF Data Portal (to be released later this year) will al
 
         # 2.1) At the archive level, they can be accessed as a dict:
         results.source_metadata
-        # {'dataset1_UUID': <dataset1 EML (BeautifulStoneSoup instance)>,
-        #  'dataset2_UUID': <dataset2 EML (BeautifulStoneSoup instance)>, ...}
+        # {'dataset1_UUID': <dataset1 EML (BeautifulSoup instance)>,
+        #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
 
         # 2.2 From a DwCALine instance, we can get back to the metadata of its source dataset:
         first_line = results.line[0]
         first_line.source_metadata
-        => <Source dataset EML (BeautifulStoneSoup instance)>
+        => <Source dataset EML (BeautifulSoup instance)>
 
 
 Run the test suite
