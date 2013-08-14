@@ -1,6 +1,9 @@
 import unittest
 import os
+import tempfile
 
+
+from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader, DwCALine
@@ -103,8 +106,8 @@ class TestDwCAReader(unittest.TestCase):
     MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
     UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
 
-    def test_cleanup(self):
-        """Test no temporary files are left after execution"""
+    def test_auto_cleanup(self):
+        """Test no temporary files are left after execution (using 'with' statement)."""
         num_files_before = len(os.listdir('.'))
 
         with DwCAReader(self.BASIC_ARCHIVE_PATH):
@@ -113,6 +116,19 @@ class TestDwCAReader(unittest.TestCase):
         num_files_after = len(os.listdir('.'))
 
         self.assertEqual(num_files_before, num_files_after)
+
+    def test_manual_cleanup(self):
+        """Test no temporary files are left after execution (calling close() manually)."""
+
+        num_files_before = len(os.listdir('.'))
+
+        r = DwCAReader(self.BASIC_ARCHIVE_PATH)
+        r.close()
+
+        num_files_after = len(os.listdir('.'))
+
+        self.assertEqual(num_files_before, num_files_after)
+
 
     def test_temporary_folder(self):
         """Test a temporary folder is created during execution
@@ -407,6 +423,14 @@ class TestDwCAReader(unittest.TestCase):
                          u'http://rs.tdwg.org/dwc/terms/phylum'])
 
             self.assertEqual(fields, star_dwca.core_terms)
+
+    def test_not_zipfile(self):
+        """ Ensure BadZipfile is raised when passed archive is not  a zip file."""
+        invalid_origin_file = tempfile.NamedTemporaryFile()
+
+        with self.assertRaises(BadZipfile):
+            with DwCAReader(invalid_origin_file.name):
+                pass
 
 
 if __name__ == "__main__":
