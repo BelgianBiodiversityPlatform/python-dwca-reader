@@ -101,7 +101,7 @@ class DwCALine(CommonEqualityMixin):
 
         if self.from_core:
             for ext_meta in metadata.findAll('extension'):
-                csv = DwCACSVIterator(ext_meta, unzipped_folder)
+                csv = _DwCACSVIterator(ext_meta, unzipped_folder)
                 for l in csv.lines():
                     tmp = DwCALine(l, False, ext_meta)
                     if tmp.core_id == self.id:
@@ -141,7 +141,7 @@ class DwCAReader(object):
         a file descriptor for further access."""
         self.archive_path = path
 
-        self._unzipped_folder = self._unzip()
+        self._unzipped_folder_path = self._unzip()
         self._metaxml = self._parse_metaxml_file()
 
         # Load the (scientific) metadata file and store its representation
@@ -150,8 +150,8 @@ class DwCAReader(object):
         self.core_rowtype = self._get_core_type()
         self.extensions_rowtype = self._get_extensions_types()
 
-        self._corefile = DwCACSVIterator(self._metaxml.core,
-                                         self._unzipped_folder)
+        self._corefile = _DwCACSVIterator(self._metaxml.core,
+                                          self._unzipped_folder_path)
 
     @property
     #TODO: decide, test and document what we guarantee about ordering
@@ -169,7 +169,7 @@ class DwCAReader(object):
 
     def _read_additional_file(self, relative_path):
         """Read an additional file in the archive and return its content."""
-        path = os.path.join(self._unzipped_folder, relative_path)
+        path = os.path.join(self._unzipped_folder_path, relative_path)
         return open(path).read()
 
     def _create_temporary_folder(self):
@@ -196,6 +196,7 @@ class DwCAReader(object):
         return BeautifulSoup(self._read_additional_file(relative_path), "xml")
 
     def _unzip(self):
+        """Unzip the current archive in a temporary directory and returns its absolute path."""
         unzipped_folder = self._create_temporary_folder()
         #TODO: check content of file!!!! It may, for example contains
         #absolute path (see zipfile doc)
@@ -206,7 +207,7 @@ class DwCAReader(object):
         self._cleanup_temporary_folder()
 
     def _cleanup_temporary_folder(self):
-        rmtree(self._unzipped_folder, False)
+        rmtree(self._unzipped_folder_path, False)
 
     def _get_core_type(self):
         return self._metaxml.core['rowType']
@@ -240,7 +241,7 @@ class DwCAReader(object):
             sm = None
 
         for line in self._corefile.lines():
-            yield DwCALine(line, True, self._metaxml, self._unzipped_folder, sm)
+            yield DwCALine(line, True, self._metaxml, self._unzipped_folder_path, sm)
 
 
 class GBIFResultsReader(DwCAReader):
@@ -253,7 +254,7 @@ class GBIFResultsReader(DwCAReader):
     # two additional files to give details about IP rights and citations
     # We make them accessible trough two simples properties
     def _dataset_metadata_to_dict(self, folder):
-        dataset_dir = os.path.join(self._unzipped_folder, folder)
+        dataset_dir = os.path.join(self._unzipped_folder_path, folder)
 
         r = {}
         for f in os.listdir(dataset_dir):
@@ -272,16 +273,20 @@ class GBIFResultsReader(DwCAReader):
         return self._read_additional_file('rights.txt')
 
 
-# Simple, internal use class used to iterate on a DwcA-enclosed CSV file
-# It initializes itself with the <core> or <extension> section of meta.xml
-class DwCACSVIterator:
-    def __init__(self, metadata_section, unzipped_folder):
-        # metadata_section: <core> or <extension> section of metaxml for
-        # the file we want to iterate on
-        self._metadata_section = metadata_section
-        self._unzipped_folder = unzipped_folder
+class _DwCACSVIterator:
+    """Simple, internal use class used to iterate on a DwcA-enclosed CSV file."""
+    # TODO: Test this class
+    # Not done yet cause issues there will probably make DwCAReader tests fails anyway
+    def __init__(self, metadata_section, unzipped_folder_path):
+        """Initialize the iterator.
 
-        self._core_fhandler = io.open(self._get_filepath(),
+        metadata_section: <core> or <extension> section of metaxml concerning the file to iterate.
+        unzipped_folder_path: absolute path to the directory containing the unzipped archive.
+        """
+        self._metadata_section = metadata_section
+        self._unzipped_folder_path = unzipped_folder_path
+
+        self._core_fhandler = io.open(self.filepath,
                                       mode='r',
                                       encoding=self._get_encoding(),
                                       newline=self._get_newline_str(),
@@ -297,8 +302,10 @@ class DwCACSVIterator:
             else:
                 yield line
 
-    def _get_filepath(self):
-        return os.path.join(self._unzipped_folder,
+    @property
+    def filepath(self):
+        """Returns the absolute path to the 'subject' file."""
+        return os.path.join(self._unzipped_folder_path,
                             self._metadata_section.files.location.string)
 
     def _get_encoding(self):
