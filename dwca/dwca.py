@@ -150,7 +150,7 @@ class DwCAReader(object):
         self.core_rowtype = self._get_core_type()
         self.extensions_rowtype = self._get_extensions_types()
 
-        self._datafile = DwCACSVIterator(self._metaxml.core,
+        self._corefile = DwCACSVIterator(self._metaxml.core,
                                          self._unzipped_folder)
 
     @property
@@ -230,7 +230,7 @@ class DwCAReader(object):
     # We'll have to edit test_lines_property() if we don't guarantee the
     # same order
     def each_line(self):
-        self._datafile.reset_line_iterator()
+        self._corefile.reset_line_iterator()
 
         # Some Archives (Currently GBIF Results) have line-level (source data)
         # In that case, we'll pass all of them to the line.
@@ -239,7 +239,7 @@ class DwCAReader(object):
         except AttributeError:
             sm = None
 
-        for line in self._datafile.lines():
+        for line in self._corefile.lines():
             yield DwCALine(line, True, self._metaxml, self._unzipped_folder, sm)
 
 
@@ -298,9 +298,8 @@ class DwCACSVIterator:
                 yield line
 
     def _get_filepath(self):
-        # TODO: Replace by os.path.join
-        return (self._unzipped_folder + '/' +
-                self._metadata_section.files.location.string)
+        return os.path.join(self._unzipped_folder,
+                            self._metadata_section.files.location.string)
 
     def _get_encoding(self):
         return self._metadata_section['encoding']

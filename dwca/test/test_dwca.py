@@ -129,7 +129,6 @@ class TestDwCAReader(unittest.TestCase):
 
         self.assertEqual(num_files_before, num_files_after)
 
-
     def test_temporary_folder(self):
         """Test a temporary folder is created during execution
 
