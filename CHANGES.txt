@@ -1,3 +1,4 @@
+v0.3.2, 2013-08-28 -- API: added the dwca.absolute_temporary_path() method.
 v0.3.1, 2013-08-09 -- Bugfix: lxml added as a requirement.
 v0.3.0, 2013-08-08 -- XML parsing (metadata, EML, ...) now uses BeautifulSoup 4 instead of v3.
 v0.2.1, 2013-08-02 -- Added a property (core_terms) to DwCAReader to get a list the DwC terms in use in the core file.
