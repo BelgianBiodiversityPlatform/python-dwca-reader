@@ -96,6 +96,11 @@ Example use
         # Or retrieve a specific line by its id:
         occurrence_number_three = dwca.get_line(3)
 
+        # We can retreive the (absolute) of embedded files
+        # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life cycle.
+        path = dwca.absolute_temporary_path('occurrence.txt')
+
+
 2. Use of Darwin Core Archives using extensions (star schema)
 
 .. code:: python

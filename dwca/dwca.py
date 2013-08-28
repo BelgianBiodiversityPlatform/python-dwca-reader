@@ -167,10 +167,20 @@ class DwCAReader(object):
         else:
             return None
 
+    def absolute_temporary_path(self, relative_path):
+        """Returns the absolute path of the file located at relative_path within the archive.
+
+        Notes:
+            - The file at this path is temporary and will be removed when closing the instance.
+            - File existence is not tested
+        """
+
+        return os.path.abspath(os.path.join(self._unzipped_folder_path, relative_path))
+
     def _read_additional_file(self, relative_path):
         """Read an additional file in the archive and return its content."""
-        path = os.path.join(self._unzipped_folder_path, relative_path)
-        return open(path).read()
+        p = self.absolute_temporary_path(relative_path)
+        return open(p).read()
 
     def _create_temporary_folder(self):
         return mkdtemp()[1]
@@ -196,7 +206,7 @@ class DwCAReader(object):
         return BeautifulSoup(self._read_additional_file(relative_path), "xml")
 
     def _unzip(self):
-        """Unzip the current archive in a temporary directory and returns its absolute path."""
+        """Unzip the current archive in a temporary directory and returns its path."""
         unzipped_folder = self._create_temporary_folder()
         #TODO: check content of file!!!! It may, for example contains
         #absolute path (see zipfile doc)

@@ -106,6 +106,20 @@ class TestDwCAReader(unittest.TestCase):
     MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
     UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
 
+    def test_absolute_temporary_path(self):
+        """Test the absolute_temporary_path() method."""
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+            path_to_occ = dwca.absolute_temporary_path('occurrence.txt')
+            
+            # Is it absolute ?
+            self.assertTrue(os.path.isabs(path_to_occ))
+            # Does file exists ?
+            self.assertTrue(os.path.isfile(path_to_occ))
+            # IS it the correct content ?
+            f = open(path_to_occ)
+            content = f.read()
+            self.assertTrue(content.startswith("id"))
+
     def test_auto_cleanup(self):
         """Test no temporary files are left after execution (using 'with' statement)."""
         num_files_before = len(os.listdir('.'))
