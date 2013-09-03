@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 import os
+import operator
 from tempfile import mkdtemp
 from zipfile import ZipFile
 from shutil import rmtree
@@ -67,6 +68,8 @@ class DwCALine(CommonEqualityMixin):
 
         self.rowtype = my_meta['rowType']
 
+        # TODO: Move line/field stripping to _EmbeddedCSV ??
+
         # fields is a list of the line's content
         line_ending = my_meta['linesTerminatedBy'].decode("string-escape")
         field_ending = my_meta['fieldsTerminatedBy'].decode("string-escape")
@@ -101,7 +104,7 @@ class DwCALine(CommonEqualityMixin):
 
         if self.from_core:
             for ext_meta in metadata.findAll('extension'):
-                csv = _DwCACSVIterator(ext_meta, unzipped_folder)
+                csv = _EmbeddedCSV(ext_meta, unzipped_folder)
                 for l in csv.lines():
                     tmp = DwCALine(l, False, ext_meta)
                     if tmp.core_id == self.id:
@@ -150,8 +153,8 @@ class DwCAReader(object):
         self.core_rowtype = self._get_core_type()
         self.extensions_rowtype = self._get_extensions_types()
 
-        self._corefile = _DwCACSVIterator(self._metaxml.core,
-                                          self._unzipped_folder_path)
+        self._corefile = _EmbeddedCSV(self._metaxml.core,
+                                      self._unzipped_folder_path)
 
     @property
     #TODO: decide, test and document what we guarantee about ordering
@@ -283,16 +286,15 @@ class GBIFResultsReader(DwCAReader):
         return self._read_additional_file('rights.txt')
 
 
-class _DwCACSVIterator:
-    """Simple, internal use class used to iterate on a DwcA-enclosed CSV file."""
+class _EmbeddedCSV:
+    """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
+    # In the future it could make sense to make it public
     def __init__(self, metadata_section, unzipped_folder_path):
-        """Initialize the iterator.
-
-        metadata_section: <core> or <extension> section of metaxml concerning the file to iterate.
-        unzipped_folder_path: absolute path to the directory containing the unzipped archive.
-        """
+        #metadata_section: <core> or <extension> section of metaxml concerning the file to iterate.
+        #unzipped_folder_path: absolute path to the directory containing the unzipped archive.
+        
         self._metadata_section = metadata_section
         self._unzipped_folder_path = unzipped_folder_path
 
@@ -311,6 +313,24 @@ class _DwCACSVIterator:
                 continue
             else:
                 yield line
+
+    @property
+    def headers(self):
+        """Returns a list of (ordered) column names that can be used to create a header line."""
+        field_tags = self._metadata_section.find_all('field')
+
+        columns = {}
+        
+        for tag in field_tags:
+            columns[int(tag['index'])] = tag['term']
+
+        # In addition to DwC terms, we may also have id or core_id columns
+        if self._metadata_section.id:
+            columns[int(self._metadata_section.id['index'])] = 'id'
+        if self._metadata_section.coreid:
+            columns[int(self._metadata_section.id['coreindex'])] = 'coreid'
+
+        return [columns[f] for f in sorted(columns.iterkeys())]
 
     @property
     def filepath(self):
