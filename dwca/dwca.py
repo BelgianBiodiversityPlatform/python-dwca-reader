@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 import io
 import os
-import operator
 from tempfile import mkdtemp
 from zipfile import ZipFile
 from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from .utils import CommonEqualityMixin
 
-
-# Two lines are considered equals if both are instances of DwCALine and
-# share the same properties
-class DwCALine(CommonEqualityMixin):
+class DwCALine():
     # TODO: if core line: display the number of related extension lines ?
     # TODO: test string representation
     def __str__(self):
@@ -80,6 +75,9 @@ class DwCALine(CommonEqualityMixin):
 
         # If core, we have an id; if extension a coreid
         # TODO: ensure in the norm this is always true
+        self.id = None
+        self.core_id = None
+
         if self.from_core:
             self.id = fields[int(my_meta.id['index'])]
         else:
@@ -128,6 +126,21 @@ class DwCALine(CommonEqualityMixin):
             m = None
 
         self.source_metadata = m
+
+    # Equality, hashing, ...
+    def __key(self):
+        """Returns a tuple representing the line. Common ground between equality and hash."""
+        return (self.from_core, self.from_extension, self.id, self.core_id, self.data,
+                self.extensions, self.source_metadata)
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.__key())
 
 
 class DwCAReader(object):
