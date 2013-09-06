@@ -12,29 +12,31 @@ class DwCALine():
     # TODO: if core line: display the number of related extension lines ?
     # TODO: test string representation
     def __str__(self):
-        txt = "--\n"
-
-        txt += "Rowtype: " + self.rowtype + "\n"
-
+        txt = ("--\n"
+               "Rowtype: {rowtype}\n"
+               "Source: {source_str}\n"
+               "{id_line}\n"
+               "Reference extension lines: {extension_flag}\n"
+               "Reference source metadata: {source_metadata_flag}\n"
+               "Data: {data}\n"
+               "--\n")
+        
         if self.from_core:
-            txt += "Source: Core file\n"
+            source_str = "Core file"
+            id_str = "Line id: " + self.id
         else:
-            txt += "Source: Extension file\n"
+            source_str = "Extension file"
+            id_str = "Core Line id: " + self.id
 
-        try:
-            txt += 'Line ID: ' + self.id + "\n"
-        except AttributeError:
-            pass
+        extension_flag = "Yes" if (len(self.extensions) > 0) else "No"
+        source_metadata_flag = "Yes" if self.source_metadata else "No"
 
-        try:
-            txt += 'Core ID: ' + self.core_id + "\n"
-        except AttributeError:
-            pass
-
-        txt += "Data: " + str(self.data)
-
-        txt += '\n--'
-        return txt
+        return txt.format(rowtype=self.rowtype,
+                          source_str=source_str,
+                          data=self.data,
+                          id_line=id_str,
+                          extension_flag=extension_flag,
+                          source_metadata_flag=source_metadata_flag)
 
     def __init__(self, line, is_core_type, metadata, unzipped_folder=None,
                  archive_source_metadata=None):
