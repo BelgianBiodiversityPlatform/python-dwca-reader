@@ -14,11 +14,12 @@ from ..darwincore.utils import qualname as qn
 def _sample_data_path(filename):
     return os.path.join(os.path.dirname(__file__), 'sample_files', filename)
 
+# TODO: Move other class constants here so they can be used in any test
+GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
+
 
 class TestGBIFResultsReader(unittest.TestCase):
     """Unit tests for GBIFResultsReader class."""
-
-    GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
     MISSINGMETA_PATH = _sample_data_path('gbif-results-lacks-s-metadata.zip')
 
     CITATIONS_CONTENT = """Please cite this data as follows, and pay attention
@@ -29,7 +30,7 @@ Rights as supplied: Not supplied"""
 
     def test_dwcareader_features(self):
         """Ensure we didn't break basic DwCAReader features."""
-        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(158, len(results_dwca.lines))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
                              results_dwca.core_rowtype)
@@ -41,16 +42,16 @@ Rights as supplied: Not supplied"""
     # Specific GBIFResultsReader feature
     def test_citations_access(self):
         """Check the content of citations.txt is accessible."""
-        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(self.CITATIONS_CONTENT, results_dwca.citations)
 
     def test_rights_access(self):
         """Check the content of rights.txt is accessible."""
-        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(self.RIGHTS_CONTENT, results_dwca.rights)
 
     def test_source_metadata(self):
-        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results:
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
             # We have 23 EML files in dataset/
             self.assertEqual(23, len(results.source_metadata))
             # Assert a key is present
@@ -71,7 +72,7 @@ Rights as supplied: Not supplied"""
                              'Rob')
 
     def test_line_source_metadata(self):
-        with GBIFResultsReader(self.GBIF_RESULTS_PATH) as results:
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
             first_line = results.get_line('607759330')
             m = first_line.source_metadata
 
@@ -96,6 +97,7 @@ Rights as supplied: Not supplied"""
 
 
 class TestDwCAReader(unittest.TestCase):
+    # TODO: Move line-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
     BASIC_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive.zip')
@@ -105,6 +107,43 @@ class TestDwCAReader(unittest.TestCase):
     EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
     MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
     UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
+
+    def test_line_human_representation(self):
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as basic_dwca:
+            l = basic_dwca.lines[0]
+            l_repr = str(l)
+            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
+            self.assertIn("Source: Core file", l_repr)
+            self.assertIn("Line id:", l_repr)
+            self.assertIn("Reference extension lines: No", l_repr)
+            self.assertIn("Reference source metadata: No", l_repr)
+            self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
+                          l_repr)
+
+        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+            l = star_dwca.lines[0]
+            l_repr = str(l)
+            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Taxon", l_repr)
+            self.assertIn("Source: Core file", l_repr)
+            self.assertIn("Line id: 1", l_repr)
+            self.assertIn("Reference extension lines: Yes", l_repr)
+            self.assertIn("Reference source metadata: No", l_repr)
+
+            extension_l_repr = str(l.extensions[0])
+            self.assertIn("Rowtype: http://rs.gbif.org/terms/1.0/VernacularName", extension_l_repr)
+            self.assertIn("Source: Extension file", extension_l_repr)
+            self.assertIn("Core Line id: 1", extension_l_repr)
+            self.assertIn("ostrich", extension_l_repr)
+            self.assertIn("Reference extension lines: No", extension_l_repr)
+            self.assertIn("Reference source metadata: No", extension_l_repr)
+
+        with GBIFResultsReader(GBIF_RESULTS_PATH) as gbif_dwca:
+            l = gbif_dwca.lines[0]
+            l_repr = str(l)
+
+            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
+            self.assertIn("Source: Core file", l_repr)
+            self.assertIn("Reference source metadata: Yes", l_repr)
 
     def test_absolute_temporary_path(self):
         """Test the absolute_temporary_path() method."""

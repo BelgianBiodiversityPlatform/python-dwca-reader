@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 
 
 class DwCALine():
-    # TODO: if core line: display the number of related extension lines ?
     # TODO: test string representation
     def __str__(self):
         txt = ("--\n"
@@ -23,10 +22,10 @@ class DwCALine():
         
         if self.from_core:
             source_str = "Core file"
-            id_str = "Line id: " + self.id
+            id_str = "Line id: " + str(self.id)
         else:
             source_str = "Extension file"
-            id_str = "Core Line id: " + self.id
+            id_str = "Core Line id: " + str(self.core_id)
 
         extension_flag = "Yes" if (len(self.extensions) > 0) else "No"
         source_metadata_flag = "Yes" if self.source_metadata else "No"
