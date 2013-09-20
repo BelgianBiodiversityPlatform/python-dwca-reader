@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 # Make it abstract ? Private ?
 class DwCALine(object):
+    # TODO: Split string representation between subclasses ?
     def __str__(self):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
@@ -27,8 +28,8 @@ class DwCALine(object):
             source_str = "Extension file"
             id_str = "Core Line id: " + str(self.core_id)
 
-        extension_flag = "Yes" if (len(self.extensions) > 0) else "No"
-        source_metadata_flag = "Yes" if self.source_metadata else "No"
+        extension_flag = "Yes" if (hasattr(self, 'extensions') and (len(self.extensions) > 0)) else "No"
+        source_metadata_flag = "Yes" if (hasattr(self, 'source_metadata') and self.source_metadata) else "No"
 
         return txt.format(rowtype=self.rowtype,
                           source_str=source_str,
@@ -37,8 +38,7 @@ class DwCALine(object):
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, line, metadata, unzipped_folder=None,
-                 archive_source_metadata=None):
+    def __init__(self, line, metadata, unzipped_folder=None):
         # line is the raw line data, directly from file
         #
         # source metadata: dict of all the source metadata available in the
@@ -48,23 +48,14 @@ class DwCALine(object):
 
         # TODO: Move line/field stripping to _EmbeddedCSV ??
 
-        # fields is a list of the line's content
+        # self.raw_fields is a list of the line's content
         line_ending = self.metadata_section['linesTerminatedBy'].decode("string-escape")
         field_ending = self.metadata_section['fieldsTerminatedBy'].decode("string-escape")
-        fields = line.rstrip(line_ending).split(field_ending)
+        self.raw_fields = line.rstrip(line_ending).split(field_ending)
+        # TODO: raw_fields is a new property: to test
 
-        # TODO: Consistency chek ?? fields length should be :
-        # num of fields described in core_meta + 2 (id and \n)
-
-        # If core, we have an id; if extension a coreid
-        # TODO: ensure in the norm this is always true
-        self.id = None
-        self.core_id = None
-
-        if self.from_core:
-            self.id = fields[int(self.metadata_section.id['index'])]
-        else:
-            self.core_id = fields[int(self.metadata_section.coreid['index'])]
+        # TODO: Consistency chek ?? self.raw_fields length should be :
+        # num of self.raw_fields described in core_meta + 2 (id and \n)
 
         self.data = {}
 
@@ -76,20 +67,29 @@ class DwCALine(object):
                 self.data[f['term']] = f['default']
             else:
                 # else, we have to look in core file
-                self.data[f['term']] = fields[int(f['index'])]
+                self.data[f['term']] = self.raw_fields[int(f['index'])]
 
-        # Core line: we also need to store related (extension) lines in the
-        # extensions attribute
 
+class DwCACoreLine(DwCALine):
+    def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
+        # metadata = whole metaxml (we'll need it to discover extensions)
+        self.metadata_section = metadata.core
+
+        super(DwCACoreLine, self).__init__(line, metadata, unzipped_folder)
+
+        self.from_core = True
+        self.from_extension = False
+
+        self.id = self.raw_fields[int(self.metadata_section.id['index'])]
+
+        # Extension load
         self.extensions = []
-
-        if self.from_core:
-            for ext_meta in metadata.findAll('extension'):
-                csv = _EmbeddedCSV(ext_meta, unzipped_folder)
-                for l in csv.lines():
-                    tmp = DwCAExtensionLine(l, ext_meta)
-                    if tmp.core_id == self.id:
-                        self.extensions.append(tmp)
+        for ext_meta in metadata.findAll('extension'):
+            csv = _EmbeddedCSV(ext_meta, unzipped_folder)
+            for l in csv.lines():
+                tmp = DwCAExtensionLine(l, ext_meta)
+                if tmp.core_id == self.id:
+                    self.extensions.append(tmp)
 
         # If we have additional metadata about the dataset we're originally
         # from (AKA source/line-level metadata), make it accessible trough
@@ -110,11 +110,12 @@ class DwCALine(object):
 
         self.source_metadata = m
 
-    # Equality, hashing, ...
+    # __key is different between DwCACoreLine and DwCAExtensionLine, while eq, ne and hash are identical
+    # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Returns a tuple representing the line. Common ground between equality and hash."""
-        return (self.from_core, self.from_extension, self.id, self.core_id, self.data,
-                self.extensions, self.source_metadata)
+        return (self.from_core, self.from_extension, self.metadata_section, self.id, self.data,
+                self.extensions, self.source_metadata, self.rowtype, self.raw_fields)
 
     def __eq__(self, other):
         return self.__key() == other.__key()
@@ -126,26 +127,32 @@ class DwCALine(object):
         return hash(self.__key())
 
 
-class DwCACoreLine(DwCALine):
-    def __init__(self, line, metadata, unzipped_folder, archive_source_metadata):
-        # metadata = whole metaxml (we'll need it to discover extensions)
-        self.from_core = True
-        self.from_extension = False
-        self.metadata_section = metadata.core
-
-        super(DwCACoreLine, self).__init__(line, metadata, unzipped_folder, archive_source_metadata)
-
-    
-
 class DwCAExtensionLine(DwCALine):
     def __init__(self, line, metadata):
         # metadata = only the sectiontaht concerns me
-        self.from_core = False
-        self.from_extension = True
         self.metadata_section = metadata
 
         super(DwCAExtensionLine, self).__init__(line, metadata)
 
+        self.from_core = False
+        self.from_extension = True
+
+        self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
+        self.id = None
+
+    def __key(self):
+        """Returns a tuple representing the line. Common ground between equality and hash."""
+        return (self.from_core, self.from_extension, self.metadata_section, self.core_id,
+                self.data, self.rowtype, self.raw_fields)
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.__key())
 
 
 class DwCAReader(object):
