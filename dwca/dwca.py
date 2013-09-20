@@ -8,7 +8,8 @@ from shutil import rmtree
 from bs4 import BeautifulSoup
 
 
-class DwCALine():
+# Make it abstract ? Private ?
+class DwCALine(object):
     def __str__(self):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
@@ -36,38 +37,20 @@ class DwCALine():
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, line, is_core_type, metadata, unzipped_folder=None,
+    def __init__(self, line, metadata, unzipped_folder=None,
                  archive_source_metadata=None):
         # line is the raw line data, directly from file
-        # is_core is a flag:
-        #   if True:
-        #        - metadata contains the whole metaxml
-        #        - it will also recursively load the related lines
-        #          in the 'extensions' attribute (and unzipped_folder
-        #          should be provided for this)
-        #   else:
-        #        - metadata contains only the <extension> section about our
-        #          file
-        #        - we don't load other lines recursively
         #
         # source metadata: dict of all the source metadata available in the
         # archive (if applicable)
 
-        self.from_core = is_core_type
-        self.from_extension = not self.from_core
-
-        if self.from_core:
-            my_meta = metadata.core
-        else:
-            my_meta = metadata
-
-        self.rowtype = my_meta['rowType']
+        self.rowtype = self.my_meta['rowType']
 
         # TODO: Move line/field stripping to _EmbeddedCSV ??
 
         # fields is a list of the line's content
-        line_ending = my_meta['linesTerminatedBy'].decode("string-escape")
-        field_ending = my_meta['fieldsTerminatedBy'].decode("string-escape")
+        line_ending = self.my_meta['linesTerminatedBy'].decode("string-escape")
+        field_ending = self.my_meta['fieldsTerminatedBy'].decode("string-escape")
         fields = line.rstrip(line_ending).split(field_ending)
 
         # TODO: Consistency chek ?? fields length should be :
@@ -79,13 +62,13 @@ class DwCALine():
         self.core_id = None
 
         if self.from_core:
-            self.id = fields[int(my_meta.id['index'])]
+            self.id = fields[int(self.my_meta.id['index'])]
         else:
-            self.core_id = fields[int(my_meta.coreid['index'])]
+            self.core_id = fields[int(self.my_meta.coreid['index'])]
 
         self.data = {}
 
-        for f in my_meta.findAll('field'):
+        for f in self.my_meta.findAll('field'):
             # if field by default, we can find its value directly in <field>
             # attribute
 
@@ -104,7 +87,7 @@ class DwCALine():
             for ext_meta in metadata.findAll('extension'):
                 csv = _EmbeddedCSV(ext_meta, unzipped_folder)
                 for l in csv.lines():
-                    tmp = DwCALine(l, False, ext_meta)
+                    tmp = DwCAExtensionLine(l, ext_meta)
                     if tmp.core_id == self.id:
                         self.extensions.append(tmp)
 
@@ -141,6 +124,24 @@ class DwCALine():
 
     def __hash__(self):
         return hash(self.__key())
+
+
+class DwCACoreLine(DwCALine):
+    def __init__(self, line, metadata, unzipped_folder, archive_source_metadata):
+        # metadata = whole metaxml (we'll need it to discover extensions)
+        self.from_core = True
+        self.from_extension = False
+        self.my_meta = metadata.core
+        super(DwCACoreLine, self).__init__(line, metadata, unzipped_folder, archive_source_metadata)
+    
+
+class DwCAExtensionLine(DwCALine):
+    def __init__(self, line, metadata):
+        # metadata = only the sectiontaht concerns me
+        self.from_core = False
+        self.from_extension = True
+        self.my_meta = metadata
+        super(DwCAExtensionLine, self).__init__(line, metadata)
 
 
 class DwCAReader(object):
@@ -267,7 +268,7 @@ class DwCAReader(object):
             sm = None
 
         for line in self._corefile.lines():
-            yield DwCALine(line, True, self._metaxml, self._unzipped_folder_path, sm)
+            yield DwCACoreLine(line, self._metaxml, self._unzipped_folder_path, sm)
 
 
 class GBIFResultsReader(DwCAReader):
