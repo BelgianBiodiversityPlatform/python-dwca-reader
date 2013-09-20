@@ -6,7 +6,8 @@ import tempfile
 from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
-from ..dwca import DwCAReader, GBIFResultsReader, DwCALine
+from ..dwca import DwCAReader, GBIFResultsReader
+from ..lines import DwCALine
 from ..darwincore.utils import qualname as qn
 
 
