@@ -44,13 +44,13 @@ class DwCALine(object):
         # source metadata: dict of all the source metadata available in the
         # archive (if applicable)
 
-        self.rowtype = self.my_meta['rowType']
+        self.rowtype = self.metadata_section['rowType']
 
         # TODO: Move line/field stripping to _EmbeddedCSV ??
 
         # fields is a list of the line's content
-        line_ending = self.my_meta['linesTerminatedBy'].decode("string-escape")
-        field_ending = self.my_meta['fieldsTerminatedBy'].decode("string-escape")
+        line_ending = self.metadata_section['linesTerminatedBy'].decode("string-escape")
+        field_ending = self.metadata_section['fieldsTerminatedBy'].decode("string-escape")
         fields = line.rstrip(line_ending).split(field_ending)
 
         # TODO: Consistency chek ?? fields length should be :
@@ -62,13 +62,13 @@ class DwCALine(object):
         self.core_id = None
 
         if self.from_core:
-            self.id = fields[int(self.my_meta.id['index'])]
+            self.id = fields[int(self.metadata_section.id['index'])]
         else:
-            self.core_id = fields[int(self.my_meta.coreid['index'])]
+            self.core_id = fields[int(self.metadata_section.coreid['index'])]
 
         self.data = {}
 
-        for f in self.my_meta.findAll('field'):
+        for f in self.metadata_section.findAll('field'):
             # if field by default, we can find its value directly in <field>
             # attribute
 
@@ -131,8 +131,10 @@ class DwCACoreLine(DwCALine):
         # metadata = whole metaxml (we'll need it to discover extensions)
         self.from_core = True
         self.from_extension = False
-        self.my_meta = metadata.core
+        self.metadata_section = metadata.core
+
         super(DwCACoreLine, self).__init__(line, metadata, unzipped_folder, archive_source_metadata)
+
     
 
 class DwCAExtensionLine(DwCALine):
@@ -140,8 +142,10 @@ class DwCAExtensionLine(DwCALine):
         # metadata = only the sectiontaht concerns me
         self.from_core = False
         self.from_extension = True
-        self.my_meta = metadata
+        self.metadata_section = metadata
+
         super(DwCAExtensionLine, self).__init__(line, metadata)
+
 
 
 class DwCAReader(object):
