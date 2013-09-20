@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 
 
 class DwCALine():
-    # TODO: test string representation
     def __str__(self):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
