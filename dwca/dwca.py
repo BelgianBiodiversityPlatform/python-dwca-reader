@@ -38,7 +38,7 @@ class DwCALine(object):
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, line, metadata, unzipped_folder=None):
+    def __init__(self, line, unzipped_folder=None):
         # line is the raw line data, directly from file
         #
         # source metadata: dict of all the source metadata available in the
@@ -75,7 +75,7 @@ class DwCACoreLine(DwCALine):
         # metadata = whole metaxml (we'll need it to discover extensions)
         self.metadata_section = metadata.core
 
-        super(DwCACoreLine, self).__init__(line, metadata, unzipped_folder)
+        super(DwCACoreLine, self).__init__(line, unzipped_folder)
 
         self.from_core = True
         self.from_extension = False
@@ -132,7 +132,7 @@ class DwCAExtensionLine(DwCALine):
         # metadata = only the sectiontaht concerns me
         self.metadata_section = metadata
 
-        super(DwCAExtensionLine, self).__init__(line, metadata)
+        super(DwCAExtensionLine, self).__init__(line)
 
         self.from_core = False
         self.from_extension = True
