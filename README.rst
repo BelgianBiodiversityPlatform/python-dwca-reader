@@ -163,7 +163,7 @@ Example use
 
 4. GBIF Data Portal exports
 
-The new version of the GBIF Data Portal (to be released later this year) will allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ that can also be read with this library in two different ways:
+The new version of the GBIF Data Portal (to be released later this year) will allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see `Description of the GBIF Data Portal Occurrence download format`_) that can also be read with this library in two different ways:
 
 - As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard data.
 - Via the specific ``GBIFResultsReader``, see example below:
@@ -197,37 +197,13 @@ The new version of the GBIF Data Portal (to be released later this year) will al
         first_line.source_metadata
         => <Source dataset EML (BeautifulSoup instance)>
 
+Other documentation
+===================
 
-Run the test suite
-------------------
-
-::
-    
-    $ pip install nose
-    $ nosetests
-
-Test coverage can easily be obtained after installing `coverage.py`_
-
-::
-
-    $ nosetests --with-coverage --cover-erase --cover-package=dwca
-    .....................
-    Name                    Stmts   Miss  Cover   Missing
-    -----------------------------------------------------
-    dwca                        0      0   100%
-    dwca.darwincore             0      0   100%
-    dwca.darwincore.terms       1      0   100%
-    dwca.darwincore.utils       3      0   100%
-    dwca.dwca                 130     16    88%   23-45
-    dwca.utils                  5      1    80%   12
-    -----------------------------------------------------
-    TOTAL                     139     17    88%
-    ----------------------------------------------------------------------
-    Ran 21 tests in 0.830s
-
-    OK
+- `Contributing <doc/contributing.rst>`_
+- `Description of the GBIF Data Portal Occurrence download format`_
 
 
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
 .. _IPT: https://code.google.com/p/gbif-providertoolkit/
-.. _coverage.py: http://nedbatchelder.com/code/coverage/
+.. _Description of the GBIF Data Portal Occurrence download format: doc/gbif_results.rst
