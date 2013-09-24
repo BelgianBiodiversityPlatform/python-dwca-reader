@@ -142,9 +142,6 @@ class GBIFResultsReader(DwCAReader):
 
         self.source_metadata = self._dataset_metadata_to_dict('dataset')
 
-    # Compared to a standard DwC-A, GBIF results export contains
-    # two additional files to give details about IP rights and citations
-    # We make them accessible trough two simples properties
     def _dataset_metadata_to_dict(self, folder):
         dataset_dir = os.path.join(self._unzipped_folder_path, folder)
 
@@ -155,6 +152,10 @@ class GBIFResultsReader(DwCAReader):
                 r[key] = self._parse_xml_included_file(os.path.join(folder, f))
 
         return r
+
+    # Compared to a standard DwC-A, GBIF results export contains
+    # two additional files to give details about IP rights and citations
+    # We make them accessible trough two simples properties
 
     @property
     def citations(self):
