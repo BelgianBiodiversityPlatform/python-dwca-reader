@@ -73,6 +73,7 @@ Example use
         # Finally, let's iterate over the archive lines and get the data:
         for line in dwca.each_line():
             # line is an instance of DwCACoreLine
+            # each_line() returns them following their order of appearance in the core file
 
             # Print can be used for debugging purposes...
             print line

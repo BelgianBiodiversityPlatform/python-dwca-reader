@@ -273,9 +273,15 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertIsInstance(line, DwCACoreLine)
 
     def test_iterate_order(self):
-        """Test that the order of the core file is respected when iterating."""
+        """Test that the order of the core file is respected when iterating with each_line()."""
         # This is also probably tested inderectly elsewhere, but this is the right place :)
-        pass
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+            l = list(dwca.each_line())
+            # Lines are ordered like this: id 4-1-3-2
+            self.assertEqual(int(l[0].id), 4)
+            self.assertEqual(int(l[1].id), 1)
+            self.assertEqual(int(l[2].id), 3)
+            self.assertEqual(int(l[3].id), 2)
 
     def test_iterate_multiple_calls(self):
         with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
