@@ -119,10 +119,8 @@ class DwCAReader(object):
     def _get_metadata_filename(self):
         return self._metaxml.archive['metadata']
 
-    #TODO: decide, test and document what we guarantee about ordering
-    # We'll have to edit test_lines_property() if we don't guarantee the
-    # same order
     def each_line(self):
+        """Iterates, in order, over each (core) line of the Archive."""
         self._corefile.reset_line_iterator()
 
         # Some Archives (Currently GBIF Results) have line-level (source data)

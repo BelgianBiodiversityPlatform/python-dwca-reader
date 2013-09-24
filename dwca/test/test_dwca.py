@@ -7,7 +7,7 @@ from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader
-from ..lines import DwCALine
+from ..lines import DwCACoreLine
 from ..darwincore.utils import qualname as qn
 
 
@@ -30,7 +30,7 @@ class TestGBIFResultsReader(unittest.TestCase):
 Rights as supplied: Not supplied"""
 
     def test_dwcareader_features(self):
-        """Ensure we didn't break basic DwCAReader features."""
+        """Ensure we didn't break inherited basic DwCAReader features."""
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(158, len(results_dwca.lines))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
@@ -107,6 +107,7 @@ class TestDwCAReader(unittest.TestCase):
     DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
     EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
     MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
+    IDS_ARCHIVE_PATH = _sample_data_path('dwca-ids.zip')
     UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
 
     def test_line_human_representation(self):
@@ -266,10 +267,15 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(2, len([l for l in dwca.each_line()]))
 
     def test_iterate_dwcalines(self):
-        """Test the each_line() method allows iterating over DwCALines"""
+        """Test the each_line() method allows iterating over DwCACoreLines"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
             for line in dwca.each_line():
-                self.assertIsInstance(line, DwCALine)
+                self.assertIsInstance(line, DwCACoreLine)
+
+    def test_iterate_order(self):
+        """Test that the order of the core file is respected when iterating."""
+        # This is also probably tested inderectly elsewhere, but this is the right place :)
+        pass
 
     def test_iterate_multiple_calls(self):
         with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
@@ -280,7 +286,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             # Number can be passed as a string....
             l = dwca.get_line('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
@@ -288,7 +294,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_multiple_calls(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             l = dwca.get_line('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
@@ -300,14 +306,14 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_other(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
-            # .Passed as an integer, conversion will be tried...
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+            # Passed as an integer, conversion will be tried...
             l = dwca.get_line(3)
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
     def test_get_inexistent_line(self):
         """ Ensure get_line() returns None if we ask it an unexistent line. """
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             self.assertEqual(None, dwca.get_line(8000))
 
     def test_read_core_value(self):
