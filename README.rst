@@ -95,7 +95,7 @@ Example use
         lines = dwca.lines
 
         # Or retrieve a specific line by its id:
-        occurrence_number_three = dwca.get_line(3)
+        occurrence_number_three = dwca.get_line_by_id(3)
 
         # We can retreive the (absolute) of embedded files
         # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life cycle.

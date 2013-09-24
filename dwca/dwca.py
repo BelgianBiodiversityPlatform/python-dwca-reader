@@ -41,7 +41,7 @@ class DwCAReader(object):
         """Get a list containing all (core) lines of the archive"""
         return list(self.each_line())
 
-    def get_line(self, line_id):
+    def get_line_by_id(self, line_id):
         """Get the line whose id is line_id."""
         for line in self.each_line():
             if line.id == str(line_id):

@@ -74,7 +74,7 @@ Rights as supplied: Not supplied"""
 
     def test_line_source_metadata(self):
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
-            first_line = results.get_line('607759330')
+            first_line = results.get_line_by_id('607759330')
             m = first_line.source_metadata
 
             self.assertIsInstance(m, BeautifulSoup)
@@ -82,7 +82,7 @@ Rights as supplied: Not supplied"""
                              individualName.givenName.contents[0],
                              'Stanley')
 
-            last_line = results.get_line('782700656')
+            last_line = results.get_line_by_id('782700656')
             m = last_line.source_metadata
 
             self.assertIsInstance(m, BeautifulSoup)
@@ -93,7 +93,7 @@ Rights as supplied: Not supplied"""
         with GBIFResultsReader(self.MISSINGMETA_PATH) as results:
             # We have source metadata, but not for all datasets/line...
             # We sould have None in this cases
-            first_line = results.get_line('607759330')
+            first_line = results.get_line_by_id('607759330')
             self.assertEqual(None, first_line.source_metadata)
 
 
@@ -294,19 +294,19 @@ class TestDwCAReader(unittest.TestCase):
 
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             # Number can be passed as a string....
-            l = dwca.get_line('3')
+            l = dwca.get_line_by_id('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
     def test_get_line_by_id_multiple_calls(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
-            l = dwca.get_line('3')
+            l = dwca.get_line_by_id('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
             # If iterator is not properly reset, None will be returned
             # the second time
-            l = dwca.get_line('3')
+            l = dwca.get_line_by_id('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
     def test_get_line_by_id_other(self):
@@ -314,13 +314,13 @@ class TestDwCAReader(unittest.TestCase):
 
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             # Passed as an integer, conversion will be tried...
-            l = dwca.get_line(3)
+            l = dwca.get_line_by_id(3)
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
     def test_get_inexistent_line(self):
-        """ Ensure get_line() returns None if we ask it an unexistent line. """
+        """ Ensure get_line_by_id() returns None if we ask it an unexistent line. """
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
-            self.assertEqual(None, dwca.get_line(8000))
+            self.assertEqual(None, dwca.get_line_by_id(8000))
 
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
