@@ -72,7 +72,7 @@ Example use
 
         # Finally, let's iterate over the archive lines and get the data:
         for line in dwca.each_line():
-            # line is an instance of DwCALine
+            # line is an instance of DwCACoreLine
 
             # Print can be used for debugging purposes...
             print line
@@ -117,13 +117,13 @@ Example use
         core_lines = dwca.lines
 
         # a) Data access
-        # Extension lines are accessible as a list of DwcALine instances in the 'extensions' attribute:
+        # Extension lines are accessible as a list of DwcAExtensionLine instances in the 'extensions' attribute:
         for e in core_lines[0].extensions:
             # Display all extensions line that refers to the first Core line
             print e
 
-        # b) We can now see in a given archive, a DwcALine can come from multiple sources...
-        # Se we can ask it where it's from:
+        # b) DwcACoreLine and DwcAExtensionLine are sublclasses of DwCALine...
+        # Se we can ask a line where it's from:
         print core_lines[0].from_core
         # => True
         print core_lines[0].extensions[0].from_extension
@@ -192,7 +192,7 @@ The new version of the GBIF Data Portal (to be released later this year) will al
         # {'dataset1_UUID': <dataset1 EML (BeautifulSoup instance)>,
         #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
 
-        # 2.2 From a DwCALine instance, we can get back to the metadata of its source dataset:
+        # 2.2 From a DwCACoreLine instance, we can get back to the metadata of its source dataset:
         first_line = results.line[0]
         first_line.source_metadata
         => <Source dataset EML (BeautifulSoup instance)>
