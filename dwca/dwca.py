@@ -11,7 +11,6 @@ from .utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
-    # Define __enter__ and __exit__ to be used with the 'with' statement
     def __enter__(self):
         return self
 
@@ -55,7 +54,7 @@ class DwCAReader(object):
 
         Notes:
             - The file at this path is temporary and will be removed when closing the instance.
-            - File existence is not tested
+            - File existence is not tested.
         """
 
         return os.path.abspath(os.path.join(self._unzipped_folder_path, relative_path))

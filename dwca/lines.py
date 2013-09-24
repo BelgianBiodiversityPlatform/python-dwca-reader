@@ -4,6 +4,7 @@ from .utils import _EmbeddedCSV
 # Make it abstract ? Private ?
 class DwCALine(object):
     # TODO: Split string representation between subclasses ?
+    # (This one should only display the common stuff and be called by others)
     def __str__(self):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
@@ -84,7 +85,7 @@ class DwCACoreLine(DwCALine):
 
         # If this data is not available
         # (because the archive don't provide source metadata or because it
-        # provide some, but not for this dataset, it will be None)
+        # provide some, but not for this line, it will be None)
         field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
 
         if (archive_source_metadata and (field_name in self.data)):
@@ -124,7 +125,6 @@ class DwCAExtensionLine(DwCALine):
         self.from_extension = True
 
         self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
-        self.id = None
 
     def __key(self):
         """Returns a tuple representing the line. Common ground between equality and hash."""
