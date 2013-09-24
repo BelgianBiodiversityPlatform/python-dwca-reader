@@ -277,7 +277,7 @@ class TestDwCAReader(unittest.TestCase):
         # This is also probably tested inderectly elsewhere, but this is the right place :)
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
             l = list(dwca.each_line())
-            # Lines are ordered like this: id 4-1-3-2
+            # Lines are ordered like this in core: id 4-1-3-2
             self.assertEqual(int(l[0].id), 4)
             self.assertEqual(int(l[1].id), 1)
             self.assertEqual(int(l[2].id), 3)
@@ -288,6 +288,20 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(4, len([l for l in dwca.each_line()]))
             # The second time, we can still find 4 lines...
             self.assertEqual(4, len([l for l in dwca.each_line()]))
+
+    def test_get_line_by_index(self):
+        """Test the get_line_by_index() method work as expected"""
+        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+            # Lines are ordered like this in core: id 4-1-3-2
+            first_line = dwca.get_line_by_index(0)
+            self.assertEqual(4, int(first_line.id))
+
+            last_line = dwca.get_line_by_index(3)
+            self.assertEqual(2, int(last_line.id))
+
+            # None returned if bigger than archive (last index: 3)
+            self.assertIsNone(dwca.get_line_by_index(4))
+            self.assertIsNone(dwca.get_line_by_index(1000))
 
     def test_get_line_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'

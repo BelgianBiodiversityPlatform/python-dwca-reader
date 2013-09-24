@@ -42,9 +42,30 @@ class DwCAReader(object):
         return list(self.each_line())
 
     def get_line_by_id(self, line_id):
-        """Get the line whose id is line_id."""
+        """Get the line whose id is line_id.
+
+        It is not alays a good idea to rely on the the line ID, because:
+            - Not all Darwin Core Archives specifies line IDs.
+            - Nothing guarantees that the ID will actually be unique within the archive (depends of
+             the data publisher). In that case, this method don't guarantee which one will be
+             returned.
+        """
         for line in self.each_line():
             if line.id == str(line_id):
+                return line
+        else:
+            return None
+
+    def get_line_by_index(self, index):
+        """Returns a core line according to its index in core file.
+
+        Notes:
+            - First line has index: 0
+            - If index is bigger than LENGTH_OF_COREFILE-1, None is returned
+            - The index is often an appropriate way to unambiguously identify a core line in a DwCA.
+        """
+        for (i, line) in enumerate(self.each_line()):
+            if i == index:
                 return line
         else:
             return None
