@@ -1,4 +1,4 @@
-from .utils import _EmbeddedCSV
+from utils import _EmbeddedCSV
 
 
 # Make it abstract ? Private ?

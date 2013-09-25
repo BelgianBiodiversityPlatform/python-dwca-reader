@@ -6,8 +6,8 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from .lines import DwCACoreLine
-from .utils import _EmbeddedCSV
+from lines import DwCACoreLine
+from utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
@@ -49,6 +49,7 @@ class DwCAReader(object):
             - Nothing guarantees that the ID will actually be unique within the archive (depends of
              the data publisher). In that case, this method don't guarantee which one will be
              returned.
+
         """
         for line in self.each_line():
             if line.id == str(line_id):
