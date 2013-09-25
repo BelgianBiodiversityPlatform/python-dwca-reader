@@ -11,7 +11,7 @@ Running the test suite
     $ pip install nose
     $ nosetests
 
-Test coverage can easily be obtained after installing `coverage.py`_
+Test coverage can be obtained after installing `coverage.py`_
 
 ::
 
@@ -32,5 +32,23 @@ Test coverage can easily be obtained after installing `coverage.py`_
     Ran 34 tests in 3.515s
 
     OK
+
+Building the docs
+-----------------
+
+TODO: Fill this section
+
+Releasing
+---------
+
+* (Ensuring it works, the test coverage is good and the documentation is updated)
+* Update the packaging (version number in setup.py, CHANGES.txt) then run
+    
+::
+
+    $ python setup.py sdist upload
+
+* Update the version in doc/conf.py, then upload the new version of the doc. TODO: detail
+* Create a new tag and push it to GitHub
 
 .. _coverage.py: http://nedbatchelder.com/code/coverage/

@@ -45,10 +45,10 @@ class DwCAReader(object):
         """Get the line whose id is line_id.
 
         It is not alays a good idea to rely on the the line ID, because:
-            - Not all Darwin Core Archives specifies line IDs.
-            - Nothing guarantees that the ID will actually be unique within the archive (depends of
-             the data publisher). In that case, this method don't guarantee which one will be
-             returned.
+        - Not all Darwin Core Archives specifies line IDs.
+        - Nothing guarantees that the ID will actually be unique within the archive (depends of
+        the data publisher). In that case, this method don't guarantee which one will be
+        returned.
 
         """
         for line in self.each_line():

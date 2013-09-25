@@ -213,10 +213,10 @@ More info:
 .. toctree::
    :maxdepth: 2
 
-   contributing
    api
    gbif_results
-
+   contributing
+   
 
 Indices and tables
 ==================
