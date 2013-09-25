@@ -1,4 +1,4 @@
 *.pyc
 .DS_Store
 .coverage
-sphinx_doc/_build
+doc/_build
