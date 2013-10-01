@@ -11,6 +11,12 @@ from utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
+    """
+    This class is used to represent a Darwin Core Archive as a whole.
+
+    It gives read access to the data lines (from the Core file), to the Archive metadata, ...
+    """
+
     def __enter__(self):
         return self
 
@@ -38,17 +44,19 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def lines(self):
-        """Get a list containing all (core) lines of the archive"""
+        """Return a list containing all (Core) lines of the archive."""
         return list(self.each_line())
 
     def get_line_by_id(self, line_id):
-        """Get the line whose id is line_id.
+        """Return the (Core) line whose id is line_id.
 
-        It is not alays a good idea to rely on the the line ID, because:
-        - Not all Darwin Core Archives specifies line IDs.
-        - Nothing guarantees that the ID will actually be unique within the archive (depends of
-        the data publisher). In that case, this method don't guarantee which one will be
-        returned.
+        .. note::
+
+            It is not alays a good idea to rely on the line ID, because:
+            1) Not all Darwin Core Archives specifies line IDs.
+            2) Nothing guarantees that the ID will actually be unique within the archive (depends
+            of the data publisher). In that case, this method don't guarantee which one will be
+            returned. :meth:`.get_line_by_index` may be more appropriate in this case.
 
         """
         for line in self.each_line():
@@ -58,12 +66,14 @@ class DwCAReader(object):
             return None
 
     def get_line_by_index(self, index):
-        """Returns a core line according to its index in core file.
+        """Return a core line according to its index in core file.
 
-        Notes:
-            - First line has index: 0
-            - If index is bigger than LENGTH_OF_COREFILE-1, None is returned
+        .. note::
+
+            - First line has index 0
+            - If index is bigger than the length of the archive, None is returned
             - The index is often an appropriate way to unambiguously identify a core line in a DwCA.
+
         """
         for (i, line) in enumerate(self.each_line()):
             if i == index:

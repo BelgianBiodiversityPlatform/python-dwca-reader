@@ -33,10 +33,19 @@ Test coverage can be obtained after installing `coverage.py`_
 
     OK
 
-Building the docs
------------------
+Building the doc
+----------------
 
-TODO: Fill this section
+Locally:
+
+::
+
+    $ cd doc; make clean; make html
+
+Online (http://python-dwca-reader.readthedocs.org/):
+
+The docs will be updated automagically upon commit on GitHub thanks to Webhooks.
+
 
 Releasing
 ---------
@@ -48,7 +57,12 @@ Releasing
 
     $ python setup.py sdist upload
 
-* Update the version in doc/conf.py, then upload the new version of the doc. TODO: detail
+* Also update the version in doc/conf.py
 * Create a new tag and push it to GitHub
+
+::
+
+    $ git tag vX.Y.Z
+    $ git push origin --tags
 
 .. _coverage.py: http://nedbatchelder.com/code/coverage/
