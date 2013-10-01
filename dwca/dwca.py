@@ -11,8 +11,7 @@ from utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
-    """
-    This class is used to represent a Darwin Core Archive as a whole.
+    """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the data lines (from the Core file), to the Archive metadata, ...
     """
@@ -26,7 +25,10 @@ class DwCAReader(object):
     def __init__(self, path):
         """Opens the file, reads all metadata and store it in self.meta
         (BeautifulSoup obj.) Also already open the core file so we've
-        a file descriptor for further access."""
+        a file descriptor for further access.
+
+        :param path: path to the Darwin Core Archive file to open.
+        """
         self.archive_path = path
 
         self._unzipped_folder_path = self._unzip()
@@ -50,7 +52,7 @@ class DwCAReader(object):
     def get_line_by_id(self, line_id):
         """Return the (Core) line whose id is line_id.
 
-        .. note::
+        .. warning::
 
             It is not alays a good idea to rely on the line ID, because:
             1) Not all Darwin Core Archives specifies line IDs.
@@ -167,6 +169,19 @@ class DwCAReader(object):
 
 
 class GBIFResultsReader(DwCAReader):
+    """This class is used to represent the (slightly augmented) variant of Darwin Core Archive
+    produced by the new GBIF Data Portal when exporting occurrences.
+
+
+    It is a subclass of :class:`.DwCAReader` and provides a few more features that reflect the
+    additional data provided in these specific archives:
+
+        - The content of `citations.txt and `rights.txt` is available via specific properties.
+        - Core lines accessed trough this class have a `source_metadata` property that gives\
+        access to the metadata of the originating dataset.
+
+    """
+    
     def __init__(self, path):
         super(GBIFResultsReader, self).__init__(path)
 
@@ -189,8 +204,10 @@ class GBIFResultsReader(DwCAReader):
 
     @property
     def citations(self):
+        """Return the content of the citations.txt file included in the archive."""
         return self._read_additional_file('citations.txt')
 
     @property
     def rights(self):
+        """Return the content of the rights.txt file included in the archive."""
         return self._read_additional_file('rights.txt')

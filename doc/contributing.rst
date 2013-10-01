@@ -33,8 +33,8 @@ Test coverage can be obtained after installing `coverage.py`_
 
     OK
 
-Building the doc
-----------------
+Building the documentation
+--------------------------
 
 Locally:
 
@@ -42,16 +42,16 @@ Locally:
 
     $ cd doc; make clean; make html
 
-Online (http://python-dwca-reader.readthedocs.org/):
+Online at http://python-dwca-reader.readthedocs.org/:
 
 The docs will be updated automagically upon commit on GitHub thanks to Webhooks.
 
 
-Releasing
----------
+Releasing at PyPI
+-----------------
 
 * (Ensuring it works, the test coverage is good and the documentation is updated)
-* Update the packaging (version number in setup.py, CHANGES.txt) then run
+* Update the packaging (version number in setup.py, CHANGES.txt) then run:
     
 ::
 
