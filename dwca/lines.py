@@ -3,6 +3,13 @@ from utils import _EmbeddedCSV
 
 # Make it abstract ? Private ?
 class DwCALine(object):
+
+    """This class is used to represent a row/line in a Darwin Core Archive.
+
+    This class is intended to be subclassed.
+    """
+
+    # TODO: Make this an Abstract Base Class ?
     # TODO: Split string representation between subclasses ?
     # (This one should only display the common stuff and be called by others)
     def __str__(self):
@@ -60,6 +67,17 @@ class DwCALine(object):
 
 
 class DwCACoreLine(DwCALine):
+    
+    """ This class is used to represent a row/line from a Darwin Core Archive core file.
+
+    It is a subclass of :class:`lines.DwCALine` and therefore inherits all of its methods and
+    attributes.
+
+    Most of the time, you won't instantiate it manually but rather obtain it trough
+    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (using lines, each_line,
+    get_line_by_index, get_line_by_id, ...).
+    """
+    
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
         super(DwCACoreLine, self).__init__(line, metadata.core)
@@ -116,6 +134,16 @@ class DwCACoreLine(DwCALine):
 
 
 class DwCAExtensionLine(DwCALine):
+    
+    """ This class is used to represent a row/line from a Darwin Core Archive extension file.
+
+    It is a subclass of :class:`lines.DwCALine` and therefore inherits all of its methods and
+    attributes.
+
+    Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
+    attribute of :class:`.DwCACoreLine`.
+    """
+
     def __init__(self, line, metadata):
         # metadata = only the section that concerns me
         super(DwCAExtensionLine, self).__init__(line, metadata)

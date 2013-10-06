@@ -11,6 +11,7 @@ from utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
+    
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the data lines (from the Core file), to the Archive metadata, ...
@@ -46,7 +47,7 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def lines(self):
-        """Return a list containing all (Core) lines of the archive."""
+        """Returns all rows from the core file as a list of :class:`lines.DwCACoreLine` instances."""
         return list(self.each_line())
 
     def get_line_by_id(self, line_id):
@@ -54,7 +55,7 @@ class DwCAReader(object):
 
         .. warning::
 
-            It is not alays a good idea to rely on the line ID, because:
+            It is rarely a good idea to rely on the line ID, because:
             1) Not all Darwin Core Archives specifies line IDs.
             2) Nothing guarantees that the ID will actually be unique within the archive (depends
             of the data publisher). In that case, this method don't guarantee which one will be
@@ -106,7 +107,7 @@ class DwCAReader(object):
         BeautifulSoup and return its content."""
 
         # This method should be called only after ._metaxml attribute is set
-        # because the name/path to metadat file is stored in the "metadata"
+        # because the name/path to metadata file is stored in the "metadata"
         # attribute of the "archive" tag
         metadata_file = self._get_metadata_filename()
         return self._parse_xml_included_file(metadata_file)
@@ -130,6 +131,7 @@ class DwCAReader(object):
         return unzipped_folder
 
     def close(self):
+        """Close the Darwin Core Archive and cleanup temporary/working files."""
         self._cleanup_temporary_folder()
 
     def _cleanup_temporary_folder(self):
@@ -142,6 +144,7 @@ class DwCAReader(object):
         return [e['rowType'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
+        """Returns True if the core file of the archive contains the term_url term, False otherwise."""
         return term_url in self.core_terms
 
     @property
@@ -169,6 +172,7 @@ class DwCAReader(object):
 
 
 class GBIFResultsReader(DwCAReader):
+    
     """This class is used to represent the (slightly augmented) variant of Darwin Core Archive
     produced by the new GBIF Data Portal when exporting occurrences.
 
@@ -176,7 +180,7 @@ class GBIFResultsReader(DwCAReader):
     It is a subclass of :class:`.DwCAReader` and provides a few more features that reflect the
     additional data provided in these specific archives:
 
-        - The content of `citations.txt and `rights.txt` is available via specific properties.
+        - The content of `citations.txt` and `rights.txt` is available via specific properties.
         - Core lines accessed trough this class have a `source_metadata` property that gives\
         access to the metadata of the originating dataset.
 
