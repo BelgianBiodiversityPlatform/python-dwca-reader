@@ -10,8 +10,10 @@ from lines import DwCACoreLine
 from utils import _EmbeddedCSV
 
 
+# TODO: document attributes !
 class DwCAReader(object):
-    
+    # TODO: Says it should generally used with the "with" statement.
+    # TODO: Add a tiny tutorial in docstring (such as for csv)
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the data lines (from the Core file), to the Archive metadata, ...
@@ -188,7 +190,8 @@ class GBIFResultsReader(DwCAReader):
     
     def __init__(self, path):
         super(GBIFResultsReader, self).__init__(path)
-
+        #: a dict containing source/original metadata of the archive, such as
+        #: {'dataset_uuid': 'dataset_metadata', ...}
         self.source_metadata = self._dataset_metadata_to_dict('dataset')
 
     def _dataset_metadata_to_dict(self, folder):

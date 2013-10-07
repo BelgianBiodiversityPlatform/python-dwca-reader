@@ -1,5 +1,7 @@
 from utils import _EmbeddedCSV
 
+# TODO: document attributes !
+
 
 # Make it abstract ? Private ?
 class DwCALine(object):
@@ -40,7 +42,9 @@ class DwCALine(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, line, metadata_section):
-        # line is the raw line data, directly from file
+        #: The row/line type as stated in the archive descriptor.
+        #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
+        #: http://rs.gbif.org/terms/1.0/VernacularName, ...
         self.rowtype = metadata_section['rowType']
 
         # TODO: Move line/field stripping to _EmbeddedCSV ??
@@ -50,10 +54,15 @@ class DwCALine(object):
         field_ending = metadata_section['fieldsTerminatedBy'].decode("string-escape")
         self.raw_fields = line.rstrip(line_ending).split(field_ending)
         # TODO: raw_fields is a new property: to test
+        # TODO: raw_fields is a new property: to document
 
         # TODO: Consistency chek ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
 
+        #: a dict containing the line/row data, such as:
+        #: {'dwc_term_1': 'value',
+        #: 'dwc_term_2': 'value',
+        #: ...}
         self.data = {}
 
         for f in metadata_section.findAll('field'):
@@ -64,6 +73,18 @@ class DwCALine(object):
             else:
                 # else, we have to look in core file
                 self.data[f['term']] = self.raw_fields[int(f['index'])]
+
+        # These properties are set by subclasses and are only listed here for documentation
+        # and clarity purposes
+
+        #: 
+        self.metadata_section = None
+        
+        #:
+        self.from_core = None
+        
+        #:
+        self.from_extension = None
 
 
 class DwCACoreLine(DwCALine):
@@ -86,9 +107,11 @@ class DwCACoreLine(DwCALine):
         self.from_core = True
         self.from_extension = False
 
+        #:
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
         # Extension load
+        #:
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
@@ -114,6 +137,7 @@ class DwCACoreLine(DwCALine):
         else:
             m = None
 
+        #:
         self.source_metadata = m
 
     # __key is different between DwCACoreLine and DwCAExtensionLine, while eq, ne and hash are identical
@@ -152,6 +176,7 @@ class DwCAExtensionLine(DwCALine):
         self.from_core = False
         self.from_extension = True
 
+        #:
         self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
 
     def __key(self):
