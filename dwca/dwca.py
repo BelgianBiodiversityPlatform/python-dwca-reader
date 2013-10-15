@@ -17,6 +17,22 @@ class DwCAReader(object):
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the data lines (from the Core file), to the Archive metadata, ...
+
+    A short usage example::
+
+        from dwca import DwCAReader
+
+        # The with statement is recommended as it ensures resources will be properly cleaned after
+        # usage:
+        with DwCAReader('my_archive.zip') as dwca:
+            # Iterating on core lines is easy:
+            for core_line in dwca.each_line():
+                # core_line are instances of lines.DwCACoreLine
+                print core_line
+
+            # Scientific metadata (EML) is available as a BeautifulSoup object
+            print dwca.metadata.prettify()
+
     """
 
     def __enter__(self):
@@ -32,6 +48,7 @@ class DwCAReader(object):
 
         :param path: path to the Darwin Core Archive file to open.
         """
+        #:
         self.archive_path = path
 
         self._unzipped_folder_path = self._unzip()
@@ -39,8 +56,11 @@ class DwCAReader(object):
 
         # Load the (scientific) metadata file and store its representation
         # in metadata attribute for future use.
+        #:
         self.metadata = self._parse_metadata_file()
+        #:
         self.core_rowtype = self._get_core_type()
+        #:
         self.extensions_rowtype = self._get_extensions_types()
 
         self._corefile = _EmbeddedCSV(self._metaxml.core,

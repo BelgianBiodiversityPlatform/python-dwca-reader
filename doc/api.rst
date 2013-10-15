@@ -1,17 +1,11 @@
 Detailed API
 ============
 
-.. autoclass:: dwca.DwCAReader
-   :members:
+.. automodule:: dwca
+    :members:
 
-.. autoclass:: dwca.GBIFResultsReader
-   :members:
+.. automodule:: lines
+    :members:
 
-.. autoclass:: lines.DwCALine
-   :members:
 
-.. autoclass:: lines.DwCACoreLine
-   :members:
 
-.. autoclass:: lines.DwCAExtensionLine
-   :members:
