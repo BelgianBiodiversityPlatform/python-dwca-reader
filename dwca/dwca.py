@@ -111,11 +111,12 @@ class DwCAReader(object):
     def absolute_temporary_path(self, relative_path):
         """Returns the absolute path of the file located at relative_path within the archive.
 
-        Notes:
+        .. note::
+
             - The file at this path is temporary and will be removed when closing the instance.
             - File existence is not tested.
-        """
 
+        """
         return os.path.abspath(os.path.join(self._unzipped_folder_path, relative_path))
 
     def _read_additional_file(self, relative_path):
@@ -155,7 +156,13 @@ class DwCAReader(object):
         return unzipped_folder
 
     def close(self):
-        """Close the Darwin Core Archive and cleanup temporary/working files."""
+        """Close the Darwin Core Archive and cleanup temporary/working files.
+
+        .. note::
+            - Alternatively, :class:`.DwCAReader` can be instanciated using the `with` statement.\
+            Cleanup will then be automatically performed when leaving the block.
+
+        """
         self._cleanup_temporary_folder()
 
     def _cleanup_temporary_folder(self):
