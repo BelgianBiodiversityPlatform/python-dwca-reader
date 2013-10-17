@@ -2,7 +2,7 @@ import io
 import os
 
 
-class _EmbeddedCSV:
+class _EmbeddedCSV(object):
     """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
@@ -16,20 +16,10 @@ class _EmbeddedCSV:
 
         self._core_fhandler = io.open(self.filepath,
                                       mode='r',
-                                      encoding=self._get_encoding(),
-                                      newline=self._get_newline_str(),
+                                      encoding=self.encoding,
+                                      newline=self.newline_str,
                                       errors='replace')
-        self.reset_line_iterator()
-
-    def lines(self):
-        for line in self._core_fhandler:
-            self._line_pointer += 1
-
-            if (self._line_pointer <= self._get_lines_to_ignore()):
-                continue
-            else:
-                yield line
-
+        
     @property
     def headers(self):
         """Returns a list of (ordered) column names that can be used to create a header line."""
@@ -54,17 +44,30 @@ class _EmbeddedCSV:
         return os.path.join(self._unzipped_folder_path,
                             self._metadata_section.files.location.string)
 
-    def _get_encoding(self):
+    @property
+    def encoding(self):
         return self._metadata_section['encoding']
 
-    def _get_newline_str(self):
+    @property
+    def newline_str(self):
         return self._metadata_section['linesTerminatedBy'].decode("string-escape")
 
-    def reset_line_iterator(self):
+    def __iter__(self):
+        # Position CSV file after header lines
         self._core_fhandler.seek(0, 0)
-        self._line_pointer = 0
+        if self.lines_to_ignore > 0:
+            self._core_fhandler.readlines(self.lines_to_ignore)
 
-    def _get_lines_to_ignore(self):
+        return self
+
+    def next(self):
+        for line in self._core_fhandler:
+            return line
+        
+        raise StopIteration
+
+    @property
+    def lines_to_ignore(self):
         try:
             return int(self._metadata_section['ignoreHeaderLines'])
         except KeyError:

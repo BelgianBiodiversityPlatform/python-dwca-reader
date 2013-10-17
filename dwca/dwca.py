@@ -180,7 +180,6 @@ class DwCAReader(object):
 
     def each_line(self):
         """Iterates, in order, over each (core) line of the Archive."""
-        self._corefile.reset_line_iterator()
 
         # Some Archives (Currently GBIF Results) have line-level (source data)
         # In that case, we'll pass all of them to the line.
@@ -189,7 +188,7 @@ class DwCAReader(object):
         except AttributeError:
             sm = None
 
-        for line in self._corefile.lines():
+        for line in self._corefile:
             yield DwCACoreLine(line, self._metaxml, self._unzipped_folder_path, sm)
 
 

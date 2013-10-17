@@ -115,7 +115,7 @@ class DwCACoreLine(DwCALine):
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
-            for l in csv.lines():
+            for l in csv:
                 tmp = DwCAExtensionLine(l, ext_meta)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
