@@ -95,8 +95,8 @@ class DwCACoreLine(DwCALine):
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough
-    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (using lines, each_line,
-    get_line_by_index, get_line_by_id, ...).
+    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (by iterating, using the lines
+    attribute, get_line_by_index, get_line_by_id, ...).
     """
     
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):

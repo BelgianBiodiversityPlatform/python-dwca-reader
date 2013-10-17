@@ -254,29 +254,29 @@ class TestDwCAReader(unittest.TestCase):
     def test_ignore_header_lines(self):
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
             # The sample file has two real lines + 1 header file
-            self.assertEqual(2, len([l for l in dwca.each_line()]))
+            self.assertEqual(2, len([l for l in dwca]))
 
         with DwCAReader(self.NOHEADERS1_PATH) as dwca:
             # This file has two real lines, without headers
             # (specified in meta.xml)
-            self.assertEqual(2, len([l for l in dwca.each_line()]))
+            self.assertEqual(2, len([l for l in dwca]))
 
         with DwCAReader(self.NOHEADERS2_PATH) as dwca:
             # This file has two real lines, without headers
             # (nothing specified in meta.xml)
-            self.assertEqual(2, len([l for l in dwca.each_line()]))
+            self.assertEqual(2, len([l for l in dwca]))
 
     def test_iterate_dwcalines(self):
-        """Test the each_line() method allows iterating over DwCACoreLines"""
+        """Test the iterating over DwCACoreLines"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
-            for line in dwca.each_line():
+            for line in dwca:
                 self.assertIsInstance(line, DwCACoreLine)
 
     def test_iterate_order(self):
-        """Test that the order of the core file is respected when iterating with each_line()."""
+        """Test that the order of the core file is respected when iterating."""
         # This is also probably tested inderectly elsewhere, but this is the right place :)
         with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
-            l = list(dwca.each_line())
+            l = list(dwca)
             # Lines are ordered like this in core: id 4-1-3-2
             self.assertEqual(int(l[0].id), 4)
             self.assertEqual(int(l[1].id), 1)
@@ -285,9 +285,9 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_iterate_multiple_calls(self):
         with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
-            self.assertEqual(4, len([l for l in dwca.each_line()]))
+            self.assertEqual(4, len([l for l in dwca]))
             # The second time, we can still find 4 lines...
-            self.assertEqual(4, len([l for l in dwca.each_line()]))
+            self.assertEqual(4, len([l for l in dwca]))
 
     def test_get_line_by_index(self):
         """Test the get_line_by_index() method work as expected"""
@@ -339,7 +339,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
-            lines = list(dwca.each_line())
+            lines = list(dwca)
 
             # Check basic locality values from sample file
             self.assertEqual('Borneo', lines[0].data[qn('locality')])
@@ -354,7 +354,7 @@ class TestDwCAReader(unittest.TestCase):
         prior to version 2.0.3.
         """
         with DwCAReader(self.DEFAULT_VAL_PATH) as dwca:
-            for l in dwca.each_line():
+            for l in dwca:
                 self.assertEqual('Belgium', l.data[qn('country')])
 
     def test_qn(self):
@@ -375,7 +375,7 @@ class TestDwCAReader(unittest.TestCase):
         # It's probably a character that was left by error when parsin
         # line
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
-            for l in simple_dwca.each_line():
+            for l in simple_dwca:
                 for k, v in l.data.iteritems():
                     self.assertFalse(v.endswith("\n"))
 
@@ -384,11 +384,11 @@ class TestDwCAReader(unittest.TestCase):
 
         # This one has no extension, so line.extensions should be an empty list
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
-            for l in simple_dwca.each_line():
+            for l in simple_dwca:
                 self.assertEqual(0, len(l.extensions))
 
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
-            lines = list(star_dwca.each_line())
+            lines = list(star_dwca)
 
             # 3 vernacular names are given for Struthio Camelus...
             self.assertEqual(3, len(lines[0].extensions))
@@ -401,7 +401,7 @@ class TestDwCAReader(unittest.TestCase):
         # TODO: test the same thing with 2 different extensions reffering to
         # the line
         with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as multi_dwca:
-            lines = list(multi_dwca.each_line())
+            lines = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
             self.assertEqual(5, len(lines[0].extensions))
@@ -421,7 +421,7 @@ class TestDwCAReader(unittest.TestCase):
             taxon_qn = "http://rs.tdwg.org/dwc/terms/Taxon"
             vernacular_qn = "http://rs.gbif.org/terms/1.0/VernacularName"
 
-            for i, line in enumerate(star_dwca.each_line()):
+            for i, line in enumerate(star_dwca):
                 # All ine instance accessed here are core:
                 self.assertEqual(taxon_qn, line.rowtype)
 
@@ -431,7 +431,7 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_line_knows_its_source(self):
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
-            for line in star_dwca.each_line():
+            for line in star_dwca:
                 # These first DwCALines we access comes from the Core file
                 self.assertTrue(line.from_core)
                 self.assertFalse(line.from_extension)
@@ -450,7 +450,7 @@ class TestDwCAReader(unittest.TestCase):
         """
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             by_iteration = []
-            for l in star_dwca.each_line():
+            for l in star_dwca:
                 by_iteration.append(l)
 
             self.assertEqual(by_iteration, star_dwca.lines)

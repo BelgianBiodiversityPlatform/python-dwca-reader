@@ -26,7 +26,7 @@ class DwCAReader(object):
         # usage:
         with DwCAReader('my_archive.zip') as dwca:
             # Iterating on core lines is easy:
-            for core_line in dwca.each_line():
+            for core_line in dwca:
                 # core_line are instances of lines.DwCACoreLine
                 print core_line
 
@@ -59,6 +59,8 @@ class DwCAReader(object):
         #:
         self.metadata = self._parse_metadata_file()
         #:
+        self.source_metadata = None
+        #:
         self.core_rowtype = self._get_core_type()
         #:
         self.extensions_rowtype = self._get_extensions_types()
@@ -70,7 +72,7 @@ class DwCAReader(object):
     #TODO: decide, test and document what we guarantee about ordering
     def lines(self):
         """Returns all rows from the core file as a list of :class:`lines.DwCACoreLine` instances."""
-        return list(self.each_line())
+        return list(self)
 
     def get_line_by_id(self, line_id):
         """Return the (Core) line whose id is line_id.
@@ -84,7 +86,7 @@ class DwCAReader(object):
             returned. :meth:`.get_line_by_index` may be more appropriate in this case.
 
         """
-        for line in self.each_line():
+        for line in self:
             if line.id == str(line_id):
                 return line
         else:
@@ -100,7 +102,7 @@ class DwCAReader(object):
             - The index is often an appropriate way to unambiguously identify a core line in a DwCA.
 
         """
-        for (i, line) in enumerate(self.each_line()):
+        for (i, line) in enumerate(self):
             if i == index:
                 return line
         else:
@@ -178,18 +180,17 @@ class DwCAReader(object):
     def _get_metadata_filename(self):
         return self._metaxml.archive['metadata']
 
-    def each_line(self):
-        """Iterates, in order, over each (core) line of the Archive."""
+    def __iter__(self):
+        self._corefile_pointer = 0
+        return self
 
-        # Some Archives (Currently GBIF Results) have line-level (source data)
-        # In that case, we'll pass all of them to the line.
-        try:
-            sm = self.source_metadata
-        except AttributeError:
-            sm = None
-
-        for line in self._corefile:
-            yield DwCACoreLine(line, self._metaxml, self._unzipped_folder_path, sm)
+    def next(self):
+        cl = self._corefile.get_line_by_index(self._corefile_pointer)
+        if cl:
+            self._corefile_pointer = self._corefile_pointer + 1
+            return DwCACoreLine(cl, self._metaxml, self._unzipped_folder_path, self.source_metadata)
+        else:
+            raise StopIteration
 
 
 class GBIFResultsReader(DwCAReader):

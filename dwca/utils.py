@@ -52,12 +52,13 @@ class _EmbeddedCSV(object):
     def newline_str(self):
         return self._metadata_section['linesTerminatedBy'].decode("string-escape")
 
-    def __iter__(self):
-        # Position CSV file after header lines
+    def _position_file_after_header(self):
         self._core_fhandler.seek(0, 0)
         if self.lines_to_ignore > 0:
             self._core_fhandler.readlines(self.lines_to_ignore)
 
+    def __iter__(self):
+        self._position_file_after_header()
         return self
 
     def next(self):
@@ -65,6 +66,17 @@ class _EmbeddedCSV(object):
             return line
         
         raise StopIteration
+
+    # TODO: Optimize for large files ?
+    # ideas: http://stackoverflow.com/questions/620367/python-how-to-jump-to-a-particular-line-in-a-huge-text-file
+    def get_line_by_index(self, index):
+        self._position_file_after_header()
+
+        for (i, line) in enumerate(self._core_fhandler):
+            if i == index:
+                return line
+        else:
+            return None  # Reached end of file
 
     @property
     def lines_to_ignore(self):

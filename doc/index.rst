@@ -74,10 +74,10 @@ Example use
         if dwca.core_rowtype == qn('Occurrence'):
             pass
 
-        # Finally, let's iterate over the archive lines and get the data:
-        for line in dwca.each_line():
+        # Finally, let's iterate over the archive core lines and get the data:
+        for line in dwca:
             # line is an instance of DwCACoreLine
-            # each_line() returns them following their order of appearance in the core file
+            # iteration respects their order of appearance in the core file
 
             # Print can be used for debugging purposes...
             print line
@@ -95,7 +95,7 @@ Example use
             print "Locality for this line is: %s" % line.data[qn('locality')]
             # => Locality for this line is: Mumbai
 
-        # Alternatively, we can get a list of core lines instead of using each_line():
+        # Alternatively, we can get a list of core lines instead of iterating:
         lines = dwca.lines
 
         # Or retrieve a specific line by its id:
