@@ -2,6 +2,9 @@ Current
 =======
 
 - API change: "for core_line in dwca.each_line():" -> "for core_line in dwca:"
+- API change: from_core and from_extension attributes of DwCALine (and sublasses) have been removed.
+              The isinstance built-in function can be used to test if a line is an instance of DwCACoreLine
+              or of DwCAExtensionLine.
 
 - Cleaner code and better documentation.
 

@@ -132,13 +132,6 @@ Example use
             # Display all extensions line that refers to the first Core line
             print e
 
-        # b) DwcACoreLine and DwcAExtensionLine are sublclasses of DwCALine...
-        # Se we can ask a line where it's from:
-        print core_lines[0].from_core
-        # => True
-        print core_lines[0].extensions[0].from_extension
-        # => True
-
         # ... and what its rowtype is:
         print core_lines[0].rowtype
         # => http://rs.tdwg.org/dwc/terms/Taxon

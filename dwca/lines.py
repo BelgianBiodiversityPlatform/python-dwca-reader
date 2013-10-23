@@ -11,10 +11,8 @@ class DwCALine(object):
     This class is intended to be subclassed.
     """
 
-    # TODO: Make this an Abstract Base Class ?
-    # TODO: Split string representation between subclasses ?
-    # (This one should only display the common stuff and be called by others)
-    def __str__(self):
+    # Common ground for __str__ between subclasses
+    def _build_str(self, source_str, id_str):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
                "Source: {source_str}\n"
@@ -23,13 +21,6 @@ class DwCALine(object):
                "Reference source metadata: {source_metadata_flag}\n"
                "Data: {data}\n"
                "--\n")
-        
-        if self.from_core:
-            source_str = "Core file"
-            id_str = "Line id: " + str(self.id)
-        else:
-            source_str = "Extension file"
-            id_str = "Core Line id: " + str(self.core_id)
 
         extension_flag = "Yes" if (hasattr(self, 'extensions') and (len(self.extensions) > 0)) else "No"
         source_metadata_flag = "Yes" if (hasattr(self, 'source_metadata') and self.source_metadata) else "No"
@@ -79,12 +70,6 @@ class DwCALine(object):
 
         #:
         self.metadata_section = None
-        
-        #:
-        self.from_core = None
-        
-        #:
-        self.from_extension = None
 
 
 class DwCACoreLine(DwCALine):
@@ -99,13 +84,15 @@ class DwCACoreLine(DwCALine):
     attribute, get_line_by_index, get_line_by_id, ...).
     """
     
+    def __str__(self):
+        id_str = "Line id: " + str(self.id)
+        return super(DwCACoreLine, self)._build_str("Core file", id_str)
+
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
         super(DwCACoreLine, self).__init__(line, metadata.core)
 
         self.metadata_section = metadata.core
-        self.from_core = True
-        self.from_extension = False
 
         #:
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
@@ -144,8 +131,8 @@ class DwCACoreLine(DwCALine):
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the line. Common ground between equality and hash."""
-        return (self.from_core, self.from_extension, self.metadata_section, self.id, self.data,
-                self.extensions, self.source_metadata, self.rowtype, self.raw_fields)
+        return (self.metadata_section, self.id, self.data, self.extensions, self.source_metadata,
+                self.rowtype, self.raw_fields)
 
     def __eq__(self, other):
         return self.__key() == other.__key()
@@ -168,21 +155,22 @@ class DwCAExtensionLine(DwCALine):
     attribute of :class:`.DwCACoreLine`.
     """
 
+    def __str__(self):
+        id_str = "Core Line id: " + str(self.core_id)
+        return super(DwCAExtensionLine, self)._build_str("Extension file", id_str)
+
     def __init__(self, line, metadata):
         # metadata = only the section that concerns me
         super(DwCAExtensionLine, self).__init__(line, metadata)
 
         self.metadata_section = metadata
-        self.from_core = False
-        self.from_extension = True
 
         #:
         self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
 
     def __key(self):
         """Return a tuple representing the line. Common ground between equality and hash."""
-        return (self.from_core, self.from_extension, self.metadata_section, self.core_id,
-                self.data, self.rowtype, self.raw_fields)
+        return (self.metadata_section, self.core_id, self.data, self.rowtype, self.raw_fields)
 
     def __eq__(self, other):
         return self.__key() == other.__key()

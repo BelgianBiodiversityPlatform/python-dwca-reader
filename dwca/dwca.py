@@ -6,8 +6,8 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from .lines import DwCACoreLine
-from .utils import _EmbeddedCSV
+from lines import DwCACoreLine
+from utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
@@ -109,7 +109,8 @@ class DwCAReader(object):
         """Return the absolute path of the file located at relative_path within the archive.
 
         .. note::
-
+            - This method allows raw access to the files contained in the archive. It is for\
+            example useful to open additional, non-standard files embedded in the archive.
             - The file at this path is temporary and will be removed when closing the instance.
             - File existence is not tested.
 
@@ -146,7 +147,7 @@ class DwCAReader(object):
         return BeautifulSoup(self._read_additional_file(relative_path), "xml")
 
     def _unzip(self):
-        """Unzip the current archive in a temporary directory and returns its path."""
+        """Unzip the current archive in a temporary directory and return its path."""
         unzipped_folder = self._create_temporary_folder()
         #TODO: check content of file!!!! It may, for example contains
         #absolute path (see zipfile doc)
@@ -173,7 +174,7 @@ class DwCAReader(object):
         return [e['rowType'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
-        """Return True if the core file of the archive contains the term_url term."""
+        """Return True if the Core file of the archive contains the term_url term."""
         return term_url in self.core_terms
 
     @property

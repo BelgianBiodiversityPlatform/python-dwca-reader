@@ -7,7 +7,7 @@ from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader
-from ..lines import DwCACoreLine
+from ..lines import DwCACoreLine, DwCAExtensionLine
 from ..darwincore.utils import qualname as qn
 
 
@@ -429,17 +429,14 @@ class TestDwCAReader(unittest.TestCase):
                     # First line has an extension, and only vn are in use
                     self.assertEqual(vernacular_qn, line.extensions[0].rowtype)
 
-    def test_line_knows_its_source(self):
+    def test_line_class(self):
         with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
             for line in star_dwca:
-                # These first DwCALines we access comes from the Core file
-                self.assertTrue(line.from_core)
-                self.assertFalse(line.from_extension)
+                self.assertIsInstance(line, DwCACoreLine)
 
                 # But the extensions are... extensions (hum)
                 for an_extension in line.extensions:
-                    self.assertFalse(an_extension.from_core)
-                    self.assertTrue(an_extension.from_extension)
+                    self.assertIsInstance(an_extension, DwCAExtensionLine)
 
     # TODO: Also test we return an empty list on empty archive
     def test_lines_property(self):
