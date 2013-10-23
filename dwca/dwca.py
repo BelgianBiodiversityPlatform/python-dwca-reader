@@ -6,8 +6,8 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from lines import DwCACoreLine
-from utils import _EmbeddedCSV
+from .lines import DwCACoreLine
+from .utils import _EmbeddedCSV
 
 
 class DwCAReader(object):
@@ -121,7 +121,8 @@ class DwCAReader(object):
         p = self.absolute_temporary_path(relative_path)
         return open(p).read()
 
-    def _create_temporary_folder(self):
+    @staticmethod
+    def _create_temporary_folder():
         return mkdtemp()[1]
 
     def _parse_metadata_file(self):

@@ -3,6 +3,8 @@ Current
 
 - API change: "for core_line in dwca.each_line():" -> "for core_line in dwca:"
 
+- Cleaner code and better documentation.
+
 v0.4.0 (2013-09-24)
 ===================
 
