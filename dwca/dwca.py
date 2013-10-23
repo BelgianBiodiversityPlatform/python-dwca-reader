@@ -10,10 +10,8 @@ from lines import DwCACoreLine
 from utils import _EmbeddedCSV
 
 
-# TODO: document attributes !
 class DwCAReader(object):
-    # TODO: Says it should generally used with the "with" statement.
-    # TODO: Add a tiny tutorial in docstring (such as for csv)
+    
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the data lines (from the Core file), to the Archive metadata, ...
@@ -42,7 +40,7 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path):
-        """Opens the file, reads all metadata and store it in self.meta
+        """Open the file, reads all metadata and store it in self.meta
         (BeautifulSoup obj.) Also already open the core file so we've
         a file descriptor for further access.
 
@@ -54,8 +52,7 @@ class DwCAReader(object):
         self._unzipped_folder_path = self._unzip()
         self._metaxml = self._parse_metaxml_file()
 
-        # Load the (scientific) metadata file and store its representation
-        # in metadata attribute for future use.
+        # Load the (scientific) metadata file and store its representation in an attribute
         #:
         self.metadata = self._parse_metadata_file()
         #:
@@ -71,7 +68,7 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def lines(self):
-        """Returns all rows from the core file as a list of :class:`lines.DwCACoreLine` instances."""
+        """Return all rows from the core file as a list of :class:`lines.DwCACoreLine` instances."""
         return list(self)
 
     def get_line_by_id(self, line_id):
@@ -109,7 +106,7 @@ class DwCAReader(object):
             return None
 
     def absolute_temporary_path(self, relative_path):
-        """Returns the absolute path of the file located at relative_path within the archive.
+        """Return the absolute path of the file located at relative_path within the archive.
 
         .. note::
 
@@ -128,7 +125,7 @@ class DwCAReader(object):
         return mkdtemp()[1]
 
     def _parse_metadata_file(self):
-        """Loads the archive (scientific) Metadata file, parse it with
+        """Load the archive (scientific) Metadata file, parse it with
         BeautifulSoup and return its content."""
 
         # This method should be called only after ._metaxml attribute is set
@@ -138,12 +135,12 @@ class DwCAReader(object):
         return self._parse_xml_included_file(metadata_file)
 
     def _parse_metaxml_file(self):
-        """Loads the meta.xml, parse it with BeautifulSoup and return its
+        """Load the meta.xml, parse it with BeautifulSoup and return its
         content."""
         return self._parse_xml_included_file('meta.xml')
 
     def _parse_xml_included_file(self, relative_path):
-        """Loads, parse with BeautifulSoup and returns XML file located
+        """Load, parse with BeautifulSoup and returns XML file located
         at relative_path."""
         return BeautifulSoup(self._read_additional_file(relative_path), "xml")
 
@@ -175,12 +172,12 @@ class DwCAReader(object):
         return [e['rowType'] for e in self._metaxml.findAll('extension')]
 
     def core_contains_term(self, term_url):
-        """Returns True if the core file of the archive contains the term_url term, False otherwise."""
+        """Return True if the core file of the archive contains the term_url term."""
         return term_url in self.core_terms
 
     @property
     def core_terms(self):
-        """Returns a set of all the terms (URL) contained in Core file."""
+        """Return a Set containing all the Darwin Core terms appearing in Core file."""
         term_names = [f['term'] for f in self._metaxml.core.findAll('field')]
         return set(term_names)
 

@@ -52,9 +52,9 @@ class DwCALine(object):
         # self.raw_fields is a list of the line's content
         line_ending = metadata_section['linesTerminatedBy'].decode("string-escape")
         field_ending = metadata_section['fieldsTerminatedBy'].decode("string-escape")
+        #:
         self.raw_fields = line.rstrip(line_ending).split(field_ending)
         # TODO: raw_fields is a new property: to test
-        # TODO: raw_fields is a new property: to document
 
         # TODO: Consistency chek ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
@@ -77,7 +77,7 @@ class DwCALine(object):
         # These properties are set by subclasses and are only listed here for documentation
         # and clarity purposes
 
-        #: 
+        #:
         self.metadata_section = None
         
         #:
@@ -110,7 +110,7 @@ class DwCACoreLine(DwCALine):
         #:
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
-        # Extension load
+        # Load related extension lines
         #:
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
@@ -143,7 +143,7 @@ class DwCACoreLine(DwCALine):
     # __key is different between DwCACoreLine and DwCAExtensionLine, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
-        """Returns a tuple representing the line. Common ground between equality and hash."""
+        """Return a tuple representing the line. Common ground between equality and hash."""
         return (self.from_core, self.from_extension, self.metadata_section, self.id, self.data,
                 self.extensions, self.source_metadata, self.rowtype, self.raw_fields)
 
@@ -180,7 +180,7 @@ class DwCAExtensionLine(DwCALine):
         self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
 
     def __key(self):
-        """Returns a tuple representing the line. Common ground between equality and hash."""
+        """Return a tuple representing the line. Common ground between equality and hash."""
         return (self.from_core, self.from_extension, self.metadata_section, self.core_id,
                 self.data, self.rowtype, self.raw_fields)
 
