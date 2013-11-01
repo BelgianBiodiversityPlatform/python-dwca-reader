@@ -50,7 +50,9 @@ class DwCAReader(object):
         self.archive_path = path
 
         self._unzipped_folder_path = self._unzip()
-        self._metaxml = self._parse_metaxml_file()
+        
+        #: A BeautifulSoup instance containing the archive descriptor (``meta.xml``)
+        self.descriptor = self._parse_metaxml_file()
 
         # Load the (scientific) metadata file and store its representation in an attribute
         #:
@@ -62,7 +64,7 @@ class DwCAReader(object):
         #:
         self.extensions_rowtype = self._get_extensions_types()
 
-        self._corefile = _EmbeddedCSV(self._metaxml.core,
+        self._corefile = _EmbeddedCSV(self.descriptor.core,
                                       self._unzipped_folder_path)
 
     @property
@@ -130,7 +132,7 @@ class DwCAReader(object):
         """Load the archive (scientific) Metadata file, parse it with
         BeautifulSoup and return its content."""
 
-        # This method should be called only after ._metaxml attribute is set
+        # This method should be called only after descriptor attribute is set
         # because the name/path to metadata file is stored in the "metadata"
         # attribute of the "archive" tag
         metadata_file = self._get_metadata_filename()
@@ -168,10 +170,10 @@ class DwCAReader(object):
         rmtree(self._unzipped_folder_path, False)
 
     def _get_core_type(self):
-        return self._metaxml.core['rowType']
+        return self.descriptor.core['rowType']
 
     def _get_extensions_types(self):
-        return [e['rowType'] for e in self._metaxml.findAll('extension')]
+        return [e['rowType'] for e in self.descriptor.findAll('extension')]
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
@@ -180,11 +182,11 @@ class DwCAReader(object):
     @property
     def core_terms(self):
         """Return a Set containing all the Darwin Core terms appearing in Core file."""
-        term_names = [f['term'] for f in self._metaxml.core.findAll('field')]
+        term_names = [f['term'] for f in self.descriptor.core.findAll('field')]
         return set(term_names)
 
     def _get_metadata_filename(self):
-        return self._metaxml.archive['metadata']
+        return self.descriptor.archive['metadata']
 
     def __iter__(self):
         self._corefile_pointer = 0
@@ -194,7 +196,7 @@ class DwCAReader(object):
         cl = self._corefile.get_line_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return DwCACoreLine(cl, self._metaxml, self._unzipped_folder_path, self.source_metadata)
+            return DwCACoreLine(cl, self.descriptor, self._unzipped_folder_path, self.source_metadata)
         else:
             raise StopIteration
 

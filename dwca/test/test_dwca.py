@@ -110,6 +110,11 @@ class TestDwCAReader(unittest.TestCase):
     IDS_ARCHIVE_PATH = _sample_data_path('dwca-ids.zip')
     UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
 
+    def test_descriptor(self):
+        with DwCAReader(self.BASIC_ARCHIVE_PATH) as basic_dwca:
+            self.assertIsInstance(basic_dwca.descriptor, BeautifulSoup)
+            self.assertEqual(basic_dwca.descriptor.archive["metadata"], 'eml.xml')
+
     def test_line_human_representation(self):
         with DwCAReader(self.BASIC_ARCHIVE_PATH) as basic_dwca:
             l = basic_dwca.lines[0]
