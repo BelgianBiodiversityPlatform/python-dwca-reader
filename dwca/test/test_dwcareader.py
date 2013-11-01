@@ -9,29 +9,22 @@ from ..dwca import DwCAReader, GBIFResultsReader
 from ..lines import DwCACoreLine, DwCAExtensionLine
 from ..darwincore.utils import qualname as qn
 
-from .helpers import _sample_data_path, GBIF_RESULTS_PATH
+from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
+                      MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
+                      IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move line-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
-    BASIC_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive.zip')
-    NOHEADERS1_PATH = _sample_data_path('dwca-noheaders-1.zip')
-    NOHEADERS2_PATH = _sample_data_path('dwca-noheaders-2.zip')
-    DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')
-    EXTENSION_ARCHIVE_PATH = _sample_data_path('dwca-star-test-archive.zip')
-    MULTIEXTENSIONS_ARCHIVE_PATH = _sample_data_path('dwca-2extensions.zip')
-    IDS_ARCHIVE_PATH = _sample_data_path('dwca-ids.zip')
-    UTF8EOL_ARCHIVE_PATH = _sample_data_path('dwca-utf8-eol-test.zip')
-
     def test_descriptor(self):
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as basic_dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
             self.assertIsInstance(basic_dwca.descriptor, BeautifulSoup)
             self.assertEqual(basic_dwca.descriptor.archive["metadata"], 'eml.xml')
 
     def test_line_human_representation(self):
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as basic_dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
             l = basic_dwca.lines[0]
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
@@ -42,7 +35,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
                           l_repr)
 
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             l = star_dwca.lines[0]
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Taxon", l_repr)
@@ -69,7 +62,7 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_absolute_temporary_path(self):
         """Test the absolute_temporary_path() method."""
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             path_to_occ = dwca.absolute_temporary_path('occurrence.txt')
             
             # Is it absolute ?
@@ -85,7 +78,7 @@ class TestDwCAReader(unittest.TestCase):
         """Test no temporary files are left after execution (using 'with' statement)."""
         num_files_before = len(os.listdir('.'))
 
-        with DwCAReader(self.BASIC_ARCHIVE_PATH):
+        with DwCAReader(BASIC_ARCHIVE_PATH):
             pass
 
         num_files_after = len(os.listdir('.'))
@@ -97,7 +90,7 @@ class TestDwCAReader(unittest.TestCase):
 
         num_files_before = len(os.listdir('.'))
 
-        r = DwCAReader(self.BASIC_ARCHIVE_PATH)
+        r = DwCAReader(BASIC_ARCHIVE_PATH)
         r.close()
 
         num_files_after = len(os.listdir('.'))
@@ -111,7 +104,7 @@ class TestDwCAReader(unittest.TestCase):
         """
 
         num_files_before = len(os.listdir('.'))
-        with DwCAReader(self.BASIC_ARCHIVE_PATH):
+        with DwCAReader(BASIC_ARCHIVE_PATH):
             num_files_during = len(os.listdir('.'))
 
         self.assertEqual(num_files_before, num_files_during - 1)
@@ -119,7 +112,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_core_rowtype(self):
         """Test that the core_rowtype property returns the Archive Core Type"""
 
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             # dwca-simple-test-archive.zip should be of Occurrence type
             self.assertEqual(dwca.core_rowtype,
                              'http://rs.tdwg.org/dwc/terms/Occurrence')
@@ -131,16 +124,16 @@ class TestDwCAReader(unittest.TestCase):
         td = 'http://rs.gbif.org/terms/1.0/Description'
 
         # This archive has no extension, we should get an empty list
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertEqual([], dwca.extensions_rowtype)
 
         # This archive only contains the VernacularName extension
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as dwca:
             self.assertEqual(dwca.extensions_rowtype[0], vn)
             self.assertEqual(1, len(dwca.extensions_rowtype))
 
         # TODO: test with more complex archive
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
             # 2 extensions are in use : vernacular names and taxon descriptions
             self.assertEqual(2, len(dwca.extensions_rowtype))
             # USe of frozenset to lose ordering
@@ -154,7 +147,7 @@ class TestDwCAReader(unittest.TestCase):
         TODO: split
         """
 
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             # Assert metadata is an instance of BeautifulSoup
             self.assertIsInstance(dwca.metadata, BeautifulSoup)
 
@@ -167,35 +160,35 @@ class TestDwCAReader(unittest.TestCase):
         """Test the core_contains_term method."""
 
         # Example file contains locality but no country
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertTrue(dwca.core_contains_term(qn('locality')))
             self.assertFalse(dwca.core_contains_term(qn('country')))
 
     def test_ignore_header_lines(self):
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             # The sample file has two real lines + 1 header file
             self.assertEqual(2, len([l for l in dwca]))
 
-        with DwCAReader(self.NOHEADERS1_PATH) as dwca:
+        with DwCAReader(NOHEADERS1_PATH) as dwca:
             # This file has two real lines, without headers
             # (specified in meta.xml)
             self.assertEqual(2, len([l for l in dwca]))
 
-        with DwCAReader(self.NOHEADERS2_PATH) as dwca:
+        with DwCAReader(NOHEADERS2_PATH) as dwca:
             # This file has two real lines, without headers
             # (nothing specified in meta.xml)
             self.assertEqual(2, len([l for l in dwca]))
 
     def test_iterate_dwcalines(self):
         """Test the iterating over DwCACoreLines"""
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             for line in dwca:
                 self.assertIsInstance(line, DwCACoreLine)
 
     def test_iterate_order(self):
         """Test that the order of the core file is respected when iterating."""
         # This is also probably tested inderectly elsewhere, but this is the right place :)
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             l = list(dwca)
             # Lines are ordered like this in core: id 4-1-3-2
             self.assertEqual(int(l[0].id), 4)
@@ -204,14 +197,14 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(int(l[3].id), 2)
 
     def test_iterate_multiple_calls(self):
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
             self.assertEqual(4, len([l for l in dwca]))
             # The second time, we can still find 4 lines...
             self.assertEqual(4, len([l for l in dwca]))
 
     def test_get_line_by_index(self):
         """Test the get_line_by_index() method work as expected"""
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Lines are ordered like this in core: id 4-1-3-2
             first_line = dwca.get_line_by_index(0)
             self.assertEqual(4, int(first_line.id))
@@ -226,7 +219,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Number can be passed as a string....
             l = dwca.get_line_by_id('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
@@ -234,7 +227,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_multiple_calls(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             l = dwca.get_line_by_id('3')
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
@@ -246,19 +239,19 @@ class TestDwCAReader(unittest.TestCase):
     def test_get_line_by_id_other(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Passed as an integer, conversion will be tried...
             l = dwca.get_line_by_id(3)
             self.assertEqual('Peliperdix', l.data[genus_qn])
 
     def test_get_inexistent_line(self):
         """ Ensure get_line_by_id() returns None if we ask it an unexistent line. """
-        with DwCAReader(self.IDS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             self.assertEqual(None, dwca.get_line_by_id(8000))
 
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             lines = list(dwca)
 
             # Check basic locality values from sample file
@@ -273,7 +266,7 @@ class TestDwCAReader(unittest.TestCase):
         text file. This is part of the standard and was produced by IPT
         prior to version 2.0.3.
         """
-        with DwCAReader(self.DEFAULT_VAL_PATH) as dwca:
+        with DwCAReader(DEFAULT_VAL_PATH) as dwca:
             for l in dwca:
                 self.assertEqual('Belgium', l.data[qn('country')])
 
@@ -294,7 +287,7 @@ class TestDwCAReader(unittest.TestCase):
         # We know we have no \n in our test archive, so if we fine one
         # It's probably a character that was left by error when parsin
         # line
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as simple_dwca:
             for l in simple_dwca:
                 for k, v in l.data.iteritems():
                     self.assertFalse(v.endswith("\n"))
@@ -303,11 +296,11 @@ class TestDwCAReader(unittest.TestCase):
         """Test we have correct number of extensions l. per core line"""
 
         # This one has no extension, so line.extensions should be an empty list
-        with DwCAReader(self.BASIC_ARCHIVE_PATH) as simple_dwca:
+        with DwCAReader(BASIC_ARCHIVE_PATH) as simple_dwca:
             for l in simple_dwca:
                 self.assertEqual(0, len(l.extensions))
 
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             lines = list(star_dwca)
 
             # 3 vernacular names are given for Struthio Camelus...
@@ -320,7 +313,7 @@ class TestDwCAReader(unittest.TestCase):
 
         # TODO: test the same thing with 2 different extensions reffering to
         # the line
-        with DwCAReader(self.MULTIEXTENSIONS_ARCHIVE_PATH) as multi_dwca:
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as multi_dwca:
             lines = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
@@ -337,7 +330,7 @@ class TestDwCAReader(unittest.TestCase):
         (on core and extension lines)
         """
 
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             taxon_qn = "http://rs.tdwg.org/dwc/terms/Taxon"
             vernacular_qn = "http://rs.gbif.org/terms/1.0/VernacularName"
 
@@ -350,7 +343,7 @@ class TestDwCAReader(unittest.TestCase):
                     self.assertEqual(vernacular_qn, line.extensions[0].rowtype)
 
     def test_line_class(self):
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             for line in star_dwca:
                 self.assertIsInstance(line, DwCACoreLine)
 
@@ -365,7 +358,7 @@ class TestDwCAReader(unittest.TestCase):
         The content of this 'lines' property is equivalent to iterating and
         storing result in a list.
         """
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             by_iteration = []
             for l in star_dwca:
                 by_iteration.append(l)
@@ -382,7 +375,7 @@ class TestDwCAReader(unittest.TestCase):
         (only the EOL string specified in meta.xml should be used).
          """
 
-        with DwCAReader(self.UTF8EOL_ARCHIVE_PATH) as dwca:
+        with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
             lines = dwca.lines
             # If line properly splitted => 64 rows.
             # (61 - and probably an IndexError - if errrors)
@@ -391,11 +384,11 @@ class TestDwCAReader(unittest.TestCase):
     def test_line_source_metadata(self):
         # For normal DwC-A, it should always be none (NO source data
         # available in archive.)
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             self.assertEqual(None, star_dwca.lines[0].source_metadata)
 
     def test_core_terms(self):
-        with DwCAReader(self.EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             # The Core file contains tjhe following rows
             # <field index="1" term="http://rs.tdwg.org/dwc/terms/family"/>
             # <field index="2" term="http://rs.tdwg.org/dwc/terms/phylum"/>
