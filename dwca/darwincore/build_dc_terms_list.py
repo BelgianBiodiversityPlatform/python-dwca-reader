@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Small utility script used during development to generate a list of DarwinCore
 # terms from Darwin Core description XML files. This list of terms is for
 # consumption by the qualname() helper

@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from .terms import TERMS
+
 
 def qualname(short):
     """Takes a darwin core term and returns the corresponding qualname
