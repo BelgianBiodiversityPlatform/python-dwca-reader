@@ -27,9 +27,9 @@ Rights as supplied: Not supplied"""
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
                              results_dwca.core_rowtype)
 
-            line1 = results_dwca.rows[0]
-            self.assertEqual('Tetraodontidae', line1.data[qn('family')])
-            self.assertEqual([], line1.extensions)
+            row1 = results_dwca.rows[0]
+            self.assertEqual('Tetraodontidae', row1.data[qn('family')])
+            self.assertEqual([], row1.extensions)
 
     # Specific GBIFResultsReader feature
     def test_citations_access(self):
@@ -63,7 +63,7 @@ Rights as supplied: Not supplied"""
                              individualName.givenName.contents[0],
                              'Rob')
 
-    def test_line_source_metadata(self):
+    def test_row_source_metadata(self):
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
             first_row = results.get_row_by_id('607759330')
             m = first_row.source_metadata
@@ -80,7 +80,7 @@ Rights as supplied: Not supplied"""
             self.assertEqual(m.dataset.language.contents[0],
                              'en')
 
-    def test_line_source_missing_metadata(self):
+    def test_row_source_missing_metadata(self):
         with GBIFResultsReader(self.MISSINGMETA_PATH) as results:
             # We have source metadata, but not for all datasets/line...
             # We sould have None in this cases

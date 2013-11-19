@@ -17,7 +17,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
 
 
 class TestDwCAReader(unittest.TestCase):
-    # TODO: Move line-oriented tests to another test class
+    # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
     def test_descriptor(self):
@@ -25,14 +25,14 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsInstance(basic_dwca.descriptor, BeautifulSoup)
             self.assertEqual(basic_dwca.descriptor.archive["metadata"], 'eml.xml')
 
-    def test_line_human_representation(self):
+    def test_row_human_representation(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
             l = basic_dwca.rows[0]
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
             self.assertIn("Source: Core file", l_repr)
-            self.assertIn("Line id:", l_repr)
-            self.assertIn("Reference extension lines: No", l_repr)
+            self.assertIn("Row id:", l_repr)
+            self.assertIn("Reference extension rows: No", l_repr)
             self.assertIn("Reference source metadata: No", l_repr)
             self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
                           l_repr)
@@ -42,8 +42,8 @@ class TestDwCAReader(unittest.TestCase):
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Taxon", l_repr)
             self.assertIn("Source: Core file", l_repr)
-            self.assertIn("Line id: 1", l_repr)
-            self.assertIn("Reference extension lines: Yes", l_repr)
+            self.assertIn("Row id: 1", l_repr)
+            self.assertIn("Reference extension rows: Yes", l_repr)
             self.assertIn("Reference source metadata: No", l_repr)
 
             extension_l_repr = str(l.extensions[0])
@@ -51,7 +51,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("Source: Extension file", extension_l_repr)
             self.assertIn("Core row id: 1", extension_l_repr)
             self.assertIn("ostrich", extension_l_repr)
-            self.assertIn("Reference extension lines: No", extension_l_repr)
+            self.assertIn("Reference extension rows: No", extension_l_repr)
             self.assertIn("Reference source metadata: No", extension_l_repr)
 
         with GBIFResultsReader(GBIF_RESULTS_PATH) as gbif_dwca:
@@ -168,31 +168,31 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_ignore_header_lines(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
-            # The sample file has two real lines + 1 header file
+            # The sample file has two real rows + 1 header line
             self.assertEqual(2, len([l for l in dwca]))
 
         with DwCAReader(NOHEADERS1_PATH) as dwca:
-            # This file has two real lines, without headers
+            # This file has two real rows, without headers
             # (specified in meta.xml)
             self.assertEqual(2, len([l for l in dwca]))
 
         with DwCAReader(NOHEADERS2_PATH) as dwca:
-            # This file has two real lines, without headers
+            # This file has two real rows, without headers
             # (nothing specified in meta.xml)
             self.assertEqual(2, len([l for l in dwca]))
 
-    def test_iterate_dwcalines(self):
+    def test_iterate_rows(self):
         """Test the iterating over DwCACoreRow(s)"""
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
-            for line in dwca:
-                self.assertIsInstance(line, DwCACoreRow)
+            for row in dwca:
+                self.assertIsInstance(row, DwCACoreRow)
 
     def test_iterate_order(self):
-        """Test that the order of the core file is respected when iterating."""
+        """Test that the order of appaearance in Core file is respected when iterating."""
         # This is also probably tested inderectly elsewhere, but this is the right place :)
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             l = list(dwca)
-            # Lines are ordered like this in core: id 4-1-3-2
+            # Row IDs are ordered like this in core file: id 4-1-3-2
             self.assertEqual(int(l[0].id), 4)
             self.assertEqual(int(l[1].id), 1)
             self.assertEqual(int(l[2].id), 3)
@@ -201,13 +201,13 @@ class TestDwCAReader(unittest.TestCase):
     def test_iterate_multiple_calls(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
             self.assertEqual(4, len([l for l in dwca]))
-            # The second time, we can still find 4 lines...
+            # The second time, we can still find 4 rows...
             self.assertEqual(4, len([l for l in dwca]))
 
     def test_get_row_by_index(self):
         """Test the get_row_by_index() method work as expected"""
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
-            # Lines are ordered like this in core: id 4-1-3-2
+            # Row IDs are ordered like this in core: id 4-1-3-2
             first_row = dwca.get_row_by_index(0)
             self.assertEqual(4, int(first_row.id))
 
@@ -246,7 +246,7 @@ class TestDwCAReader(unittest.TestCase):
             r = dwca.get_row_by_id(3)
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
-    def test_get_inexistent_line(self):
+    def test_get_inexistent_row(self):
         """ Ensure get_row_by_id() returns None if we ask it an unexistent row. """
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             self.assertEqual(None, dwca.get_row_by_id(8000))
@@ -284,86 +284,82 @@ class TestDwCAReader(unittest.TestCase):
             qn('dsfsdfsdfsdfsdfsd')
 
     def test_no_cr_left(self):
-        """Test no carriage return characters are left at end of line"""
+        """Test no carriage return characters are left at end of line."""
 
         # We know we have no \n in our test archive, so if we fine one
-        # It's probably a character that was left by error when parsin
+        # it's probably a character that was left by error when parsing
         # line
         with DwCAReader(BASIC_ARCHIVE_PATH) as simple_dwca:
             for l in simple_dwca:
                 for k, v in l.data.iteritems():
                     self.assertFalse(v.endswith("\n"))
 
-    def test_correct_extension_lines_per_core_line(self):
-        """Test we have correct number of extensions l. per core line"""
+    def test_correct_extension_rows_per_core_row(self):
+        """Test we have the correct number of extensions rows."""
 
-        # This one has no extension, so line.extensions should be an empty list
+        # This one has no extension, so row.extensions should be an empty list
         with DwCAReader(BASIC_ARCHIVE_PATH) as simple_dwca:
-            for l in simple_dwca:
-                self.assertEqual(0, len(l.extensions))
+            for r in simple_dwca:
+                self.assertEqual(0, len(r.extensions))
 
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            lines = list(star_dwca)
+            rows = list(star_dwca)
 
             # 3 vernacular names are given for Struthio Camelus...
-            self.assertEqual(3, len(lines[0].extensions))
+            self.assertEqual(3, len(rows[0].extensions))
             # ... 1 vernacular name for Alectoris chukar ...
-            self.assertEqual(1, len(lines[1].extensions))
-            # ... and none for the last two lines
-            self.assertEqual(0, len(lines[2].extensions))
-            self.assertEqual(0, len(lines[3].extensions))
+            self.assertEqual(1, len(rows[1].extensions))
+            # ... and none for the last two rows
+            self.assertEqual(0, len(rows[2].extensions))
+            self.assertEqual(0, len(rows[3].extensions))
 
-        # TODO: test the same thing with 2 different extensions reffering to
-        # the line
+        # TODO: test the same thing with 2 different extensions reffering to the row
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as multi_dwca:
-            lines = list(multi_dwca)
+            rows = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
-            self.assertEqual(5, len(lines[0].extensions))
+            self.assertEqual(5, len(rows[0].extensions))
             # 1 Vernacular name, no taxon description
-            self.assertEqual(1, len(lines[1].extensions))
+            self.assertEqual(1, len(rows[1].extensions))
             # No extensions for this core line
-            self.assertEqual(0, len(lines[2].extensions))
+            self.assertEqual(0, len(rows[2].extensions))
             # No vernacular name, 1 taxon description
 
-    def test_line_rowtype(self):
-        """Test the rowtype attribute of DwCALine
-
-        (on core and extension lines)
-        """
+    def test_row_rowtype(self):
+        """Test the rowtype attribute of rows (for Core and extensions)."""
 
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             taxon_qn = "http://rs.tdwg.org/dwc/terms/Taxon"
             vernacular_qn = "http://rs.gbif.org/terms/1.0/VernacularName"
 
-            for i, line in enumerate(star_dwca):
+            for i, row in enumerate(star_dwca):
                 # All ine instance accessed here are core:
-                self.assertEqual(taxon_qn, line.rowtype)
+                self.assertEqual(taxon_qn, row.rowtype)
 
                 if i == 0:
-                    # First line has an extension, and only vn are in use
-                    self.assertEqual(vernacular_qn, line.extensions[0].rowtype)
+                    # First row has an extension, and only vn are in use
+                    self.assertEqual(vernacular_qn, row.extensions[0].rowtype)
 
-    def test_line_class(self):
+    def test_row_class(self):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            for line in star_dwca:
-                self.assertIsInstance(line, DwCACoreRow)
+            for row in star_dwca:
+                self.assertIsInstance(row, DwCACoreRow)
 
                 # But the extensions are... extensions (hum)
-                for an_extension in line.extensions:
+                for an_extension in row.extensions:
                     self.assertIsInstance(an_extension, DwCAExtensionRow)
 
     # TODO: Also test we return an empty list on empty archive
     def test_rows_property(self):
-        """Test that DwCAReader expose a list of all core lines in 'rows'
+        """Test that DwCAReader expose a list of all core rows in 'rows'
 
         The content of this 'rows' property is equivalent to iterating and
         storing result in a list.
         """
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             by_iteration = []
-            for l in star_dwca:
-                by_iteration.append(l)
+            for r in star_dwca:
+                by_iteration.append(r)
 
             self.assertEqual(by_iteration, star_dwca.rows)
 
@@ -378,12 +374,12 @@ class TestDwCAReader(unittest.TestCase):
          """
 
         with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
-            lines = dwca.rows
+            rows = dwca.rows
             # If line properly splitted => 64 rows.
             # (61 - and probably an IndexError - if errrors)
-            self.assertEqual(64, len(lines[0].data))
+            self.assertEqual(64, len(rows[0].data))
 
-    def test_line_source_metadata(self):
+    def test_row_source_metadata(self):
         # For normal DwC-A, it should always be none (NO source data
         # available in archive.)
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
@@ -416,7 +412,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(fields, star_dwca.core_terms)
 
     def test_not_zipfile(self):
-        """ Ensure BadZipfile is raised when passed archive is not  a zip file."""
+        """ Ensure BadZipfile is raised when passed archive is not a zip file."""
         invalid_origin_file = tempfile.NamedTemporaryFile()
 
         with self.assertRaises(BadZipfile):

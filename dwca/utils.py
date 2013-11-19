@@ -74,9 +74,9 @@ class _EmbeddedCSV(object):
     def get_row_by_index(self, index):
         self._position_file_after_header()
 
-        for (i, line) in enumerate(self._core_fhandler):
+        for (i, row) in enumerate(self._core_fhandler):
             if i == index:
-                return line
+                return row
         else:
             return None  # Reached end of file
 

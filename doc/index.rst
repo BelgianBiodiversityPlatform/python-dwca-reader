@@ -85,7 +85,7 @@ Example use
             # => --
             # => Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence
             # => Source: Core file
-            # => Line ID:
+            # => Row ID:
             # => Data: {u'http://rs.tdwg.org/dwc/terms/basisOfRecord': u'Observation', u'http://rs.tdwg.org/dwc/terms/family': # => u'Tetraodontidae', u'http://rs.tdwg.org/dwc/terms/locality': u'Borneo', u'http://rs.tdwg.# 
             # => org/dwc/terms/scientificName': u'tetraodon fluviatilis'}
             # => --
@@ -96,7 +96,7 @@ Example use
             # => Value of 'locality' for this row: Mumbai
 
         # Alternatively, we can get a list of core rows instead of iterating:
-        lines = dwca.rows
+        rows = dwca.rows
 
         # Or retrieve a specific row by its id:
         occurrence_number_three = dwca.get_row_by_id(3)
@@ -127,9 +127,9 @@ Example use
         core_rows = dwca.rows
 
         # a) Data access
-        # Extension lines are accessible as a list of DwcAExtensionRow instances in the 'extensions' attribute:
+        # Extension rows are accessible as a list of DwcAExtensionRow instances in the 'extensions' attribute:
         for e in core_rows[0].extensions:
-            # Display all extensions line that refers to the first Core row
+            # Display all rows from extension files that refers to the first Core row
             print e
 
         # ... and what its rowtype is:
@@ -147,7 +147,7 @@ Example use
         rows = dwca.rows
         ostrich = rows[0]
 
-        print "You'll find below all extensions line reffering to Ostrich"
+        print "You'll find below all extensions rows reffering to Ostrich"
         print "There should be 3 vernacular names and 2 taxon description"
         for ext in ostrich.extensions:
             print ext
@@ -188,7 +188,7 @@ The new version of the GBIF Data Portal (to be released later this year) will al
         results.rights
         # => "Dataset: [Name and license of source datasets for this resultset]"
 
-        # 2) In addition to the dataset-wide metadata (EML) file, these archives also include the source metadata for all datasets whose lines are part of the resultset.
+        # 2) In addition to the dataset-wide metadata (EML) file, these archives also include the source metadata for all datasets whose rows are part of the resultset.
 
         # 2.1) At the archive level, they can be accessed as a dict:
         results.source_metadata

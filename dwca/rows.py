@@ -18,8 +18,8 @@ class DwCARow(object):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
                "Source: {source_str}\n"
-               "{id_line}\n"
-               "Reference extension lines: {extension_flag}\n"
+               "{id_row}\n"
+               "Reference extension rows: {extension_flag}\n"
                "Reference source metadata: {source_metadata_flag}\n"
                "Data: {data}\n"
                "--\n")
@@ -30,29 +30,27 @@ class DwCARow(object):
         return txt.format(rowtype=self.rowtype,
                           source_str=source_str,
                           data=self.data,
-                          id_line=id_str,
+                          id_row=id_str,
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, line, metadata_section):
-        #: The row/line type as stated in the archive descriptor.
+    def __init__(self, csv_line, metadata_section):
+        #: The csv line type as stated in the archive descriptor.
         #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
         self.rowtype = metadata_section['rowType']
 
-        # TODO: Move line/field stripping to _EmbeddedCSV ??
-
-        # self.raw_fields is a list of the line's content
+        # self.raw_fields is a list of the csv_line's content
         line_ending = metadata_section['linesTerminatedBy'].decode("string-escape")
         field_ending = metadata_section['fieldsTerminatedBy'].decode("string-escape")
         #:
-        self.raw_fields = line.rstrip(line_ending).split(field_ending)
+        self.raw_fields = csv_line.rstrip(line_ending).split(field_ending)
         # TODO: raw_fields is a new property: to test
 
         # TODO: Consistency chek ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
 
-        #: a dict containing the line/row data, such as:
+        #: a dict containing the csv_line/row data, such as:
         #: {'dwc_term_1': 'value',
         #: 'dwc_term_2': 'value',
         #: ...}
@@ -78,16 +76,16 @@ class DwCACoreRow(DwCARow):
     
     """ This class is used to represent a row/line from a Darwin Core Archive core file.
 
-    It is a subclass of :class:`lines.DwCALine` and therefore inherits all of its methods and
+    It is a subclass of :class:`lines.DwCARow` and therefore inherits all of its methods and
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough
-    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (by iterating, using the lines
+    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (by iterating, using the rows
     attribute, get_row_by_index, get_row_by_id, ...).
     """
     
     def __str__(self):
-        id_str = "Line id: " + str(self.id)
+        id_str = "Row id: " + str(self.id)
         return super(DwCACoreRow, self)._build_str("Core file", id_str)
 
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
@@ -99,8 +97,8 @@ class DwCACoreRow(DwCARow):
         #:
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
-        # Load related extension lines
-        #: A list of :class:`.DwCAExtensionRow` instances that relates to this Core line
+        # Load related extension row
+        #: A list of :class:`.DwCAExtensionRow` instances that relates to this Core row
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
@@ -110,12 +108,12 @@ class DwCACoreRow(DwCARow):
                     self.extensions.append(tmp)
 
         # If we have additional metadata about the dataset we're originally
-        # from (AKA source/line-level metadata), make it accessible trough
+        # from (AKA source/row-level metadata), make it accessible trough
         # the source_metadata attribute
 
         # If this data is not available
         # (because the archive don't provide source metadata or because it
-        # provide some, but not for this line, it will be None)
+        # provide some, but not for this row, it will be set to None)
         field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
 
         if (archive_source_metadata and (field_name in self.data)):
@@ -132,7 +130,7 @@ class DwCACoreRow(DwCARow):
     # __key is different between DwCACoreRow and DwCAExtensionRow, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
-        """Return a tuple representing the line. Common ground between equality and hash."""
+        """Return a tuple representing the row. Common ground between equality and hash."""
         return (self.metadata_section, self.id, self.data, self.extensions, self.source_metadata,
                 self.rowtype, self.raw_fields)
 
@@ -150,7 +148,7 @@ class DwCAExtensionRow(DwCARow):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
-    It is a subclass of :class:`lines.DwCALine` and therefore inherits all of its methods and
+    It is a subclass of :class:`rows.DwCARow` and therefore inherits all of its methods and
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
@@ -171,7 +169,7 @@ class DwCAExtensionRow(DwCARow):
         self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
 
     def __key(self):
-        """Return a tuple representing the line. Common ground between equality and hash."""
+        """Return a tuple representing the row. Common ground between equality and hash."""
         return (self.metadata_section, self.core_id, self.data, self.rowtype, self.raw_fields)
 
     def __eq__(self, other):

@@ -26,7 +26,7 @@ class DwCAReader(object):
         with DwCAReader('my_archive.zip') as dwca:
             # Iterating on core rows is easy:
             for core_row in dwca:
-                # core_row is an instance of lines.DwCACoreRow
+                # core_row is an instance of rows.DwCACoreRow
                 print core_row
 
             # Scientific metadata (EML) is available as a BeautifulSoup object
@@ -212,7 +212,7 @@ class GBIFResultsReader(DwCAReader):
     additional data provided in these specific archives:
 
         - The content of `citations.txt` and `rights.txt` is available via specific properties.
-        - Core lines accessed trough this class have a `source_metadata` property that gives\
+        - (core) Rows accessed trough this class have a `source_metadata` property that gives\
         access to the metadata of the originating dataset.
 
     """
