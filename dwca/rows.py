@@ -6,7 +6,7 @@ from utils import _EmbeddedCSV
 
 
 # Make it abstract ? Private ?
-class DwCALine(object):
+class DwCARow(object):
 
     """This class is used to represent a row/line in a Darwin Core Archive.
 
@@ -74,7 +74,7 @@ class DwCALine(object):
         self.metadata_section = None
 
 
-class DwCACoreLine(DwCALine):
+class DwCACoreRow(DwCARow):
     
     """ This class is used to represent a row/line from a Darwin Core Archive core file.
 
@@ -88,11 +88,11 @@ class DwCACoreLine(DwCALine):
     
     def __str__(self):
         id_str = "Line id: " + str(self.id)
-        return super(DwCACoreLine, self)._build_str("Core file", id_str)
+        return super(DwCACoreRow, self)._build_str("Core file", id_str)
 
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
-        super(DwCACoreLine, self).__init__(line, metadata.core)
+        super(DwCACoreRow, self).__init__(line, metadata.core)
 
         self.metadata_section = metadata.core
 
@@ -100,12 +100,12 @@ class DwCACoreLine(DwCALine):
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
         # Load related extension lines
-        #: A list of :class:`.DwCAExtensionLine` instances that relates to this Core line
+        #: A list of :class:`.DwCAExtensionRow` instances that relates to this Core line
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
             for l in csv:
-                tmp = DwCAExtensionLine(l, ext_meta)
+                tmp = DwCAExtensionRow(l, ext_meta)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
 
@@ -129,7 +129,7 @@ class DwCACoreLine(DwCALine):
         #:
         self.source_metadata = m
 
-    # __key is different between DwCACoreLine and DwCAExtensionLine, while eq, ne and hash are identical
+    # __key is different between DwCACoreRow and DwCAExtensionRow, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the line. Common ground between equality and hash."""
@@ -146,7 +146,7 @@ class DwCACoreLine(DwCALine):
         return hash(self.__key())
 
 
-class DwCAExtensionLine(DwCALine):
+class DwCAExtensionRow(DwCARow):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
@@ -154,16 +154,16 @@ class DwCAExtensionLine(DwCALine):
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
-    attribute of :class:`.DwCACoreLine`.
+    attribute of :class:`.DwCACoreRow`.
     """
 
     def __str__(self):
-        id_str = "Core Line id: " + str(self.core_id)
-        return super(DwCAExtensionLine, self)._build_str("Extension file", id_str)
+        id_str = "Core row id: " + str(self.core_id)
+        return super(DwCAExtensionRow, self)._build_str("Extension file", id_str)
 
     def __init__(self, line, metadata):
         # metadata = only the section that concerns me
-        super(DwCAExtensionLine, self).__init__(line, metadata)
+        super(DwCAExtensionRow, self).__init__(line, metadata)
 
         self.metadata_section = metadata
 

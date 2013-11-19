@@ -8,7 +8,7 @@ Python-dwca-reader provides a specialized ``GBIFResultsReader`` class that gives
 Additions to the Darwin Core Archive standard & specificities:
 --------------------------------------------------------------
 
-* In addition to the general metadata file (``metadata.xml``), it contains a ``dataset`` directory. Each file in this directory is an EML document describing a dataset whose occurences are part of the search results. The file name (without extension) is the UUID of this dataset. Each line in occurrence.txt refers to this file using the ``datasetID`` Darwin Core term. These UUID's can also be resolved using the `GBRDS Registry`_.
+* In addition to the general metadata file (``metadata.xml``), it contains a ``dataset`` directory. Each file in this directory is an EML document describing a dataset whose occurences are part of the search results. The file name (without extension) is the UUID of this dataset. Each row in occurrence.txt refers to this file using the ``datasetID`` Darwin Core term. These UUID's can also be resolved using the `GBRDS Registry`_.
 * It contains rights.txt and citations.txt that provides aggregated IP rights and citation information for these search results. These two files are not referenced in the archive descriptor (``meta.xml``)
 
 Examples:

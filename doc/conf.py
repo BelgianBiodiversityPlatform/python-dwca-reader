@@ -231,7 +231,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Python-dwca-reader', u'Python-dwca-reader Documentation',
-   u'Nicolas Noé', 'Python-dwca-reader', 'One line description of project.',
+   u'Nicolas Noé', 'Python-dwca-reader', 'A simple Python class to read Darwin Core Archive (DwC-A) files.',
    'Miscellaneous'),
 ]
 

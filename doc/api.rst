@@ -4,7 +4,7 @@ Detailed API
 .. automodule:: dwca
     :members:
 
-.. automodule:: lines
+.. automodule:: rows
     :members:
 
 

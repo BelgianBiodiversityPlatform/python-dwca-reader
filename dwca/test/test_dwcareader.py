@@ -8,7 +8,7 @@ from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader
-from ..lines import DwCACoreLine, DwCAExtensionLine
+from ..rows import DwCACoreRow, DwCAExtensionRow
 from ..darwincore.utils import qualname as qn
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
@@ -49,7 +49,7 @@ class TestDwCAReader(unittest.TestCase):
             extension_l_repr = str(l.extensions[0])
             self.assertIn("Rowtype: http://rs.gbif.org/terms/1.0/VernacularName", extension_l_repr)
             self.assertIn("Source: Extension file", extension_l_repr)
-            self.assertIn("Core Line id: 1", extension_l_repr)
+            self.assertIn("Core row id: 1", extension_l_repr)
             self.assertIn("ostrich", extension_l_repr)
             self.assertIn("Reference extension lines: No", extension_l_repr)
             self.assertIn("Reference source metadata: No", extension_l_repr)
@@ -182,10 +182,10 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(2, len([l for l in dwca]))
 
     def test_iterate_dwcalines(self):
-        """Test the iterating over DwCACoreLines"""
+        """Test the iterating over DwCACoreRow(s)"""
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             for line in dwca:
-                self.assertIsInstance(line, DwCACoreLine)
+                self.assertIsInstance(line, DwCACoreRow)
 
     def test_iterate_order(self):
         """Test that the order of the core file is respected when iterating."""
@@ -347,11 +347,11 @@ class TestDwCAReader(unittest.TestCase):
     def test_line_class(self):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             for line in star_dwca:
-                self.assertIsInstance(line, DwCACoreLine)
+                self.assertIsInstance(line, DwCACoreRow)
 
                 # But the extensions are... extensions (hum)
                 for an_extension in line.extensions:
-                    self.assertIsInstance(an_extension, DwCAExtensionLine)
+                    self.assertIsInstance(an_extension, DwCAExtensionRow)
 
     # TODO: Also test we return an empty list on empty archive
     def test_rows_property(self):
