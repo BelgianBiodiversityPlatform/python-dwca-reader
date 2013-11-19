@@ -83,7 +83,7 @@ class DwCACoreRow(DwCARow):
 
     Most of the time, you won't instantiate it manually but rather obtain it trough
     :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (by iterating, using the lines
-    attribute, get_line_by_index, get_line_by_id, ...).
+    attribute, get_row_by_index, get_row_by_id, ...).
     """
     
     def __str__(self):

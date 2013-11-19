@@ -65,16 +65,16 @@ Rights as supplied: Not supplied"""
 
     def test_line_source_metadata(self):
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
-            first_line = results.get_line_by_id('607759330')
-            m = first_line.source_metadata
+            first_row = results.get_row_by_id('607759330')
+            m = first_row.source_metadata
 
             self.assertIsInstance(m, BeautifulSoup)
             self.assertEqual(m.dataset.creator.
                              individualName.givenName.contents[0],
                              'Stanley')
 
-            last_line = results.get_line_by_id('782700656')
-            m = last_line.source_metadata
+            last_row = results.get_row_by_id('782700656')
+            m = last_row.source_metadata
 
             self.assertIsInstance(m, BeautifulSoup)
             self.assertEqual(m.dataset.language.contents[0],
@@ -84,5 +84,5 @@ Rights as supplied: Not supplied"""
         with GBIFResultsReader(self.MISSINGMETA_PATH) as results:
             # We have source metadata, but not for all datasets/line...
             # We sould have None in this cases
-            first_line = results.get_line_by_id('607759330')
-            self.assertEqual(None, first_line.source_metadata)
+            first_row = results.get_row_by_id('607759330')
+            self.assertEqual(None, first_row.source_metadata)

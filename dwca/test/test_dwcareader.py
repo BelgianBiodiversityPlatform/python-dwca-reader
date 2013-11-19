@@ -204,61 +204,61 @@ class TestDwCAReader(unittest.TestCase):
             # The second time, we can still find 4 lines...
             self.assertEqual(4, len([l for l in dwca]))
 
-    def test_get_line_by_index(self):
-        """Test the get_line_by_index() method work as expected"""
+    def test_get_row_by_index(self):
+        """Test the get_row_by_index() method work as expected"""
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Lines are ordered like this in core: id 4-1-3-2
-            first_line = dwca.get_line_by_index(0)
-            self.assertEqual(4, int(first_line.id))
+            first_row = dwca.get_row_by_index(0)
+            self.assertEqual(4, int(first_row.id))
 
-            last_line = dwca.get_line_by_index(3)
-            self.assertEqual(2, int(last_line.id))
+            last_row = dwca.get_row_by_index(3)
+            self.assertEqual(2, int(last_row.id))
 
             # None returned if bigger than archive (last index: 3)
-            self.assertIsNone(dwca.get_line_by_index(4))
-            self.assertIsNone(dwca.get_line_by_index(1000))
+            self.assertIsNone(dwca.get_row_by_index(4))
+            self.assertIsNone(dwca.get_row_by_index(1000))
 
-    def test_get_line_by_id_string(self):
+    def test_get_row_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Number can be passed as a string....
-            l = dwca.get_line_by_id('3')
-            self.assertEqual('Peliperdix', l.data[genus_qn])
+            r = dwca.get_row_by_id('3')
+            self.assertEqual('Peliperdix', r.data[genus_qn])
 
-    def test_get_line_by_id_multiple_calls(self):
+    def test_get_row_by_id_multiple_calls(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
-            l = dwca.get_line_by_id('3')
-            self.assertEqual('Peliperdix', l.data[genus_qn])
+            r = dwca.get_row_by_id('3')
+            self.assertEqual('Peliperdix', r.data[genus_qn])
 
             # If iterator is not properly reset, None will be returned
             # the second time
-            l = dwca.get_line_by_id('3')
-            self.assertEqual('Peliperdix', l.data[genus_qn])
+            r = dwca.get_row_by_id('3')
+            self.assertEqual('Peliperdix', r.data[genus_qn])
 
-    def test_get_line_by_id_other(self):
+    def test_get_row_by_id_other(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Passed as an integer, conversion will be tried...
-            l = dwca.get_line_by_id(3)
-            self.assertEqual('Peliperdix', l.data[genus_qn])
+            r = dwca.get_row_by_id(3)
+            self.assertEqual('Peliperdix', r.data[genus_qn])
 
     def test_get_inexistent_line(self):
-        """ Ensure get_line_by_id() returns None if we ask it an unexistent line. """
+        """ Ensure get_row_by_id() returns None if we ask it an unexistent row. """
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
-            self.assertEqual(None, dwca.get_line_by_id(8000))
+            self.assertEqual(None, dwca.get_row_by_id(8000))
 
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
-            lines = list(dwca)
+            rows = list(dwca)
 
             # Check basic locality values from sample file
-            self.assertEqual('Borneo', lines[0].data[qn('locality')])
-            self.assertEqual('Mumbai', lines[1].data[qn('locality')])
+            self.assertEqual('Borneo', rows[0].data[qn('locality')])
+            self.assertEqual('Mumbai', rows[1].data[qn('locality')])
 
     def test_read_core_value_default(self):
         """Retrieve a (default) value from core

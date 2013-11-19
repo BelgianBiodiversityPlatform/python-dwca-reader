@@ -74,37 +74,37 @@ class DwCAReader(object):
         """Return all rows from the core file as a list of :class:`rows.DwCACoreRow` instances."""
         return list(self)
 
-    def get_line_by_id(self, line_id):
-        """Return the (Core) line whose id is line_id.
+    def get_row_by_id(self, row_id):
+        """Return the (Core) row whose id is row_id.
 
         .. warning::
 
-            It is rarely a good idea to rely on the line ID, because:
-            1) Not all Darwin Core Archives specifies line IDs.
+            It is rarely a good idea to rely on the row ID, because:
+            1) Not all Darwin Core Archives specifies row IDs.
             2) Nothing guarantees that the ID will actually be unique within the archive (depends
             of the data publisher). In that case, this method don't guarantee which one will be
-            returned. :meth:`.get_line_by_index` may be more appropriate in this case.
+            returned. :meth:`.get_row_by_index` may be more appropriate in this case.
 
         """
-        for line in self:
-            if line.id == str(line_id):
-                return line
+        for row in self:
+            if row.id == str(row_id):
+                return row
         else:
             return None
 
-    def get_line_by_index(self, index):
-        """Return a core line according to its index in core file.
+    def get_row_by_index(self, index):
+        """Return a core row according to its index in core file.
 
         .. note::
 
-            - First line has index 0
+            - First row has index 0
             - If index is bigger than the length of the archive, None is returned
-            - The index is often an appropriate way to unambiguously identify a core line in a DwCA.
+            - The index is often an appropriate way to unambiguously identify a core row in a DwCA.
 
         """
-        for (i, line) in enumerate(self):
+        for (i, row) in enumerate(self):
             if i == index:
-                return line
+                return row
         else:
             return None
 
@@ -194,7 +194,7 @@ class DwCAReader(object):
         return self
 
     def next(self):
-        cl = self._corefile.get_line_by_index(self._corefile_pointer)
+        cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
             return DwCACoreRow(cl, self.descriptor, self._unzipped_folder_path, self.source_metadata)

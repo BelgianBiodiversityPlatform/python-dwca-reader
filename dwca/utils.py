@@ -71,7 +71,7 @@ class _EmbeddedCSV(object):
 
     # TODO: Optimize for large files ?
     # ideas: http://stackoverflow.com/questions/620367/python-how-to-jump-to-a-particular-line-in-a-huge-text-file
-    def get_line_by_index(self, index):
+    def get_row_by_index(self, index):
         self._position_file_after_header()
 
         for (i, line) in enumerate(self._core_fhandler):

@@ -99,12 +99,12 @@ Example use
         lines = dwca.rows
 
         # Or retrieve a specific row by its id:
-        occurrence_number_three = dwca.get_line_by_id(3)
+        occurrence_number_three = dwca.get_row_by_id(3)
 
         # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard don't guarantee unicity (nor even that there will be an id).
         # the index (position) of the row (starting at 0) is generally preferable.
 
-        occurrence_on_second_line = dwca.get_line_by_index(1)
+        occurrence_on_second_line = dwca.get_row_by_index(1)
 
         # We can retreive the (absolute) of embedded files
         # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life cycle.
