@@ -23,11 +23,11 @@ Rights as supplied: Not supplied"""
     def test_dwcareader_features(self):
         """Ensure we didn't break inherited basic DwCAReader features."""
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
-            self.assertEqual(158, len(results_dwca.lines))
+            self.assertEqual(158, len(results_dwca.rows))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
                              results_dwca.core_rowtype)
 
-            line1 = results_dwca.lines[0]
+            line1 = results_dwca.rows[0]
             self.assertEqual('Tetraodontidae', line1.data[qn('family')])
             self.assertEqual([], line1.extensions)
 

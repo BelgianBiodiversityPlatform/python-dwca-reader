@@ -15,7 +15,7 @@ class DwCAReader(object):
     
     """This class is used to represent a Darwin Core Archive as a whole.
 
-    It gives read access to the data lines (from the Core file), to the Archive metadata, ...
+    It gives read access to the (Core file) rows, to the Archive metadata, ...
 
     A short usage example::
 
@@ -24,10 +24,10 @@ class DwCAReader(object):
         # The with statement is recommended as it ensures resources will be properly cleaned after
         # usage:
         with DwCAReader('my_archive.zip') as dwca:
-            # Iterating on core lines is easy:
-            for core_line in dwca:
+            # Iterating on core rows is easy:
+            for core_row in dwca:
                 # core_line are instances of lines.DwCACoreLine
-                print core_line
+                print core_row
 
             # Scientific metadata (EML) is available as a BeautifulSoup object
             print dwca.metadata.prettify()
@@ -70,7 +70,7 @@ class DwCAReader(object):
 
     @property
     #TODO: decide, test and document what we guarantee about ordering
-    def lines(self):
+    def rows(self):
         """Return all rows from the core file as a list of :class:`lines.DwCACoreLine` instances."""
         return list(self)
 

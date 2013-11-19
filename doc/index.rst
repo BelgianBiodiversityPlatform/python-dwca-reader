@@ -74,13 +74,13 @@ Example use
         if dwca.core_rowtype == qn('Occurrence'):
             pass
 
-        # Finally, let's iterate over the archive core lines and get the data:
-        for line in dwca:
-            # line is an instance of DwCACoreLine
+        # Finally, let's iterate over the archive core rows and get the data:
+        for row in dwca:
+            # row is an instance of DwCACoreLine
             # iteration respects their order of appearance in the core file
 
             # Print can be used for debugging purposes...
-            print line
+            print row
 
             # => --
             # => Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence
@@ -92,17 +92,17 @@ Example use
 
             # You can get the value of a specific Darwin Core term through
             # the "data" dict:
-            print "Locality for this line is: %s" % line.data[qn('locality')]
-            # => Locality for this line is: Mumbai
+            print "Value of 'locality' for this row: %s" % row.data[qn('locality')]
+            # => Value of 'locality' for this row: Mumbai
 
-        # Alternatively, we can get a list of core lines instead of iterating:
-        lines = dwca.lines
+        # Alternatively, we can get a list of core rows instead of iterating:
+        lines = dwca.rows
 
-        # Or retrieve a specific line by its id:
+        # Or retrieve a specific row by its id:
         occurrence_number_three = dwca.get_line_by_id(3)
 
-        # Caution: ids are generally a fragile way to identify a core line in an archive, since the standard don't guarantee unicity (nor even that there will be an id).
-        # the index (position) of the line (starting at 0) is generally preferable.
+        # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard don't guarantee unicity (nor even that there will be an id).
+        # the index (position) of the row (starting at 0) is generally preferable.
 
         occurrence_on_second_line = dwca.get_line_by_index(1)
 
@@ -124,16 +124,16 @@ Example use
         # => [u'http://rs.gbif.org/terms/1.0/VernacularName']
 
         # For convenience
-        core_lines = dwca.lines
+        core_rows = dwca.rows
 
         # a) Data access
         # Extension lines are accessible as a list of DwcAExtensionLine instances in the 'extensions' attribute:
-        for e in core_lines[0].extensions:
-            # Display all extensions line that refers to the first Core line
+        for e in core_rows[0].extensions:
+            # Display all extensions line that refers to the first Core row
             print e
 
         # ... and what its rowtype is:
-        print core_lines[0].rowtype
+        print core_rows[0].rowtype
         # => http://rs.tdwg.org/dwc/terms/Taxon
 
 3. Another example with multiple extensions (no new API here):
@@ -144,8 +144,8 @@ Example use
     from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('multiext_archive.zip') as dwca:
-        lines = dwca.lines
-        ostrich = lines[0]
+        rows = dwca.rows
+        ostrich = rows[0]
 
         print "You'll find below all extensions line reffering to Ostrich"
         print "There should be 3 vernacular names and 2 taxon description"
@@ -168,7 +168,7 @@ Example use
 
 The new version of the GBIF Data Portal (to be released later this year) will allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see :doc:`gbif_results`) that can also be read with this library in two different ways:
 
-- As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard data.
+- As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard features.
 - Via the specific ``GBIFResultsReader``, see example below:
 
 .. code:: python
@@ -196,8 +196,8 @@ The new version of the GBIF Data Portal (to be released later this year) will al
         #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
 
         # 2.2 From a DwCACoreLine instance, we can get back to the metadata of its source dataset:
-        first_line = results.line[0]
-        first_line.source_metadata
+        first_row = results.rows[0]
+        first_row.source_metadata
         => <Source dataset EML (BeautifulSoup instance)>
 
 

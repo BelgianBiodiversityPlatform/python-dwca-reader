@@ -27,7 +27,7 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_line_human_representation(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            l = basic_dwca.lines[0]
+            l = basic_dwca.rows[0]
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
             self.assertIn("Source: Core file", l_repr)
@@ -38,7 +38,7 @@ class TestDwCAReader(unittest.TestCase):
                           l_repr)
 
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            l = star_dwca.lines[0]
+            l = star_dwca.rows[0]
             l_repr = str(l)
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Taxon", l_repr)
             self.assertIn("Source: Core file", l_repr)
@@ -55,7 +55,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("Reference source metadata: No", extension_l_repr)
 
         with GBIFResultsReader(GBIF_RESULTS_PATH) as gbif_dwca:
-            l = gbif_dwca.lines[0]
+            l = gbif_dwca.rows[0]
             l_repr = str(l)
 
             self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
@@ -354,10 +354,10 @@ class TestDwCAReader(unittest.TestCase):
                     self.assertIsInstance(an_extension, DwCAExtensionLine)
 
     # TODO: Also test we return an empty list on empty archive
-    def test_lines_property(self):
-        """Test that DwCAReader expose a list of all core lines in 'lines'
+    def test_rows_property(self):
+        """Test that DwCAReader expose a list of all core lines in 'rows'
 
-        The content of this 'lines' property is equivalent to iterating and
+        The content of this 'rows' property is equivalent to iterating and
         storing result in a list.
         """
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
@@ -365,7 +365,7 @@ class TestDwCAReader(unittest.TestCase):
             for l in star_dwca:
                 by_iteration.append(l)
 
-            self.assertEqual(by_iteration, star_dwca.lines)
+            self.assertEqual(by_iteration, star_dwca.rows)
 
     # TODO: Add more test to ensure that the specified EOL sequence
     # (and ONLY this sequence!) is used to split lines.
@@ -378,7 +378,7 @@ class TestDwCAReader(unittest.TestCase):
          """
 
         with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
-            lines = dwca.lines
+            lines = dwca.rows
             # If line properly splitted => 64 rows.
             # (61 - and probably an IndexError - if errrors)
             self.assertEqual(64, len(lines[0].data))
@@ -387,7 +387,7 @@ class TestDwCAReader(unittest.TestCase):
         # For normal DwC-A, it should always be none (NO source data
         # available in archive.)
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            self.assertEqual(None, star_dwca.lines[0].source_metadata)
+            self.assertEqual(None, star_dwca.rows[0].source_metadata)
 
     def test_core_terms(self):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
