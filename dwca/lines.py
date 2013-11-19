@@ -100,7 +100,7 @@ class DwCACoreLine(DwCALine):
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
         # Load related extension lines
-        #:
+        #: A list of :class:`.DwCAExtensionLine` instances that relates to this Core line
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)

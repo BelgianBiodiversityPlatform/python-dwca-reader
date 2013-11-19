@@ -5,7 +5,7 @@ Welcome to Python-dwca-reader's documentation!
 What is it ?
 ------------
 
-A simple Python class to read `Darwin Core Archive`_ (DwC-A) files. It can also read exports (Occurrences downloads) from the new GBIF Data Portal (to be released later in 2013).
+A simple Python class to parse `Darwin Core Archive`_ (DwC-A) files. It can also read exports (Occurrences downloads) from the new GBIF Data Portal (to be released later in 2013).
 
 Status
 ------
@@ -33,7 +33,7 @@ Quite simply:
 Example use
 -----------
 
-1. Basic use, access to metadata and "Core lines"
+1. Basic use, access to metadata and rows from the Core file
 
 .. code:: python
 
@@ -148,7 +148,7 @@ Example use
         ostrich = lines[0]
 
         print "You'll find below all extensions line reffering to Ostrich"
-        print "There should be 3 verncaular names and 2 taxon description"
+        print "There should be 3 vernacular names and 2 taxon description"
         for ext in ostrich.extensions:
             print ext
 
