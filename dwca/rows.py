@@ -98,12 +98,12 @@ class CoreRow(Row):
         self.id = self.raw_fields[int(self.metadata_section.id['index'])]
 
         # Load related extension row
-        #: A list of :class:`.DwCAExtensionRow` instances that relates to this Core row
+        #: A list of :class:`.ExtensionRow` instances that relates to this Core row
         self.extensions = []
         for ext_meta in metadata.findAll('extension'):
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
             for l in csv:
-                tmp = DwCAExtensionRow(l, ext_meta)
+                tmp = ExtensionRow(l, ext_meta)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
 
@@ -127,7 +127,7 @@ class CoreRow(Row):
         #:
         self.source_metadata = m
 
-    # __key is different between CoreRow and DwCAExtensionRow, while eq, ne and hash are identical
+    # __key is different between CoreRow and ExtensionRow, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
@@ -144,7 +144,7 @@ class CoreRow(Row):
         return hash(self.__key())
 
 
-class DwCAExtensionRow(Row):
+class ExtensionRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
@@ -157,11 +157,11 @@ class DwCAExtensionRow(Row):
 
     def __str__(self):
         id_str = "Core row id: " + str(self.core_id)
-        return super(DwCAExtensionRow, self)._build_str("Extension file", id_str)
+        return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
     def __init__(self, line, metadata):
         # metadata = only the section that concerns me
-        super(DwCAExtensionRow, self).__init__(line, metadata)
+        super(ExtensionRow, self).__init__(line, metadata)
 
         self.metadata_section = metadata
 

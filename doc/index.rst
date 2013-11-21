@@ -127,7 +127,7 @@ Example use
         core_rows = dwca.rows
 
         # a) Data access
-        # Extension rows are accessible as a list of DwcAExtensionRow instances in the 'extensions' attribute:
+        # Extension rows are accessible as a list of ExtensionRow instances in the 'extensions' attribute:
         for e in core_rows[0].extensions:
             # Display all rows from extension files that refers to the first Core row
             print e

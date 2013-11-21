@@ -8,7 +8,7 @@ from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader
-from ..rows import CoreRow, DwCAExtensionRow
+from ..rows import CoreRow, ExtensionRow
 from ..darwincore.utils import qualname as qn
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
@@ -347,7 +347,7 @@ class TestDwCAReader(unittest.TestCase):
 
                 # But the extensions are... extensions (hum)
                 for an_extension in row.extensions:
-                    self.assertIsInstance(an_extension, DwCAExtensionRow)
+                    self.assertIsInstance(an_extension, ExtensionRow)
 
     # TODO: Also test we return an empty list on empty archive
     def test_rows_property(self):
