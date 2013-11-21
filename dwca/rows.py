@@ -6,7 +6,7 @@ from utils import _EmbeddedCSV
 
 
 # Make it abstract ? Private ?
-class DwCARow(object):
+class Row(object):
 
     """This class is used to represent a row/line in a Darwin Core Archive.
 
@@ -72,7 +72,7 @@ class DwCARow(object):
         self.metadata_section = None
 
 
-class DwCACoreRow(DwCARow):
+class CoreRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive core file.
 
@@ -86,11 +86,11 @@ class DwCACoreRow(DwCARow):
     
     def __str__(self):
         id_str = "Row id: " + str(self.id)
-        return super(DwCACoreRow, self)._build_str("Core file", id_str)
+        return super(CoreRow, self)._build_str("Core file", id_str)
 
     def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
-        super(DwCACoreRow, self).__init__(line, metadata.core)
+        super(CoreRow, self).__init__(line, metadata.core)
 
         self.metadata_section = metadata.core
 
@@ -127,7 +127,7 @@ class DwCACoreRow(DwCARow):
         #:
         self.source_metadata = m
 
-    # __key is different between DwCACoreRow and DwCAExtensionRow, while eq, ne and hash are identical
+    # __key is different between CoreRow and DwCAExtensionRow, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
@@ -144,7 +144,7 @@ class DwCACoreRow(DwCARow):
         return hash(self.__key())
 
 
-class DwCAExtensionRow(DwCARow):
+class DwCAExtensionRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
@@ -152,7 +152,7 @@ class DwCAExtensionRow(DwCARow):
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
-    attribute of :class:`.DwCACoreRow`.
+    attribute of :class:`.CoreRow`.
     """
 
     def __str__(self):

@@ -76,7 +76,7 @@ Example use
 
         # Finally, let's iterate over the archive core rows and get the data:
         for row in dwca:
-            # row is an instance of DwCACoreRow
+            # row is an instance of CoreRow
             # iteration respects their order of appearance in the core file
 
             # Print can be used for debugging purposes...
@@ -195,7 +195,7 @@ The new version of the GBIF Data Portal (to be released later this year) will al
         # {'dataset1_UUID': <dataset1 EML (BeautifulSoup instance)>,
         #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
 
-        # 2.2 From a DwCACoreRow instance, we can get back to the metadata of its source dataset:
+        # 2.2 From a CoreRow instance, we can get back to the metadata of its source dataset:
         first_row = results.rows[0]
         first_row.source_metadata
         => <Source dataset EML (BeautifulSoup instance)>

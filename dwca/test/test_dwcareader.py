@@ -8,7 +8,7 @@ from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
 from ..dwca import DwCAReader, GBIFResultsReader
-from ..rows import DwCACoreRow, DwCAExtensionRow
+from ..rows import CoreRow, DwCAExtensionRow
 from ..darwincore.utils import qualname as qn
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
@@ -182,10 +182,10 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(2, len([l for l in dwca]))
 
     def test_iterate_rows(self):
-        """Test the iterating over DwCACoreRow(s)"""
+        """Test the iterating over CoreRow(s)"""
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             for row in dwca:
-                self.assertIsInstance(row, DwCACoreRow)
+                self.assertIsInstance(row, CoreRow)
 
     def test_iterate_order(self):
         """Test that the order of appaearance in Core file is respected when iterating."""
@@ -343,7 +343,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_row_class(self):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             for row in star_dwca:
-                self.assertIsInstance(row, DwCACoreRow)
+                self.assertIsInstance(row, CoreRow)
 
                 # But the extensions are... extensions (hum)
                 for an_extension in row.extensions:

@@ -7,7 +7,7 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from rows import DwCACoreRow
+from rows import CoreRow
 from utils import _EmbeddedCSV
 
 
@@ -26,7 +26,7 @@ class DwCAReader(object):
         with DwCAReader('my_archive.zip') as dwca:
             # Iterating on core rows is easy:
             for core_row in dwca:
-                # core_row is an instance of rows.DwCACoreRow
+                # core_row is an instance of rows.CoreRow
                 print core_row
 
             # Scientific metadata (EML) is available as a BeautifulSoup object
@@ -71,7 +71,7 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def rows(self):
-        """Return all rows from the core file as a list of :class:`rows.DwCACoreRow` instances."""
+        """Return all rows from the core file as a list of :class:`rows.CoreRow` instances."""
         return list(self)
 
     def get_row_by_id(self, row_id):
@@ -197,7 +197,7 @@ class DwCAReader(object):
         cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return DwCACoreRow(cl, self.descriptor, self._unzipped_folder_path, self.source_metadata)
+            return CoreRow(cl, self.descriptor, self._unzipped_folder_path, self.source_metadata)
         else:
             raise StopIteration
 
