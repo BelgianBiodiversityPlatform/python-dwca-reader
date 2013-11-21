@@ -1,7 +1,7 @@
 Detailed API
 ============
 
-.. automodule:: dwca
+.. automodule:: read
     :members:
 
 .. automodule:: rows

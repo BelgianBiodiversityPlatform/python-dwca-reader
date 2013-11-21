@@ -4,8 +4,8 @@ import unittest
 
 from bs4 import BeautifulSoup
 
-from ..dwca import GBIFResultsReader
-from ..darwincore.utils import qualname as qn
+from dwca.read import GBIFResultsReader
+from dwca.darwincore.utils import qualname as qn
 
 from .helpers import _sample_data_path, GBIF_RESULTS_PATH
 

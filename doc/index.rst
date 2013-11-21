@@ -37,7 +37,7 @@ Example use
 
 .. code:: python
 
-    from dwca import DwCAReader
+    from dwca.read import DwCAReader
     from dwca.darwincore.utils import qualname as qn
 
     # Let's open our archive...
@@ -115,7 +115,7 @@ Example use
 
 .. code:: python
 
-    from dwca import DwCAReader
+    from dwca.read import DwCAReader
     from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('archive_with_vernacularnames_extension.zip') as dwca:
@@ -140,7 +140,7 @@ Example use
 
 .. code:: python
 
-    from dwca import DwCAReader
+    from dwca.read import DwCAReader
     from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('multiext_archive.zip') as dwca:

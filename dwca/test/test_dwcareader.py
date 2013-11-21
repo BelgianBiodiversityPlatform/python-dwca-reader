@@ -7,9 +7,9 @@ import tempfile
 from zipfile import BadZipfile
 from bs4 import BeautifulSoup
 
-from ..dwca import DwCAReader, GBIFResultsReader
-from ..rows import CoreRow, ExtensionRow
-from ..darwincore.utils import qualname as qn
+from dwca.read import DwCAReader, GBIFResultsReader
+from dwca.rows import CoreRow, ExtensionRow
+from dwca.darwincore.utils import qualname as qn
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
