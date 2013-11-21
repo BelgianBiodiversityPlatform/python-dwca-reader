@@ -1,20 +1,20 @@
 Description of the GBIF Data Portal Occurrence download format
 ==============================================================
 
-As of late 2013, the new version [1]_ of the GBIF Data Portal now exports occurrences (search results) in a format that is a superset on the Darwin Core Archive standard.
+As of late 2013, the new version of the `GBIF Data Portal`_ exports occurrences (search results) in a format that is a superset of the Darwin Core Archive standard.
 
 Python-dwca-reader provides a specialized ``GBIFResultsReader`` class that gives access to its specificities. The rest of this document describe the file format.
 
 Additions to the Darwin Core Archive standard & specificities:
 --------------------------------------------------------------
 
-* In addition to the general metadata file (``metadata.xml``), it contains a ``dataset`` directory. Each file in this directory is an EML document describing a dataset whose occurences are part of the search results. The file name (without extension) is the UUID of this dataset. Each row in occurrence.txt refers to this file using the ``datasetID`` Darwin Core term. These UUID's can also be resolved using the `GBRDS Registry`_.
+* In addition to the general metadata file (``metadata.xml``), it contains a ``dataset`` directory. Each file in this directory is an EML document describing a dataset whose occurences are part of the search results. The file name (without extension) is the UUID of this dataset. Each row in occurrence.txt refers to this file using the ``datasetID`` Darwin Core term. These UUID's can also be resolved using the `Portal Registry API`_.
 * It contains rights.txt and citations.txt that provides aggregated IP rights and citation information for these search results. These two files are not referenced in the archive descriptor (``meta.xml``)
 
 Examples:
 ---------
 
-If a row in ``occurrence.txt`` has the '4bfac3ea-8763-4f4b-a71a-76a6f5f243d3' value in its ``datasetID`` column, we can find an EML file corresponding to the originating dataseet in the ``dataset/4bfac3ea-8763-4f4b-a71a-76a6f5f243d3.xml`` file. This dataset can also be found in the GBIF Registry at: http://gbrds.gbif.org/browse/agent?uuid=4bfac3ea-8763-4f4b-a71a-76a6f5f243d3 .
+If a row in ``occurrence.txt`` has the '4bfac3ea-8763-4f4b-a71a-76a6f5f243d3' value in its ``datasetID`` column, we can find an EML file corresponding to the originating dataseet in the ``dataset/4bfac3ea-8763-4f4b-a71a-76a6f5f243d3.xml`` file. Information about this dataset can be retrived at: http://api.gbif.org/v0.9/dataset/4bfac3ea-8763-4f4b-a71a-76a6f5f243d3.
 
 A consumer of these search results can use the content of citations.txt and rights.txt to check use is allowed and properly cite the data originator.
 
@@ -59,5 +59,5 @@ sample rights.txt:
     Dataset: University of Ghent - Zoology Museum - Vertebratacollectie
     Rights as supplied: Not supplied
 
-.. _GBRDS Registry: http://gbrds.gbif.org/index
-.. [1] currently in development/beta at http://uat.gbif.org
+.. _GBIF Data Portal: http://www.gbif.org/occurrence
+.. _Portal Registry API: http://www.gbif.org/developer/registry

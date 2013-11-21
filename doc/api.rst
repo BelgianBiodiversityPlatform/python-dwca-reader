@@ -6,6 +6,3 @@ Detailed API
 
 .. automodule:: rows
     :members:
-
-
-

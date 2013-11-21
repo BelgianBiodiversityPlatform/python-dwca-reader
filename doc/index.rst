@@ -166,10 +166,11 @@ Example use
 
 4. GBIF Data Portal exports
 
-The new version of the GBIF Data Portal (to be released later this year) will allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see :doc:`gbif_results`) that can also be read with this library in two different ways:
+The new version of the GBIF Data Portal allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see :doc:`gbif_results`) that can also be read with this library in two different ways:
 
 - As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard features.
 - Via the specific ``GBIFResultsReader``, see example below:
+
 
 .. code:: python
 
