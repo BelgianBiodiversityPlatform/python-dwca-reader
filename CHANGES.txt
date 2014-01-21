@@ -11,6 +11,7 @@ Current
 - API change: DwCAExtensionLine => ExtensionRow
 - API change: DWCAReader.get_line_by_id => DWCAReader.get_row_by_id
 - API change: DWCAReader.get_line_by_index => DWCAReader.get_row_by_index
+- API change: DwCAReader.get_row_by_* methods throw RowNotFound when failure instead of returning None
 
 - Cleaner code and better documentation.
 

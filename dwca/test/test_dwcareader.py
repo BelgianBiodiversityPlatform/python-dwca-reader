@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
+from dwca.exceptions import RowNotFound
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
@@ -214,9 +215,12 @@ class TestDwCAReader(unittest.TestCase):
             last_row = dwca.get_row_by_index(3)
             self.assertEqual(2, int(last_row.id))
 
-            # None returned if bigger than archive (last index: 3)
-            self.assertIsNone(dwca.get_row_by_index(4))
-            self.assertIsNone(dwca.get_row_by_index(1000))
+            # Exception raised if bigger than archive (last index: 3)
+            with self.assertRaises(RowNotFound):
+                dwca.get_row_by_index(4)
+
+            with self.assertRaises(RowNotFound):
+                dwca.get_row_by_index(1000)
 
     def test_get_row_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
@@ -247,9 +251,10 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
     def test_get_inexistent_row(self):
-        """ Ensure get_row_by_id() returns None if we ask it an unexistent row. """
+        """ Ensure get_row_by_id() raises RowNotFound if we ask it an unexistent row. """
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
-            self.assertEqual(None, dwca.get_row_by_id(8000))
+            with self.assertRaises(RowNotFound):
+                dwca.get_row_by_id(8000)
 
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""

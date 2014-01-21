@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from rows import CoreRow
 from utils import _EmbeddedCSV
+from dwca.exceptions import RowNotFound
 
 
 class DwCAReader(object):
@@ -75,7 +76,7 @@ class DwCAReader(object):
         return list(self)
 
     def get_row_by_id(self, row_id):
-        """Return the (Core) row whose id is row_id.
+        """Return the (Core) row whose id is row_id. Raise RowNotFound if no match.
 
         .. warning::
 
@@ -90,10 +91,10 @@ class DwCAReader(object):
             if row.id == str(row_id):
                 return row
         else:
-            return None
+            raise RowNotFound
 
     def get_row_by_index(self, index):
-        """Return a core row according to its index in core file.
+        """Return a core row according to its index in core file. Raise RowNotFound if no match.
 
         .. note::
 
@@ -106,7 +107,7 @@ class DwCAReader(object):
             if i == index:
                 return row
         else:
-            return None
+            raise RowNotFound
 
     def absolute_temporary_path(self, relative_path):
         """Return the absolute path of the file located at relative_path within the archive.
