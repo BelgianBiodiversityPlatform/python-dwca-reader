@@ -51,7 +51,7 @@ Releasing at PyPI
 -----------------
 
 * (Ensuring it works, the test coverage is good and the documentation is updated)
-* Update the packaging (version number in setup.py, CHANGES.txt) then run:
+* Update the packaging (version number in setup.py, CHANGES.txt, doc/conf.py, ...) then run:
     
 ::
 

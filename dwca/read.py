@@ -7,8 +7,8 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from rows import CoreRow
-from utils import _EmbeddedCSV
+from dwca.rows import CoreRow
+from dwca.utils import _EmbeddedCSV
 from dwca.exceptions import RowNotFound
 
 

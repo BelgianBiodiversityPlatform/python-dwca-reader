@@ -1,5 +1,5 @@
-Current
-=======
+v0.5.0 (2014-01-21)
+===================
 
 - API new: DwCAReader.descriptor
 - API change: "for core_line in dwca.each_line():" => "for core_row in dwca:"
