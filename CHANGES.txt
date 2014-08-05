@@ -1,3 +1,11 @@
+TODO before release:
+    # _ArchiveDescriptor: TODO: Once we have a nice API, make object public w/ tests and doc.
+
+descriptor_class branch current
+===============================
+
+- API change: DwCAReader.descriptor is an instance of _ArchiveDescriptor (previously BeautifulSoup)
+
 v0.5.1 (2014-08-05)
 ===================
 

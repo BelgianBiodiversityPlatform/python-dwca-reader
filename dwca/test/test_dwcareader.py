@@ -11,6 +11,7 @@ from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
 from dwca.exceptions import RowNotFound
+from dwca.utils import _ArchiveDescriptor
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
@@ -23,8 +24,11 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_descriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor, BeautifulSoup)
-            self.assertEqual(basic_dwca.descriptor.archive["metadata"], 'eml.xml')
+            self.assertIsInstance(basic_dwca.descriptor, _ArchiveDescriptor)
+
+            # Test that it exposes a 'raw_beautifulsoup' attribute
+            self.assertIsInstance(basic_dwca.descriptor.raw_beautifulsoup, BeautifulSoup)
+            self.assertEqual(basic_dwca.descriptor.raw_beautifulsoup.archive["metadata"], 'eml.xml')
 
     def test_row_human_representation(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:

@@ -8,7 +8,7 @@ from shutil import rmtree
 from bs4 import BeautifulSoup
 
 from dwca.rows import CoreRow
-from dwca.utils import _EmbeddedCSV
+from dwca.utils import _EmbeddedCSV, _ArchiveDescriptor
 from dwca.exceptions import RowNotFound
 
 
@@ -53,8 +53,8 @@ class DwCAReader(object):
 
         self._unzipped_folder_path = self._unzip()
         
-        #: A BeautifulSoup instance containing the archive descriptor (``meta.xml``)
-        self.descriptor = self._parse_metaxml_file()
+        #: An _ArchiveDescriptor instance representing the archive descriptor (``meta.xml``)
+        self.descriptor = _ArchiveDescriptor(self._read_additional_file('meta.xml'))
 
         # Load the (scientific) metadata file and store its representation in an attribute
         #:
@@ -66,7 +66,7 @@ class DwCAReader(object):
         #:
         self.extensions_rowtype = self._get_extensions_types()
 
-        self._corefile = _EmbeddedCSV(self.descriptor.core,
+        self._corefile = _EmbeddedCSV(self.descriptor.raw_beautifulsoup.core,
                                       self._unzipped_folder_path)
 
     @property
@@ -140,11 +140,6 @@ class DwCAReader(object):
         metadata_file = self._get_metadata_filename()
         return self._parse_xml_included_file(metadata_file)
 
-    def _parse_metaxml_file(self):
-        """Load the meta.xml, parse it with BeautifulSoup and return its
-        content."""
-        return self._parse_xml_included_file('meta.xml')
-
     def _parse_xml_included_file(self, relative_path):
         """Load, parse with BeautifulSoup and returns XML file located
         at relative_path."""
@@ -172,10 +167,10 @@ class DwCAReader(object):
         rmtree(self._unzipped_folder_path, False)
 
     def _get_core_type(self):
-        return self.descriptor.core['rowType']
+        return self.descriptor.raw_beautifulsoup.core['rowType']
 
     def _get_extensions_types(self):
-        return [e['rowType'] for e in self.descriptor.findAll('extension')]
+        return [e['rowType'] for e in self.descriptor.raw_beautifulsoup.findAll('extension')]
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
@@ -184,11 +179,11 @@ class DwCAReader(object):
     @property
     def core_terms(self):
         """Return a Set containing all the Darwin Core terms appearing in Core file."""
-        term_names = [f['term'] for f in self.descriptor.core.findAll('field')]
+        term_names = [f['term'] for f in self.descriptor.raw_beautifulsoup.core.findAll('field')]
         return set(term_names)
 
     def _get_metadata_filename(self):
-        return self.descriptor.archive['metadata']
+        return self.descriptor.raw_beautifulsoup.archive['metadata']
 
     def __iter__(self):
         self._corefile_pointer = 0
@@ -198,7 +193,8 @@ class DwCAReader(object):
         cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor, self._unzipped_folder_path, self.source_metadata)
+            return CoreRow(cl, self.descriptor.raw_beautifulsoup, self._unzipped_folder_path,
+                           self.source_metadata)
         else:
             raise StopIteration
 

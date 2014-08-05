@@ -3,6 +3,14 @@
 import io
 import os
 
+from bs4 import BeautifulSoup
+
+
+class _ArchiveDescriptor(object):
+    """Class used to encapsulate the Archive Descriptor"""
+    def __init__(self, metaxml_content):
+        self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')
+
 
 class _EmbeddedCSV(object):
     """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
