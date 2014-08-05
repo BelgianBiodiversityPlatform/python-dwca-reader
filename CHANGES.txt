@@ -1,10 +1,18 @@
 TODO before release:
-    # _ArchiveDescriptor: TODO: Once we have a nice API, make object public w/ tests and doc.
+====================
+- Progressively remove all calls to _ArchiveDescriptor.raw_beautifulsoup
+- _ArchiveDescriptor: TODO: Once we have a nice API, make object public w/ tests and doc.
+- Move _ArchiveDescriptor out of utils.py ?? (idem for tests?)
+- Ensure the tutorials don't refer to the old API anymore
 
 descriptor_class branch current
 ===============================
 
+- API add: brand new _ArchiveDescriptor
 - API change: DwCAReader.descriptor is an instance of _ArchiveDescriptor (previously BeautifulSoup)
+- API remove: DwCAReader.core_rowtype (use DwCAReader.descriptor.core_type)
+- API remove: DwCAReader.extensions_rowtype (use DwCAReader.descriptor.extensions_type)
+- API remove: DwCAReader.core_terms (use DwCAReader.descriptor.core_terms)
 
 v0.5.1 (2014-08-05)
 ===================

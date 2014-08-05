@@ -61,10 +61,6 @@ class DwCAReader(object):
         self.metadata = self._parse_metadata_file()
         #:
         self.source_metadata = None
-        #:
-        self.core_rowtype = self._get_core_type()
-        #:
-        self.extensions_rowtype = self._get_extensions_types()
 
         self._corefile = _EmbeddedCSV(self.descriptor.raw_beautifulsoup.core,
                                       self._unzipped_folder_path)
@@ -134,11 +130,7 @@ class DwCAReader(object):
         """Load the archive (scientific) Metadata file, parse it with
         BeautifulSoup and return its content."""
 
-        # This method should be called only after descriptor attribute is set
-        # because the name/path to metadata file is stored in the "metadata"
-        # attribute of the "archive" tag
-        metadata_file = self._get_metadata_filename()
-        return self._parse_xml_included_file(metadata_file)
+        return self._parse_xml_included_file(self.descriptor.metadata_filename)
 
     def _parse_xml_included_file(self, relative_path):
         """Load, parse with BeautifulSoup and returns XML file located
@@ -166,24 +158,9 @@ class DwCAReader(object):
     def _cleanup_temporary_folder(self):
         rmtree(self._unzipped_folder_path, False)
 
-    def _get_core_type(self):
-        return self.descriptor.raw_beautifulsoup.core['rowType']
-
-    def _get_extensions_types(self):
-        return [e['rowType'] for e in self.descriptor.raw_beautifulsoup.findAll('extension')]
-
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
-        return term_url in self.core_terms
-
-    @property
-    def core_terms(self):
-        """Return a Set containing all the Darwin Core terms appearing in Core file."""
-        term_names = [f['term'] for f in self.descriptor.raw_beautifulsoup.core.findAll('field')]
-        return set(term_names)
-
-    def _get_metadata_filename(self):
-        return self.descriptor.raw_beautifulsoup.archive['metadata']
+        return term_url in self.descriptor.core_terms
 
     def __iter__(self):
         self._corefile_pointer = 0

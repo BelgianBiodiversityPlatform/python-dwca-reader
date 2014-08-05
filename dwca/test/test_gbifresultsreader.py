@@ -25,7 +25,7 @@ Rights as supplied: Not supplied"""
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
             self.assertEqual(158, len(results_dwca.rows))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
-                             results_dwca.core_rowtype)
+                             results_dwca.descriptor.core_type)
 
             row1 = results_dwca.rows[0]
             self.assertEqual('Tetraodontidae', row1.data[qn('family')])
