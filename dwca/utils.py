@@ -21,7 +21,11 @@ class _EmbeddedCSV(object):
                                       encoding=self.encoding,
                                       newline=self.newline_str,
                                       errors='replace')
-        
+
+        # On init, we parse the file once to build an index of newlines (including lines to ignore)
+        # that will make random access faster later on...
+        self._line_offsets = get_all_line_offsets(self._core_fhandler, self.encoding)
+
     @property
     def headers(self):
         """Returns a list of (ordered) column names that can be used to create a header line."""
@@ -68,17 +72,15 @@ class _EmbeddedCSV(object):
             return line
         
         raise StopIteration
-
-    # TODO: Optimize for large files ?
-    # ideas: http://stackoverflow.com/questions/620367/python-how-to-jump-to-a-particular-line-in-a-huge-text-file
+    
     def get_row_by_index(self, index):
-        self._position_file_after_header()
-
-        for (i, row) in enumerate(self._core_fhandler):
-            if i == index:
-                return row
-        else:
-            return None  # Reached end of file
+        if index < 0:
+            return None
+        try:
+            self._core_fhandler.seek(self._line_offsets[index + self.lines_to_ignore], 0)
+            return self._core_fhandler.readline()
+        except IndexError:
+            return None
 
     @property
     def lines_to_ignore(self):
@@ -86,3 +88,23 @@ class _EmbeddedCSV(object):
             return int(self._metadata_section['ignoreHeaderLines'])
         except KeyError:
             return 0
+
+
+def get_all_line_offsets(f, encoding):
+    """ Parse the file whose handler is given and return a list of each line beginning positions.
+
+        The value returned is suitable for seek() operations.
+        This can take long for large files.
+
+        It needs to know the encoding to properly count the bytes in a given string.
+    """
+
+    f.seek(0, 0)
+    line_offsets = []
+    offset = 0
+    for line in f:
+        line_offsets.append(offset)
+        offset += len(line.encode(encoding))
+    
+    f.seek(0, 0)
+    return line_offsets
