@@ -8,7 +8,8 @@ from shutil import rmtree
 from bs4 import BeautifulSoup
 
 from dwca.rows import CoreRow
-from dwca.utils import _EmbeddedCSV, _ArchiveDescriptor
+from dwca.utils import _EmbeddedCSV
+from dwca.descriptors import _ArchiveDescriptor
 from dwca.exceptions import RowNotFound
 
 
@@ -160,7 +161,7 @@ class DwCAReader(object):
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
-        return term_url in self.descriptor.core_terms
+        return term_url in self.descriptor.core.terms
 
     def __iter__(self):
         self._corefile_pointer = 0

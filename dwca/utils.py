@@ -3,30 +3,6 @@
 import io
 import os
 
-from bs4 import BeautifulSoup
-
-
-# TODO: Make _ArchiveDescriptor better structured (.core, .extension w/ child objects, ...)
-class _ArchiveDescriptor(object):
-    """Class used to encapsulate the Archive Descriptor"""
-    def __init__(self, metaxml_content):
-        #:
-        self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')
-
-        #:
-        self.core_type = self.raw_beautifulsoup.core['rowType']
-        
-        #:
-        self.extensions_type = [e['rowType'] for e in self.raw_beautifulsoup.findAll('extension')]
-
-        #:
-        self.metadata_filename = self.raw_beautifulsoup.archive['metadata']  # Relative to archive
-
-        # a Set containing all the Darwin Core terms appearing in Core file
-        term_names = [f['term'] for f in self.raw_beautifulsoup.core.findAll('field')]
-        #:
-        self.core_terms = set(term_names)
-
 
 class _EmbeddedCSV(object):
     """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
