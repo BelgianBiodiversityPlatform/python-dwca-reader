@@ -9,11 +9,10 @@ class _EmbeddedCSV(object):
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     # In the future it could make sense to make it public
-    def __init__(self, metadata_section, unzipped_folder_path):
-        #metadata_section: <core> or <extension> section of metaxml concerning the file to iterate.
+    def __init__(self, file_descriptor, unzipped_folder_path):
         #unzipped_folder_path: absolute path to the directory containing the unzipped archive.
         
-        self._metadata_section = metadata_section
+        self._file_descriptor = file_descriptor
         self._unzipped_folder_path = unzipped_folder_path
 
         self._core_fhandler = io.open(self.filepath,
@@ -26,37 +25,39 @@ class _EmbeddedCSV(object):
         # that will make random access faster later on...
         self._line_offsets = get_all_line_offsets(self._core_fhandler, self.encoding)
 
-    @property
-    def headers(self):
-        """Returns a list of (ordered) column names that can be used to create a header line."""
-        field_tags = self._metadata_section.find_all('field')
+        self.lines_to_ignore = self._file_descriptor.lines_to_ignore
 
-        columns = {}
+    # @property
+    # def headers(self):
+    #     """Returns a list of (ordered) column names that can be used to create a header line."""
+    #     field_tags = self._metadata_section.find_all('field')
+
+    #     columns = {}
         
-        for tag in field_tags:
-            columns[int(tag['index'])] = tag['term']
+    #     for tag in field_tags:
+    #         columns[int(tag['index'])] = tag['term']
 
-        # In addition to DwC terms, we may also have id or core_id columns
-        if self._metadata_section.id:
-            columns[int(self._metadata_section.id['index'])] = 'id'
-        if self._metadata_section.coreid:
-            columns[int(self._metadata_section.id['coreindex'])] = 'coreid'
+    #     # In addition to DwC terms, we may also have id or core_id columns
+    #     if self._metadata_section.id:
+    #         columns[int(self._metadata_section.id['index'])] = 'id'
+    #     if self._metadata_section.coreid:
+    #         columns[int(self._metadata_section.id['coreindex'])] = 'coreid'
 
-        return [columns[f] for f in sorted(columns.iterkeys())]
+    #     return [columns[f] for f in sorted(columns.iterkeys())]
 
     @property
     def filepath(self):
         """Returns the absolute path to the 'subject' file."""
         return os.path.join(self._unzipped_folder_path,
-                            self._metadata_section.files.location.string)
+                            self._file_descriptor.file_location)
 
     @property
     def encoding(self):
-        return self._metadata_section['encoding']
+        return self._file_descriptor.encoding
 
     @property
     def newline_str(self):
-        return self._metadata_section['linesTerminatedBy'].decode("string-escape")
+        return self._file_descriptor.lines_terminated_by
 
     def _position_file_after_header(self):
         self._core_fhandler.seek(0, 0)
@@ -82,14 +83,7 @@ class _EmbeddedCSV(object):
         except IndexError:
             return None
 
-    @property
-    def lines_to_ignore(self):
-        try:
-            return int(self._metadata_section['ignoreHeaderLines'])
-        except KeyError:
-            return 0
-
-
+    
 def get_all_line_offsets(f, encoding):
     """ Parse the file whose handler is given and return a list of each line beginning positions.
 

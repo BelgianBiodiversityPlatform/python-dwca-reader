@@ -23,6 +23,22 @@ class _SectionDescriptor(object):
         #:
         self.terms = set(term_names)
 
+        #:
+        self.file_location = self.raw_beautifulsoup.files.location.string  # TODO: Test !!!
+
+        #:
+        self.encoding = self.raw_beautifulsoup['encoding']  # TODO: test
+
+        #:
+        self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")  # TODO: test
+
+    @property
+    def lines_to_ignore(self):
+        try:
+            return int(self.raw_beautifulsoup['ignoreHeaderLines'])
+        except KeyError:
+            return 0
+
 
 # TODO: Make _ArchiveDescriptor better structured (.core, .extension w/ child objects, ...)
 class _ArchiveDescriptor(object):

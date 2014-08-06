@@ -1,3 +1,6 @@
+TODO:
+    Support multiple files for Core (or an extension...)(if allowed by standard)
+
 TODO before release:
 ====================
 - Progressively remove all calls to _ArchiveDescriptor.raw_beautifulsoup

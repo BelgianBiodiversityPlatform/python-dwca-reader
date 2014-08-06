@@ -88,7 +88,7 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, metadata, unzipped_folder, archive_source_metadata=None):
+    def __init__(self, line, metadata, archive_descriptor, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
         super(CoreRow, self).__init__(line, metadata.core)
 
@@ -100,10 +100,11 @@ class CoreRow(Row):
         # Load related extension row
         #: A list of :class:`.ExtensionRow` instances that relates to this Core row
         self.extensions = []
-        for ext_meta in metadata.findAll('extension'):
+        #for ext_meta in metadata.findAll('extension'):
+        for ext_meta in archive_descriptor.extensions:
             csv = _EmbeddedCSV(ext_meta, unzipped_folder)
             for l in csv:
-                tmp = ExtensionRow(l, ext_meta)
+                tmp = ExtensionRow(l, ext_meta.raw_beautifulsoup)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
 

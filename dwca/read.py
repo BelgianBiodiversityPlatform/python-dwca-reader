@@ -63,7 +63,7 @@ class DwCAReader(object):
         #:
         self.source_metadata = None
 
-        self._corefile = _EmbeddedCSV(self.descriptor.raw_beautifulsoup.core,
+        self._corefile = _EmbeddedCSV(self.descriptor.core,
                                       self._unzipped_folder_path)
 
     @property
@@ -171,7 +171,7 @@ class DwCAReader(object):
         cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor.raw_beautifulsoup, self._unzipped_folder_path,
+            return CoreRow(cl, self.descriptor.raw_beautifulsoup, self.descriptor, self._unzipped_folder_path,
                            self.source_metadata)
         else:
             raise StopIteration
