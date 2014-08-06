@@ -12,6 +12,7 @@ class _SectionDescriptor(object):
         if is_core:
             self.represents_corefile = True
             self.represents_extensionfile = False
+            self.id_index = int(self.raw_beautifulsoup.id['index'])
         else:
             self.represents_corefile = False
             self.represents_extensionfile = True

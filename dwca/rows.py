@@ -89,14 +89,14 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, metadata, archive_descriptor, unzipped_folder, archive_source_metadata=None):
-        # metadata = whole metaxml (we'll need it to discover extensions)
+    def __init__(self, line, archive_descriptor, unzipped_folder, archive_source_metadata=None):
         super(CoreRow, self).__init__(line, archive_descriptor.core)
 
-        self.metadata_section = metadata.core
+        #:
+        self.descriptor = archive_descriptor.core
 
         #:
-        self.id = self.raw_fields[int(self.metadata_section.id['index'])]
+        self.id = self.raw_fields[self.descriptor.id_index]
 
         # Load related extension row
         #: A list of :class:`.ExtensionRow` instances that relates to this Core row
@@ -132,7 +132,7 @@ class CoreRow(Row):
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
-        return (self.metadata_section, self.id, self.data, self.extensions, self.source_metadata,
+        return (self.descriptor, self.id, self.data, self.extensions, self.source_metadata,
                 self.rowtype, self.raw_fields)
 
     def __eq__(self, other):

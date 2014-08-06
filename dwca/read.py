@@ -171,7 +171,7 @@ class DwCAReader(object):
         cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor.raw_beautifulsoup, self.descriptor, self._unzipped_folder_path,
+            return CoreRow(cl, self.descriptor, self._unzipped_folder_path,
                            self.source_metadata)
         else:
             raise StopIteration
