@@ -9,17 +9,29 @@ class _SectionDescriptor(object):
         #:
         self.raw_beautifulsoup = section_tag  # It's a Tag instance
 
-        #:
-        self.represents_corefile = is_core
-
-        #:
-        self.represents_extensionfile = not self.represents_corefile
+        if is_core:
+            self.represents_corefile = True
+            self.represents_extensionfile = False
+        else:
+            self.represents_corefile = False
+            self.represents_extensionfile = True
+            self.coreid_index = int(self.raw_beautifulsoup.coreid['index'])
 
         #:
         self.type = self.raw_beautifulsoup['rowType']
 
+        #:
+        self.fields = []
+        for f in self.raw_beautifulsoup.findAll('field'):
+            default = (f['default'] if f.has_attr('default') else None)
+            
+            # Default fields don't have an index attribute
+            index = (f['index'] if f.has_attr('index') else None)
+
+            self.fields.append({'term': f['term'], 'index': index, 'default': default})
+
         # a Set containing all the Darwin Core terms appearing in Core file
-        term_names = [f['term'] for f in self.raw_beautifulsoup.findAll('field')]
+        term_names = [f['term'] for f in self.fields]
         #:
         self.terms = set(term_names)
 
@@ -31,6 +43,9 @@ class _SectionDescriptor(object):
 
         #:
         self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")  # TODO: test
+
+        #:
+        self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")  # TODO: test
 
     @property
     def lines_to_ignore(self):

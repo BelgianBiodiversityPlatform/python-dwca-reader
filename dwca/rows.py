@@ -34,15 +34,16 @@ class Row(object):
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, csv_line, metadata_section):
+    def __init__(self, csv_line, descriptor):
         #: The csv line type as stated in the archive descriptor.
         #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
-        self.rowtype = metadata_section['rowType']
+        self.rowtype = descriptor.type
+
+        line_ending = descriptor.lines_terminated_by
+        field_ending = descriptor.fields_terminated_by
 
         # self.raw_fields is a list of the csv_line's content
-        line_ending = metadata_section['linesTerminatedBy'].decode("string-escape")
-        field_ending = metadata_section['fieldsTerminatedBy'].decode("string-escape")
         #:
         self.raw_fields = csv_line.rstrip(line_ending).split(field_ending)
         # TODO: raw_fields is a new property: to test
@@ -56,10 +57,10 @@ class Row(object):
         #: ...}
         self.data = {}
 
-        for f in metadata_section.findAll('field'):
+        for f in descriptor.fields:
             # if field by default, we can find its value directly in <field>
             # attribute
-            if f.has_attr('default'):
+            if f['default'] is not None:
                 self.data[f['term']] = f['default']
             else:
                 # else, we have to look in core file
@@ -90,7 +91,7 @@ class CoreRow(Row):
 
     def __init__(self, line, metadata, archive_descriptor, unzipped_folder, archive_source_metadata=None):
         # metadata = whole metaxml (we'll need it to discover extensions)
-        super(CoreRow, self).__init__(line, metadata.core)
+        super(CoreRow, self).__init__(line, archive_descriptor.core)
 
         self.metadata_section = metadata.core
 
@@ -100,11 +101,10 @@ class CoreRow(Row):
         # Load related extension row
         #: A list of :class:`.ExtensionRow` instances that relates to this Core row
         self.extensions = []
-        #for ext_meta in metadata.findAll('extension'):
-        for ext_meta in archive_descriptor.extensions:
-            csv = _EmbeddedCSV(ext_meta, unzipped_folder)
+        for ext_descriptor in archive_descriptor.extensions:
+            csv = _EmbeddedCSV(ext_descriptor, unzipped_folder)
             for l in csv:
-                tmp = ExtensionRow(l, ext_meta.raw_beautifulsoup)
+                tmp = ExtensionRow(l, ext_descriptor)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
 
@@ -160,18 +160,17 @@ class ExtensionRow(Row):
         id_str = "Core row id: " + str(self.core_id)
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
-    def __init__(self, line, metadata):
-        # metadata = only the section that concerns me
-        super(ExtensionRow, self).__init__(line, metadata)
+    def __init__(self, line, descriptor):
+        super(ExtensionRow, self).__init__(line, descriptor)
 
-        self.metadata_section = metadata
+        self.descriptor = descriptor
 
         #:
-        self.core_id = self.raw_fields[int(self.metadata_section.coreid['index'])]
+        self.core_id = self.raw_fields[descriptor.coreid_index]
 
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
-        return (self.metadata_section, self.core_id, self.data, self.rowtype, self.raw_fields)
+        return (self.descriptor, self.core_id, self.data, self.rowtype, self.raw_fields)
 
     def __eq__(self, other):
         return self.__key() == other.__key()
