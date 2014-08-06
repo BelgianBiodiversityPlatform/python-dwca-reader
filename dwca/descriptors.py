@@ -3,11 +3,17 @@
 from bs4 import BeautifulSoup
 
 
-class _CoreDescriptor(object):
-    """Class used to encapsulate the Core section of the Descriptor"""
-    def __init__(self, coresection_xml):
+class _SectionDescriptor(object):
+    """Class used to encapsulate the file section (for Core or an Extension) of the Descriptor"""
+    def __init__(self, section_tag, is_core):
         #:
-        self.raw_beautifulsoup = coresection_xml  # It's a Tag instance
+        self.raw_beautifulsoup = section_tag  # It's a Tag instance
+
+        #:
+        self.represents_corefile = is_core
+
+        #:
+        self.represents_extensionfile = not self.represents_corefile
 
         #:
         self.type = self.raw_beautifulsoup['rowType']
@@ -26,11 +32,14 @@ class _ArchiveDescriptor(object):
         self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')
         
         #:
-        self.extensions_type = [e['rowType'] for e in self.raw_beautifulsoup.findAll('extension')]
-
-        #:
         self.metadata_filename = self.raw_beautifulsoup.archive['metadata']  # Relative to archive
 
-        self.core = _CoreDescriptor(self.raw_beautifulsoup.core)
+        #:
+        self.core = _SectionDescriptor(self.raw_beautifulsoup.core, is_core=True)
+
+        self.extensions = [_SectionDescriptor(tag, False) for tag in self.raw_beautifulsoup.findAll('extension')]
+
+        #:
+        self.extensions_type = [e.type for e in self.extensions]
 
         

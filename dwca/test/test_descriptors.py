@@ -3,7 +3,7 @@ import unittest
 
 from bs4 import Tag, BeautifulSoup
 
-from dwca.descriptors import _CoreDescriptor
+from dwca.descriptors import _SectionDescriptor
 from dwca.darwincore.utils import qualname as qn
 from dwca.read import DwCAReader
 
@@ -11,12 +11,20 @@ from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH)
 
 
-class TestCoreDescriptor(unittest.TestCase):
-    """Unit tests for _CoreDescriptor class."""
+class TestSectionDescriptor(unittest.TestCase):
+    """Unit tests for _SectionDescriptor class."""
 
     def test_exposes_raw_beautifulsoup_tag(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertIsInstance(dwca.descriptor.core.raw_beautifulsoup, Tag)
+
+    def test_tell_if_represents_core(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            core_descriptor = dwca.descriptor.core
+            self.assertTrue(core_descriptor.represents_corefile)
+            self.assertFalse(core_descriptor.represents_extensionfile)
+
+            # TODO: Same thing with an extension
 
     def test_exposes_core_type(self):
         """Test that it exposes the Archive Core Type as type"""
@@ -61,7 +69,7 @@ class TestDescriptor(unittest.TestCase):
 
     def test_exposes_coredescriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor.core, _CoreDescriptor)
+            self.assertIsInstance(basic_dwca.descriptor.core, _SectionDescriptor)
 
     def test_exposes_raw_beautifulsoup(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
