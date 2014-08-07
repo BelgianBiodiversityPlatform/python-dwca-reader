@@ -2,8 +2,6 @@
 
 from dwca.utils import _EmbeddedCSV
 
-# TODO: document attributes !
-
 
 # Make it abstract ? Private ?
 class Row(object):

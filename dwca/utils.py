@@ -17,13 +17,13 @@ class _EmbeddedCSV(object):
 
         self._core_fhandler = io.open(self.filepath,
                                       mode='r',
-                                      encoding=self.encoding,
-                                      newline=self.newline_str,
+                                      encoding=self._file_descriptor.encoding,
+                                      newline=self._file_descriptor.lines_terminated_by,
                                       errors='replace')
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = get_all_line_offsets(self._core_fhandler, self.encoding)
+        self._line_offsets = get_all_line_offsets(self._core_fhandler, self._file_descriptor.encoding)
 
         self.lines_to_ignore = self._file_descriptor.lines_to_ignore
 
@@ -32,14 +32,6 @@ class _EmbeddedCSV(object):
         """Returns the absolute path to the 'subject' file."""
         return os.path.join(self._unzipped_folder_path,
                             self._file_descriptor.file_location)
-
-    @property
-    def encoding(self):
-        return self._file_descriptor.encoding
-
-    @property
-    def newline_str(self):
-        return self._file_descriptor.lines_terminated_by
 
     def _position_file_after_header(self):
         self._core_fhandler.seek(0, 0)

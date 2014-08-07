@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 class _SectionDescriptor(object):
-    """Class used to encapsulate the file section (for Core or an Extension) of the Descriptor"""
+    """Class used to encapsulate a file section (for Core or an Extension) from the Archive Descriptor"""
     def __init__(self, section_tag):
         #:
         self.raw_beautifulsoup = section_tag  # It's a Tag instance
@@ -32,9 +32,8 @@ class _SectionDescriptor(object):
             self.fields.append({'term': f['term'], 'index': index, 'default': default})
 
         # a Set containing all the Darwin Core terms appearing in file
-        term_names = [f['term'] for f in self.fields]
         #:
-        self.terms = set(term_names)
+        self.terms = set([f['term'] for f in self.fields])
 
         #:
         self.file_location = self.raw_beautifulsoup.files.location.string  # TODO: Test !!!
@@ -90,6 +89,7 @@ class _ArchiveDescriptor(object):
         #:
         self.core = _SectionDescriptor(self.raw_beautifulsoup.core)
 
+        #:
         self.extensions = [_SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
 
         #:
