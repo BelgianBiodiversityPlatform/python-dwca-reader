@@ -5,12 +5,11 @@ from bs4 import BeautifulSoup
 
 class _SectionDescriptor(object):
     """Class used to encapsulate the file section (for Core or an Extension) of the Descriptor"""
-    # TODO: shouldn't is_core be detected automatically ?
-    def __init__(self, section_tag, is_core):
+    def __init__(self, section_tag):
         #:
         self.raw_beautifulsoup = section_tag  # It's a Tag instance
 
-        if is_core:
+        if self._autodetect_for_core():
             self.represents_corefile = True
             self.represents_extensionfile = False
             self.id_index = int(self.raw_beautifulsoup.id['index'])
@@ -32,7 +31,7 @@ class _SectionDescriptor(object):
 
             self.fields.append({'term': f['term'], 'index': index, 'default': default})
 
-        # a Set containing all the Darwin Core terms appearing in Core file
+        # a Set containing all the Darwin Core terms appearing in file
         term_names = [f['term'] for f in self.fields]
         #:
         self.terms = set(term_names)
@@ -48,6 +47,10 @@ class _SectionDescriptor(object):
 
         #:
         self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")  # TODO: test
+
+    def _autodetect_for_core(self):
+        """Returns True if instance represents a Core file"""
+        return self.raw_beautifulsoup.name == 'core'
 
     @property
     def headers(self):
@@ -75,7 +78,6 @@ class _SectionDescriptor(object):
             return 0
 
 
-# TODO: Make _ArchiveDescriptor better structured (.core, .extension w/ child objects, ...)
 class _ArchiveDescriptor(object):
     """Class used to encapsulate the Archive Descriptor"""
     def __init__(self, metaxml_content):
@@ -86,9 +88,9 @@ class _ArchiveDescriptor(object):
         self.metadata_filename = self.raw_beautifulsoup.archive['metadata']  # Relative to archive
 
         #:
-        self.core = _SectionDescriptor(self.raw_beautifulsoup.core, is_core=True)
+        self.core = _SectionDescriptor(self.raw_beautifulsoup.core)
 
-        self.extensions = [_SectionDescriptor(tag, False) for tag in self.raw_beautifulsoup.findAll('extension')]
+        self.extensions = [_SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
 
         #:
         self.extensions_type = [e.type for e in self.extensions]

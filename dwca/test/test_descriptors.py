@@ -69,7 +69,7 @@ class TestSectionDescriptor(unittest.TestCase):
         """
 
         as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = _SectionDescriptor(as_tag, True)
+        core_descriptor = _SectionDescriptor(as_tag)
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/scientificName',
@@ -96,7 +96,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
         as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = _SectionDescriptor(as_tag, True)
+        core_descriptor = _SectionDescriptor(as_tag)
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/order',

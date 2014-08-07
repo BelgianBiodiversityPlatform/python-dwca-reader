@@ -43,9 +43,8 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path):
-        """Open the file, reads all metadata and store it in self.meta
-        (BeautifulSoup obj.) Also already open the core file so we've
-        a file descriptor for further access.
+        """Open the file, reads all metadata and store it in self.metadata (BeautifulSoup obj.)
+        Also already open the core file so we've a file descriptor for further access.
 
         :param path: path to the Darwin Core Archive file to open.
         """
