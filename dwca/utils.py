@@ -27,24 +27,6 @@ class _EmbeddedCSV(object):
 
         self.lines_to_ignore = self._file_descriptor.lines_to_ignore
 
-    # @property
-    # def headers(self):
-    #     """Returns a list of (ordered) column names that can be used to create a header line."""
-    #     field_tags = self._metadata_section.find_all('field')
-
-    #     columns = {}
-        
-    #     for tag in field_tags:
-    #         columns[int(tag['index'])] = tag['term']
-
-    #     # In addition to DwC terms, we may also have id or core_id columns
-    #     if self._metadata_section.id:
-    #         columns[int(self._metadata_section.id['index'])] = 'id'
-    #     if self._metadata_section.coreid:
-    #         columns[int(self._metadata_section.id['coreindex'])] = 'coreid'
-
-    #     return [columns[f] for f in sorted(columns.iterkeys())]
-
     @property
     def filepath(self):
         """Returns the absolute path to the 'subject' file."""

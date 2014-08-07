@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 class _SectionDescriptor(object):
     """Class used to encapsulate the file section (for Core or an Extension) of the Descriptor"""
+    # TODO: shouldn't is_core be detected automatically ?
     def __init__(self, section_tag, is_core):
         #:
         self.raw_beautifulsoup = section_tag  # It's a Tag instance
@@ -47,6 +48,24 @@ class _SectionDescriptor(object):
 
         #:
         self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")  # TODO: test
+
+    @property
+    def headers(self):
+        """Returns a list of (ordered) column names that can be used to create a header line."""
+
+        columns = {}
+        
+        for f in self.fields:
+            if f['index']:  # Some (default values for example) don't have a corresponding col.
+                columns[f['index']] = f['term']
+
+        # In addition to DwC terms, we may also have id (Core) or core_id (Extensions) columns
+        if hasattr(self, 'id_index'):
+            columns[self.id_index] = 'id'
+        if hasattr(self, 'coreid_index'):
+            columns[self.coreid_index] = 'coreid'
+
+        return [columns[f] for f in sorted(columns.iterkeys())]
 
     @property
     def lines_to_ignore(self):

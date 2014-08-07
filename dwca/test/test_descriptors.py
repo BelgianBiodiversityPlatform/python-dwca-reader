@@ -14,6 +14,100 @@ from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
 class TestSectionDescriptor(unittest.TestCase):
     """Unit tests for _SectionDescriptor class."""
 
+    def test_headers_simplecases(self):
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            descriptor = dwca.descriptor
+
+            # With core file...
+            expected_headers_core = ['id',
+                                     'http://rs.tdwg.org/dwc/terms/order',
+                                     'http://rs.tdwg.org/dwc/terms/class',
+                                     'http://rs.tdwg.org/dwc/terms/kingdom',
+                                     'http://rs.tdwg.org/dwc/terms/phylum',
+                                     'http://rs.tdwg.org/dwc/terms/genus',
+                                     'http://rs.tdwg.org/dwc/terms/family']
+
+            self.assertEqual(descriptor.core.headers, expected_headers_core)
+
+            # And with a first extension...
+            expected_headers_description_ext = ['coreid',
+                                                'http://purl.org/dc/terms/type',
+                                                'http://purl.org/dc/terms/language',
+                                                'http://purl.org/dc/terms/description']
+            
+            desc_ext_descriptor = next(d for d in dwca.descriptor.extensions
+                                       if d.type == 'http://rs.gbif.org/terms/1.0/Description')
+
+            self.assertEqual(desc_ext_descriptor.headers, expected_headers_description_ext)
+
+            # And another one
+            expected_headers_vernacular_ext = ['coreid',
+                                               'http://rs.tdwg.org/dwc/terms/countryCode',
+                                               'http://purl.org/dc/terms/language',
+                                               'http://rs.tdwg.org/dwc/terms/vernacularName']
+
+            vern_ext_descriptor = next(d for d in dwca.descriptor.extensions
+                                       if d.type == 'http://rs.gbif.org/terms/1.0/VernacularName')
+
+            self.assertEqual(vern_ext_descriptor.headers, expected_headers_vernacular_ext)
+
+    def test_headers_defaultvalue(self):
+        """ Ensure headers work properly when confronted to default values (w/o column in file)"""
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/locality"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = _SectionDescriptor(as_tag, True)
+
+        expected_headers_core = ['id',
+                                 'http://rs.tdwg.org/dwc/terms/scientificName',
+                                 'http://rs.tdwg.org/dwc/terms/basisOfRecord',
+                                 'http://rs.tdwg.org/dwc/terms/family',
+                                 'http://rs.tdwg.org/dwc/terms/locality']
+
+        self.assertEqual(core_descriptor.headers, expected_headers_core)
+
+    def test_headers_unordered(self):
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Taxon">
+            <files>
+                <location>taxon.txt</location>
+            </files>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/phylum"/>
+            <id index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/order"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/class"/>
+            <field index="6" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+            <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
+        </core>
+        """
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = _SectionDescriptor(as_tag, True)
+
+        expected_headers_core = ['id',
+                                 'http://rs.tdwg.org/dwc/terms/order',
+                                 'http://rs.tdwg.org/dwc/terms/class',
+                                 'http://rs.tdwg.org/dwc/terms/kingdom',
+                                 'http://rs.tdwg.org/dwc/terms/phylum',
+                                 'http://rs.tdwg.org/dwc/terms/genus',
+                                 'http://rs.tdwg.org/dwc/terms/family']
+
+        self.assertEqual(core_descriptor.headers, expected_headers_core)
+
     def test_exposes_raw_beautifulsoup_tag(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertIsInstance(dwca.descriptor.core.raw_beautifulsoup, Tag)
@@ -38,7 +132,7 @@ class TestSectionDescriptor(unittest.TestCase):
 
     def test_exposes_core_terms(self):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            # The Core file contains tjhe following rows
+            # The Core file contains the following rows
             # <field index="1" term="http://rs.tdwg.org/dwc/terms/family"/>
             # <field index="2" term="http://rs.tdwg.org/dwc/terms/phylum"/>
             # <field index="3" term="http://rs.tdwg.org/dwc/terms/order"/>

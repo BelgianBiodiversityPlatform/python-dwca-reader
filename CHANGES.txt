@@ -3,11 +3,11 @@ TODO:
 
 TODO before release:
 ====================
+
 - Uncomment, update, test and document _EmbeddedCSV.headers (previously forgotten)
-- Progressively remove all calls to _ArchiveDescriptor.raw_beautifulsoup
 - _ArchiveDescriptor: TODO: Once we have a nice API, make object public w/ tests and doc.
 - Ensure the tutorials don't refer to the old API anymore
-Descriptor.fields: turn to something that encapsulates BS4 objects (currently a list of Tags)
+- Regenerate/upload doc.
 
 descriptor_class branch current
 ===============================
