@@ -1,18 +1,7 @@
-TODO:
-    Support multiple files for Core (or an extension...)(if allowed by standard)
-
-TODO before release:
-====================
-
-- Uncomment, update, test and document _EmbeddedCSV.headers (previously forgotten)
-- _ArchiveDescriptor: TODO: Once we have a nice API, make object public w/ tests and doc.
-- Ensure the tutorials don't refer to the old API anymore
-- Regenerate/upload doc.
-
 descriptor_class branch current
 ===============================
 
-- API add: brand new _ArchiveDescriptor (w/ _CoreDescriptor)
+- API add: brand new _ArchiveDescriptor and _SectionDescriptor
 - API change: DwCAReader.descriptor is an instance of _ArchiveDescriptor (previously BeautifulSoup)
 - API remove: DwCAReader.core_rowtype (use DwCAReader.descriptor.core.type)
 - API remove: DwCAReader.extensions_rowtype (use DwCAReader.descriptor.extensions_type)

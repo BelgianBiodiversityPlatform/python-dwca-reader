@@ -6,3 +6,6 @@ Detailed API
 
 .. automodule:: rows
     :members:
+
+.. automodule:: descriptors
+    :members:

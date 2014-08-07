@@ -5,17 +5,17 @@ Welcome to Python-dwca-reader's documentation!
 What is it ?
 ------------
 
-A simple Python class to parse `Darwin Core Archive`_ (DwC-A) files. It can also read exports (Occurrences downloads) from the new GBIF Data Portal (to be released later in 2013).
+A simple Python package to read and parse `Darwin Core Archive`_ (DwC-A) files. It can also read exports (Occurrences downloads) from the new `GBIF website`_.
 
 Status
 ------
 
-It is currently considered alpha quality. It helped its author a couple of times, but should be improved and tested before widespread use.
+It is currently considered beta quality. It helped its author a couple of times, but should be improved and tested before widespread use. API is still moving (for the better!)
 
 Major limitations
 -----------------
 
-- It sometimes assumes the file has been produced by GBIF's IPT_. For example, only zip compression is curently supported, even tough the Darwin Core Archive allows other compression formats.
+- It doesn't currently fully implement the Darwin Core Archive standard, but focus on the most common/useful features. It should work well with data from `IPT`_ and GBIF-downloaded data.
 - No write support.
 
 Tutorial
@@ -42,19 +42,23 @@ Example use
 
     # Let's open our archive...
     # Using the with statement ensure that resources will be properly freed/cleaned after use.
-    with DwCAReader('my_archive.zip') as dwca:
+    with DwCAReader('my-archive.zip') as dwca:
         # We can now interact with the 'dwca' object
 
-        # We can read scientific metadata (EML) through a BeautifulSoup object in the 'metadata' attribute
+        # We can read scientific metadata (EML) through a BeautifulSoup object in the 'metadata'
+        # attribute.
+
         # See BeautifulSoup 4 documentation: http://www.crummy.com/software/BeautifulSoup/bs4/doc
         print dwca.metadata.prettify()
 
-        # We can get inspect archive to discover what is the Core Type (Occurrence, Taxon, ...):
-        print "Core type is: %s" % dwca.core_rowtype
+        # The 'descriptor' attributes gives access to the Archive Descriptor (meta.xml) and allow
+        # inspecting the archive:
+        # For example, discover what the type the Core file is: (Occurrence, Taxon, ...)
+        print "Core type is: %s" % dwca.descriptor.core.type
         # => Core type is: http://rs.tdwg.org/dwc/terms/Occurrence
 
         # Check if a Darwin Core term in present in the core file
-        if dwca.core_contains_term('http://rs.tdwg.org/dwc/terms/locality'):
+        if 'http://rs.tdwg.org/dwc/terms/locality' in dwca.descriptor.core.terms:
             print "This archive contains the 'locality' term in its core file."
         else:
             print "Locality term is not present."
@@ -67,11 +71,11 @@ Example use
 
         # Combined with previous examples, this can be used to things more clear:
         # For example:
-        if dwca.core_contains_term(qn('locality')):
+        if qn('locality') in dwca.descriptor.core.terms:
             pass
 
         # Or:
-        if dwca.core_rowtype == qn('Occurrence'):
+        if dwca.descriptor.core.type == qn('Occurrence'):
             pass
 
         # Finally, let's iterate over the archive core rows and get the data:
@@ -86,7 +90,7 @@ Example use
             # => Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence
             # => Source: Core file
             # => Row ID:
-            # => Data: {u'http://rs.tdwg.org/dwc/terms/basisOfRecord': u'Observation', u'http://rs.tdwg.org/dwc/terms/family': # => u'Tetraodontidae', u'http://rs.tdwg.org/dwc/terms/locality': u'Borneo', u'http://rs.tdwg.# 
+            # => Data: {u'http://rs.tdwg.org/dwc/terms/basisOfRecord': u'Observation', u'http://rs.tdwg.org/dwc/terms/family': # => u'Tetraodontidae', u'http://rs.tdwg.org/dwc/terms/locality': u'Borneo', u'http://rs.tdwg.#
             # => org/dwc/terms/scientificName': u'tetraodon fluviatilis'}
             # => --
 
@@ -96,12 +100,13 @@ Example use
             # => Value of 'locality' for this row: Mumbai
 
         # Alternatively, we can get a list of core rows instead of iterating:
+        # BEWARE: all rows will be loaded in memory!
         rows = dwca.rows
 
         # Or retrieve a specific row by its id:
         occurrence_number_three = dwca.get_row_by_id(3)
 
-        # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard don't guarantee unicity (nor even that there will be an id).
+        # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard dosn't guarantee unicity (nor even that there will be an id).
         # the index (position) of the row (starting at 0) is generally preferable.
 
         occurrence_on_second_line = dwca.get_row_by_index(1)
@@ -111,37 +116,31 @@ Example use
         path = dwca.absolute_temporary_path('occurrence.txt')
 
 
-2. Use of Darwin Core Archives using extensions (star schema)
+2. Access to Darwin Core Archives with extensions (star schema)
 
 .. code:: python
 
     from dwca.read import DwCAReader
-    from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('archive_with_vernacularnames_extension.zip') as dwca:
         # Let's ask the archive what kind of extensions are in use:
-        print dwca.extensions_rowtype
-        # => [u'http://rs.gbif.org/terms/1.0/VernacularName']
+        for e in dwca.descriptor.extensions:
+            print e.type
+        # => http://rs.gbif.org/terms/1.0/VernacularName
 
-        # For convenience
-        core_rows = dwca.rows
+        first_core_row = dwca.rows[0]
 
-        # a) Data access
-        # Extension rows are accessible as a list of ExtensionRow instances in the 'extensions' attribute:
-        for e in core_rows[0].extensions:
-            # Display all rows from extension files that refers to the first Core row
-            print e
+        # Extension rows are accessible from a core row as a list of ExtensionRow instances:
+        for extension_line in first_core_row.extensions:
+            # Display all rows from extension files reffering to the first Core row
+            print extension_line
 
-        # ... and what its rowtype is:
-        print core_rows[0].rowtype
-        # => http://rs.tdwg.org/dwc/terms/Taxon
 
 3. Another example with multiple extensions (no new API here):
 
 .. code:: python
 
     from dwca.read import DwCAReader
-    from dwca.darwincore.utils import qualname as qn
 
     with DwCAReader('multiext_archive.zip') as dwca:
         rows = dwca.rows
@@ -157,13 +156,6 @@ Example use
             if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
                 print ext
 
-        print "We can also use list comprehensions for this:"
-        description_ext = [e for e in ostrich.extensions if
-                       e.rowtype == 'http://rs.gbif.org/terms/1.0/Description']
-        
-        for ext in description_ext:
-            print ext
-
 4. GBIF Data Portal exports
 
 The new version of the GBIF Data Portal allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see :doc:`gbif_results`) that can also be read with this library in two different ways:
@@ -174,32 +166,33 @@ The new version of the GBIF Data Portal allow users to export searched occurrenc
 
 .. code:: python
 
-    from dwca import GBIFResultsReader
+    from dwca.read import GBIFResultsReader
 
-    with GBIFResultsReader('results.zip') as results:
+    with GBIFResultsReader('gbif-results.zip') as results:
         # GBIFResultsReader being a subclass of DwCAReader, all previously described features will work the same.
         #
         # But there's more:
         #
         # 1) GBIF Portal downloads include citation and IP rights information about the resultset. They can be accessed via specific attributes:
 
-        results.citations
+        print results.citations
         # => "Please cite this data as follows, and pay attention to the rights documented in the rights.txt: ..."
 
-        results.rights
+        print results.rights
         # => "Dataset: [Name and license of source datasets for this resultset]"
 
         # 2) In addition to the dataset-wide metadata (EML) file, these archives also include the source metadata for all datasets whose rows are part of the resultset.
 
         # 2.1) At the archive level, they can be accessed as a dict:
-        results.source_metadata
+        print results.source_metadata
         # {'dataset1_UUID': <dataset1 EML (BeautifulSoup instance)>,
         #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
 
         # 2.2 From a CoreRow instance, we can get back to the metadata of its source dataset:
-        first_row = results.rows[0]
-        first_row.source_metadata
-        => <Source dataset EML (BeautifulSoup instance)>
+        first_row = results.get_row_by_index(0)
+        
+        print first_row.source_metadata
+        # => <Source dataset EML (BeautifulSoup instance)>
 
 
 More info:
@@ -218,6 +211,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`search`
 
-
+.. _GBIF website: http://www.gbif.org
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
 .. _IPT: https://code.google.com/p/gbif-providertoolkit/
