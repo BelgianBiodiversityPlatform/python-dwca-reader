@@ -49,8 +49,6 @@ class _EmbeddedCSV(object):
         raise StopIteration
     
     def get_row_by_index(self, index):
-        if index < 0:
-            return None
         try:
             self._core_fhandler.seek(self._line_offsets[index + self.lines_to_ignore], 0)
             return self._core_fhandler.readline()
