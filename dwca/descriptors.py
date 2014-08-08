@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+"""This module provides classes that represents the descriptor (meta.xml) file in a DarwinCore Archive.
+
+"""
+
 from bs4 import BeautifulSoup
 
 
 class SectionDescriptor(object):
-    """Class used to encapsulate a file section (for Core or an Extension) from the Archive Descriptor"""
+    """Class used to encapsulate a file section (Core or Extension) in the Archive Descriptor"""
     def __init__(self, section_tag):
         #:
         self.raw_beautifulsoup = section_tag  # It's a Tag instance
@@ -48,7 +52,7 @@ class SectionDescriptor(object):
         self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")
 
     def _autodetect_for_core(self):
-        """Returns True if instance represents a Core file"""
+        """Returns True if instance represents a Core file."""
         return self.raw_beautifulsoup.name == 'core'
 
     @property
@@ -78,7 +82,7 @@ class SectionDescriptor(object):
 
 
 class ArchiveDescriptor(object):
-    """Class used to encapsulate the Archive Descriptor"""
+    """Class used to encapsulate the whole Archive Descriptor (`meta.xml`)."""
     def __init__(self, metaxml_content):
         #:
         self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')

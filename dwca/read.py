@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files.
+
+"""
+
 import os
 from tempfile import mkdtemp
 from zipfile import ZipFile
@@ -53,7 +57,7 @@ class DwCAReader(object):
 
         self._unzipped_folder_path = self._unzip()
         
-        #: An ArchiveDescriptor instance representing the archive descriptor (``meta.xml``)
+        #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive descriptor (``meta.xml``)
         self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'))
 
         # Load the (scientific) metadata file and store its representation in an attribute
@@ -68,7 +72,13 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def rows(self):
-        """Return all rows from the core file as a list of :class:`rows.CoreRow` instances."""
+        """Return all rows from the core file as a list of :class:`rows.CoreRow` instances.
+
+        .. warning::
+
+            This will cause all rows to be loaded in memory. In case of large Darwin Core Archive, you
+            may prefer iterating with a for loop.
+        """
         return list(self)
 
     def get_row_by_id(self, row_id):

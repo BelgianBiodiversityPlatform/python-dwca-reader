@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""This module provides classes that encapsulate data rows from DarwinCore Archive (DwC-A) files.
+
+"""
+
 from dwca.utils import _EmbeddedCSV
 
 
