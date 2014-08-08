@@ -13,6 +13,119 @@ from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
 
 class TestSectionDescriptor(unittest.TestCase):
     """Unit tests for SectionDescriptor class."""
+    
+    def test_lines_to_ignore(self):
+        # With explicit "0"
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(core_descriptor.lines_to_ignore, 0)
+
+        # With explicit 1
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(core_descriptor.lines_to_ignore, 1)
+
+        # Implicit 0 (when nothing stated)
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(core_descriptor.lines_to_ignore, 0)
+
+
+    def test_file_details(self):
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/locality"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(core_descriptor.file_location, "occurrence.txt")
+        self.assertEqual(core_descriptor.encoding, "utf-8")
+        # TODO: Also test .lines_terminated_by and .fields_terminated_by
+        # (this seems a bit tricky, and it's already tested indirectly - many things would fail
+        # without them)
+
+    def test_fields(self):
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/locality"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        # .fields is supposed to return a list of dicts like those
+        expected_fields = (
+            {'term': 'http://rs.tdwg.org/dwc/terms/country',
+             'index': None,
+             'default': 'Belgium'},
+
+            {'term': 'http://rs.tdwg.org/dwc/terms/scientificName',
+             'index': 1,
+             'default': None}
+        )
+
+        for ef in expected_fields:
+            self.assertTrue(ef in core_descriptor.fields)
+
+        self.assertEqual(len(core_descriptor.fields), 5)
 
     def test_headers_simplecases(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
@@ -112,13 +225,94 @@ class TestSectionDescriptor(unittest.TestCase):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertIsInstance(dwca.descriptor.core.raw_beautifulsoup, Tag)
 
+    def test_content_raw_beautifulsoup_tag(self):
+        """ Test the content ofraw_beautifulsoup seems decent. """
+        ext_section = """
+        <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
+        fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
+            <files><location>description.txt</location></files>
+            <coreid index="0" />
+            <field index="1" term="http://purl.org/dc/terms/type"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://purl.org/dc/terms/description"/>
+        </extension>
+        """
+
+        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
+        ext_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(ext_descriptor.raw_beautifulsoup.name, 'extension')
+        self.assertEqual(ext_descriptor.raw_beautifulsoup['encoding'], 'utf-8')
+        self.assertEqual(len(ext_descriptor.raw_beautifulsoup.findAll('field')), 3)
+
     def test_tell_if_represents_core(self):
+        # 1. Test with core
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             core_descriptor = dwca.descriptor.core
             self.assertTrue(core_descriptor.represents_corefile)
             self.assertFalse(core_descriptor.represents_extensionfile)
 
-            # TODO: Same thing with an extension
+        ext_section = """
+        <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
+        fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
+            <files><location>description.txt</location></files>
+            <coreid index="0" />
+            <field index="1" term="http://purl.org/dc/terms/type"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://purl.org/dc/terms/description"/>
+        </extension>
+        """
+
+        # 2. And with extension
+        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
+        ext_descriptor = SectionDescriptor(as_tag)
+        self.assertFalse(ext_descriptor.represents_corefile)
+        self.assertTrue(ext_descriptor.represents_extensionfile)
+
+    def test_exposes_coreid_index_of_extensions(self):
+        ext_section = """
+        <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
+            <files><location>description.txt</location></files>
+            <coreid index="0" />
+            <field index="1" term="http://purl.org/dc/terms/type"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://purl.org/dc/terms/description"/>
+        </extension>
+        """
+
+        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
+        ext_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(ext_descriptor.coreid_index, 0)
+
+        # ... but it doesn't have .id_index (only for core!)
+        with self.assertRaises(AttributeError):
+            ext_descriptor.id_index
+
+    def test_exposes_id_index_of_core(self):
+        metaxml_section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+        ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+                <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/locality"/>
+        </core>
+        """
+
+        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
+        core_descriptor = SectionDescriptor(as_tag)
+
+        self.assertEqual(core_descriptor.id_index, 0)
+
+        # ... but it doesn't have .coreid_index (only for extensions!)
+        with self.assertRaises(AttributeError):
+            core_descriptor.coreid_index
 
     def test_exposes_core_type(self):
         """Test that it exposes the Archive Core Type as type"""

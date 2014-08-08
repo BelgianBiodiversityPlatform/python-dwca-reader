@@ -27,7 +27,7 @@ class SectionDescriptor(object):
             default = (f['default'] if f.has_attr('default') else None)
             
             # Default fields don't have an index attribute
-            index = (f['index'] if f.has_attr('index') else None)
+            index = (int(f['index']) if f.has_attr('index') else None)
 
             self.fields.append({'term': f['term'], 'index': index, 'default': default})
 
