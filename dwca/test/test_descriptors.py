@@ -3,7 +3,7 @@ import unittest
 
 from bs4 import Tag, BeautifulSoup
 
-from dwca.descriptors import _SectionDescriptor
+from dwca.descriptors import SectionDescriptor
 from dwca.darwincore.utils import qualname as qn
 from dwca.read import DwCAReader
 
@@ -12,7 +12,7 @@ from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
 
 
 class TestSectionDescriptor(unittest.TestCase):
-    """Unit tests for _SectionDescriptor class."""
+    """Unit tests for SectionDescriptor class."""
 
     def test_headers_simplecases(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
@@ -69,7 +69,7 @@ class TestSectionDescriptor(unittest.TestCase):
         """
 
         as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = _SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(as_tag)
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/scientificName',
@@ -96,7 +96,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
         as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = _SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(as_tag)
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/order',
@@ -159,11 +159,11 @@ class TestSectionDescriptor(unittest.TestCase):
 
 
 class TestDescriptor(unittest.TestCase):
-    """Unit tests for _ArchiveDescriptor class."""
+    """Unit tests for ArchiveDescriptor class."""
 
     def test_exposes_coredescriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor.core, _SectionDescriptor)
+            self.assertIsInstance(basic_dwca.descriptor.core, SectionDescriptor)
 
     def test_exposes_raw_beautifulsoup(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:

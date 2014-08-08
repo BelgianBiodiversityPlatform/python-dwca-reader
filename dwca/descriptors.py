@@ -3,7 +3,7 @@
 from bs4 import BeautifulSoup
 
 
-class _SectionDescriptor(object):
+class SectionDescriptor(object):
     """Class used to encapsulate a file section (for Core or an Extension) from the Archive Descriptor"""
     def __init__(self, section_tag):
         #:
@@ -77,7 +77,7 @@ class _SectionDescriptor(object):
             return 0
 
 
-class _ArchiveDescriptor(object):
+class ArchiveDescriptor(object):
     """Class used to encapsulate the Archive Descriptor"""
     def __init__(self, metaxml_content):
         #:
@@ -87,10 +87,10 @@ class _ArchiveDescriptor(object):
         self.metadata_filename = self.raw_beautifulsoup.archive['metadata']  # Relative to archive
 
         #:
-        self.core = _SectionDescriptor(self.raw_beautifulsoup.core)
+        self.core = SectionDescriptor(self.raw_beautifulsoup.core)
 
         #:
-        self.extensions = [_SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
+        self.extensions = [SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
 
         #:
         self.extensions_type = [e.type for e in self.extensions]

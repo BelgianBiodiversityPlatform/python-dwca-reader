@@ -11,7 +11,7 @@ from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
 from dwca.exceptions import RowNotFound
-from dwca.descriptors import _ArchiveDescriptor
+from dwca.descriptors import ArchiveDescriptor
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
@@ -24,7 +24,7 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_descriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor, _ArchiveDescriptor)
+            self.assertIsInstance(basic_dwca.descriptor, ArchiveDescriptor)
 
     def test_row_human_representation(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:

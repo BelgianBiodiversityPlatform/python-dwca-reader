@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from dwca.rows import CoreRow
 from dwca.utils import _EmbeddedCSV
-from dwca.descriptors import _ArchiveDescriptor
+from dwca.descriptors import ArchiveDescriptor
 from dwca.exceptions import RowNotFound
 
 
@@ -53,8 +53,8 @@ class DwCAReader(object):
 
         self._unzipped_folder_path = self._unzip()
         
-        #: An _ArchiveDescriptor instance representing the archive descriptor (``meta.xml``)
-        self.descriptor = _ArchiveDescriptor(self._read_additional_file('meta.xml'))
+        #: An ArchiveDescriptor instance representing the archive descriptor (``meta.xml``)
+        self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'))
 
         # Load the (scientific) metadata file and store its representation in an attribute
         #:
