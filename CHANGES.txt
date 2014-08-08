@@ -1,7 +1,7 @@
-descriptor_class branch current
-===============================
+v0.6.0 (2014-08-08)
+===================
 
-- Better performance thanks to a better architecture.
+- Better performance thanks to a better architecture
 - API add: brand new _ArchiveDescriptor and _SectionDescriptor
 - API change: DwCAReader.descriptor is an instance of _ArchiveDescriptor (previously BeautifulSoup)
 - API remove: DwCAReader.core_rowtype (use DwCAReader.descriptor.core.type instead)
