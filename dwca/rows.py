@@ -12,7 +12,7 @@ class Row(object):
 
     """This class is used to represent a row/line in a Darwin Core Archive.
 
-    This class is intended to be subclassed.
+    This class is intended to be subclassed rather than used directly.
     """
 
     # Common ground for __str__ between subclasses
@@ -83,7 +83,7 @@ class CoreRow(Row):
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough
-    :class:`dwca.DwCAReader` or :class:`dwca.GBIFResultsReader` (by iterating, using the rows
+    :class:`read.DwCAReader` or :class:`read.GBIFResultsReader` (by iterating, using the rows
     attribute, get_row_by_index, get_row_by_id, ...).
     """
     
@@ -151,7 +151,7 @@ class ExtensionRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
-    It is a subclass of :class:`rows.DwCARow` and therefore inherits all of its methods and
+    It is a subclass of :class:`rows.Row` and therefore inherits all of its methods and
     attributes.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
