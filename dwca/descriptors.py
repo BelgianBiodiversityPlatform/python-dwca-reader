@@ -36,16 +36,16 @@ class SectionDescriptor(object):
         self.terms = set([f['term'] for f in self.fields])
 
         #:
-        self.file_location = self.raw_beautifulsoup.files.location.string  # TODO: Test !!!
+        self.file_location = self.raw_beautifulsoup.files.location.string
 
         #:
-        self.encoding = self.raw_beautifulsoup['encoding']  # TODO: test
+        self.encoding = self.raw_beautifulsoup['encoding']
 
         #:
-        self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")  # TODO: test
+        self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")
 
         #:
-        self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")  # TODO: test
+        self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")
 
     def _autodetect_for_core(self):
         """Returns True if instance represents a Core file"""
@@ -94,5 +94,3 @@ class ArchiveDescriptor(object):
 
         #:
         self.extensions_type = [e.type for e in self.extensions]
-
-        

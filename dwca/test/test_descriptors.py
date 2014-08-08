@@ -3,7 +3,7 @@ import unittest
 
 from bs4 import Tag, BeautifulSoup
 
-from dwca.descriptors import SectionDescriptor
+from dwca.descriptors import SectionDescriptor, ArchiveDescriptor
 from dwca.darwincore.utils import qualname as qn
 from dwca.read import DwCAReader
 
@@ -65,7 +65,6 @@ class TestSectionDescriptor(unittest.TestCase):
         core_descriptor = SectionDescriptor(as_tag)
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
-
 
     def test_file_details(self):
         metaxml_section = """
@@ -352,12 +351,73 @@ class TestSectionDescriptor(unittest.TestCase):
             self.assertEqual(fields, descriptor.core.terms)
 
 
-class TestDescriptor(unittest.TestCase):
+class TestArchiveDescriptor(unittest.TestCase):
     """Unit tests for ArchiveDescriptor class."""
 
     def test_exposes_coredescriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
             self.assertIsInstance(basic_dwca.descriptor.core, SectionDescriptor)
+
+    def test_exposes_extensions_2ext(self):
+        all_metaxml = """
+        <archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+          <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Taxon">
+            <files>
+              <location>taxon.txt</location>
+            </files>
+            <id index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/order"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/class"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/phylum"/>
+            <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
+            <field index="6" term="http://rs.tdwg.org/dwc/terms/family"/>
+          </core>
+          <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
+            <files>
+              <location>description.txt</location>
+            </files>
+            <coreid index="0" />
+            <field index="1" term="http://purl.org/dc/terms/type"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://purl.org/dc/terms/description"/>
+          </extension>
+          <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/VernacularName">
+            <files>
+              <location>vernacularname.txt</location>
+            </files>
+            <coreid index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/countryCode"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
+          </extension>
+        </archive>
+        """
+
+        d = ArchiveDescriptor(all_metaxml)
+        expected_extensions_files = ('description.txt', 'vernacularname.txt')
+        for ext in d.extensions:
+            self.assertTrue(ext.file_location in expected_extensions_files)
+
+        self.assertEqual(len(d.extensions), 2)
+
+    def test_exposes_extensions_none(self):
+        all_metaxml = """
+        <archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+          <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files>
+              <location>occurrence.txt</location>
+            </files>
+            <id index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/locality"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+          </core>
+        </archive>
+        """
+        d = ArchiveDescriptor(all_metaxml)
+        self.assertEqual(len(d.extensions), 0)
 
     def test_exposes_raw_beautifulsoup(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
