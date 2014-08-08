@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Python-dwca-reader'
-copyright = u'2013, Nicolas Noé'
+copyright = u'2013-2014, Nicolas Noé'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
