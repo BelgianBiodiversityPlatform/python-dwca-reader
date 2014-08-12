@@ -53,10 +53,14 @@ class Row(object):
         # TODO: Consistency chek ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
 
-        #: a dict containing the csv_line/row data, such as:
+        #: A dict containing the Row data, such as:
         #: {'dwc_term_1': 'value',
         #: 'dwc_term_2': 'value',
-        #: ...}
+        #: ...}.
+        #:
+        #: Example::
+        #:
+        #:      print myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
         self.data = {}
 
         for f in descriptor.fields:
@@ -68,23 +72,14 @@ class Row(object):
                 # else, we have to look in core file
                 self.data[f['term']] = self.raw_fields[int(f['index'])]
 
-        # These properties are set by subclasses and are only listed here for documentation
-        # and clarity purposes
-
-        #:
-        self.metadata_section = None
-
 
 class CoreRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive core file.
 
-    It is a subclass of :class:`lines.DwCARow` and therefore inherits all of its methods and
-    attributes.
-
-    Most of the time, you won't instantiate it manually but rather obtain it trough
-    :class:`read.DwCAReader` or :class:`read.GBIFResultsReader` (by iterating, using the rows
-    attribute, get_row_by_index, get_row_by_id, ...).
+    You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
+    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_row_by_index,
+    get_row_by_id, ...).
     """
     
     def __str__(self):
@@ -94,14 +89,14 @@ class CoreRow(Row):
     def __init__(self, line, archive_descriptor, unzipped_folder, archive_source_metadata=None):
         super(CoreRow, self).__init__(line, archive_descriptor.core)
 
-        #:
+        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the Core file.
         self.descriptor = archive_descriptor.core
 
-        #:
+        #: The row id (from the data file).
         self.id = self.raw_fields[self.descriptor.id_index]
 
         # Load related extension row
-        #: A list of :class:`.ExtensionRow` instances that relates to this Core row
+        #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
         self.extensions = []
         for ext_descriptor in archive_descriptor.extensions:
             csv = _EmbeddedCSV(ext_descriptor, unzipped_folder)
@@ -127,7 +122,9 @@ class CoreRow(Row):
         else:
             m = None
 
-        #:
+        #: Row-level metadata (if provided by the archive).
+        #: This is a non-standard feature currently only provided when using
+        #: :class:`dwca.read.GBIFResultsReader`.
         self.source_metadata = m
 
     # __key is different between CoreRow and ExtensionRow, while eq, ne and hash are identical
@@ -151,9 +148,6 @@ class ExtensionRow(Row):
     
     """ This class is used to represent a row/line from a Darwin Core Archive extension file.
 
-    It is a subclass of :class:`rows.Row` and therefore inherits all of its methods and
-    attributes.
-
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
     attribute of :class:`.CoreRow`.
     """
@@ -165,9 +159,11 @@ class ExtensionRow(Row):
     def __init__(self, line, descriptor):
         super(ExtensionRow, self).__init__(line, descriptor)
 
+        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating
+        #: extension data file.
         self.descriptor = descriptor
 
-        #:
+        #: The id of the core row this extension is reffering to.
         self.core_id = self.raw_fields[descriptor.coreid_index]
 
     def __key(self):

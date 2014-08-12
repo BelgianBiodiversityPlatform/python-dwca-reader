@@ -4,17 +4,32 @@ Detailed API
 Reader objects
 --------------
 
-.. automodule:: read
+.. automodule:: dwca.read
     :members:
+    :show-inheritance:
 
 Row objects
 -----------
 
-.. automodule:: rows
+.. automodule:: dwca.rows
     :members:
+    :show-inheritance:
 
 Descriptor objects
 ------------------
 
-.. automodule:: descriptors
+.. automodule:: dwca.descriptors
+    :members:
+
+
+Helpers
+-------
+
+.. automodule:: dwca.darwincore.utils
+    :members:
+
+Exceptions
+----------
+
+.. automodule:: dwca.exceptions
     :members:

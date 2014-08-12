@@ -52,7 +52,7 @@ class DwCAReader(object):
 
         :param path: path to the Darwin Core Archive file to open.
         """
-        #:
+        #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path
 
         self._unzipped_folder_path = self._unzip()
@@ -60,8 +60,7 @@ class DwCAReader(object):
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive descriptor (``meta.xml``)
         self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'))
 
-        # Load the (scientific) metadata file and store its representation in an attribute
-        #:
+        #: A :class:`BeautifulSoup` instance containing the (scientific) metadata of the archive.
         self.metadata = self._parse_metadata_file()
         #:
         self.source_metadata = None
@@ -72,17 +71,20 @@ class DwCAReader(object):
     @property
     #TODO: decide, test and document what we guarantee about ordering
     def rows(self):
-        """Return all rows from the core file as a list of :class:`rows.CoreRow` instances.
+        """A list of :class:`rows.CoreRow` instances representing the content of the archive.
 
         .. warning::
 
-            This will cause all rows to be loaded in memory. In case of large Darwin Core Archive, you
-            may prefer iterating with a for loop.
+            This will cause all rows to be loaded in memory. In case of large Darwin Core Archive,
+            you may prefer iterating with a for loop.
         """
         return list(self)
 
     def get_row_by_id(self, row_id):
-        """Return the (Core) row whose id is row_id. Raise RowNotFound if no match.
+        """Return the (Core) row whose id is row_id.
+
+        :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
+        :raises: :class:`dwca.exceptions.RowNotFound`
 
         .. warning::
 
@@ -100,7 +102,10 @@ class DwCAReader(object):
             raise RowNotFound
 
     def get_row_by_index(self, index):
-        """Return a core row according to its index in core file. Raise RowNotFound if no match.
+        """Return a core row according to its index in core file.
+
+        :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
+        :raises: :class:`dwca.exceptions.RowNotFound`
 
         .. note::
 
@@ -188,12 +193,12 @@ class DwCAReader(object):
 
 class GBIFResultsReader(DwCAReader):
     
-    """This class is used to represent the (slightly augmented) variant of Darwin Core Archive
+    """This class is used to represent the slightly augmented variant of Darwin Core Archive
     produced by the new GBIF Data Portal when exporting occurrences.
 
 
-    It is a subclass of :class:`.DwCAReader` and provides a few more features that reflect the
-    additional data provided in these specific archives:
+    It provides a few additions to :class:`.DwCAReader` that reflect the additional data provided
+    in these specific archives:
 
         - The content of `citations.txt` and `rights.txt` is available via specific properties.
         - (core) Rows accessed trough this class have a `source_metadata` property that gives\
@@ -203,7 +208,7 @@ class GBIFResultsReader(DwCAReader):
     
     def __init__(self, path):
         super(GBIFResultsReader, self).__init__(path)
-        #: a dict containing source/original metadata of the archive, such as
+        #: A dict containing source/original metadata of the archive, such as
         #: {'dataset_uuid': 'dataset_metadata', ...}
         self.source_metadata = self._dataset_metadata_to_dict('dataset')
 

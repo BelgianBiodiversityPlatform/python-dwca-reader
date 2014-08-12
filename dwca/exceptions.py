@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""This module provide specific exceptions for the whole package.
+
+"""
+
 
 class RowNotFound(Exception):
-    pass
+    """The DwC-A Row cannot be found."""
