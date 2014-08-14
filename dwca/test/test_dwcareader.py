@@ -22,6 +22,12 @@ class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
+    def test_classic_opening(self):
+        """Ensure it also works w/o the 'with' statement."""
+        dwca = DwCAReader(BASIC_ARCHIVE_PATH)
+        self.assertIsInstance(dwca.metadata, BeautifulSoup)
+        dwca.close()
+
     def test_descriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
             self.assertIsInstance(basic_dwca.descriptor, ArchiveDescriptor)

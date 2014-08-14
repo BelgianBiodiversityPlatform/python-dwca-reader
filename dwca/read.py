@@ -23,20 +23,36 @@ class DwCAReader(object):
 
     It gives read access to the (Core file) rows, to the Archive metadata, ...
 
+    :param path: path to the Darwin Core Archive (zip file) to open.
+    :type path: str
+
     A short usage example::
 
         from dwca import DwCAReader
+        
+        dwca = DwCAReader('my_archive.zip')
+        # Iterating on core rows is easy:
+        for core_row in dwca:
+            # core_row is an instance of rows.CoreRow
+            print core_row
 
-        # The with statement is recommended as it ensures resources will be properly cleaned after
-        # usage:
-        with DwCAReader('my_archive.zip') as dwca:
-            # Iterating on core rows is easy:
-            for core_row in dwca:
-                # core_row is an instance of rows.CoreRow
-                print core_row
+        # Scientific metadata (EML) is available as a BeautifulSoup object
+        print dwca.metadata.prettify()
 
-            # Scientific metadata (EML) is available as a BeautifulSoup object
-            print dwca.metadata.prettify()
+        # Close the archive to free resources
+        dwca.close()
+
+    The archive can also be opened with the `with` statement. This is recommended, since it ensures
+    resources will be properly cleaned after usage:
+
+    ::
+
+        from dwca import DwCAReader
+
+        with DwCAReader('my-archive.zip') as dwca:
+            pass  # Do what you want
+
+        # When leaving the block, resources are automatically freed.
 
     """
 
@@ -49,8 +65,6 @@ class DwCAReader(object):
     def __init__(self, path):
         """Open the file, reads all metadata and store it in self.metadata (BeautifulSoup obj.)
         Also already open the core file so we've a file descriptor for further access.
-
-        :param path: path to the Darwin Core Archive file to open.
         """
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path
@@ -81,7 +95,7 @@ class DwCAReader(object):
         return list(self)
 
     def get_row_by_id(self, row_id):
-        """Return the (Core) row whose id is row_id.
+        """Return the (core) row whose id is row_id.
 
         :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
         :raises: :class:`dwca.exceptions.RowNotFound`
@@ -102,7 +116,7 @@ class DwCAReader(object):
             raise RowNotFound
 
     def get_row_by_index(self, index):
-        """Return a core row according to its index in core file.
+        """Return a core row according to its position/index in core file.
 
         :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
         :raises: :class:`dwca.exceptions.RowNotFound`
@@ -165,7 +179,7 @@ class DwCAReader(object):
 
         .. note::
             - Alternatively, :class:`.DwCAReader` can be instanciated using the `with` statement.\
-            Cleanup will then be automatically performed when leaving the block.
+            (see example above).
 
         """
         self._cleanup_temporary_folder()
