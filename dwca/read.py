@@ -23,7 +23,7 @@ class DwCAReader(object):
 
     It gives read access to the (Core file) rows, to the Archive metadata, ...
 
-    :param path: path to the Darwin Core Archive (zip file) to open.
+    :param path: path to the Darwin Core Archive (either a zip file or a directory) to open.
     :type path: str
 
     A short usage example::
@@ -69,7 +69,12 @@ class DwCAReader(object):
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path
 
-        self._unzipped_folder_path = self._unzip()
+        if os.path.isdir(self.archive_path):  # Archive as a directly readable directory
+            self._workin_directory_path = self.archive_path
+            self._workin_directory_cleanable = False
+        else:  # Archive is zipped, we have to unzip it
+            self._workin_directory_path = self._unzip()
+            self._workin_directory_cleanable = True
         
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive descriptor (``meta.xml``)
         self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'))
@@ -80,7 +85,7 @@ class DwCAReader(object):
         self.source_metadata = None
 
         self._corefile = _EmbeddedCSV(self.descriptor.core,
-                                      self._unzipped_folder_path)
+                                      self._workin_directory_path)
 
     @property
     #TODO: decide, test and document what we guarantee about ordering
@@ -144,16 +149,12 @@ class DwCAReader(object):
             - File existence is not tested.
 
         """
-        return os.path.abspath(os.path.join(self._unzipped_folder_path, relative_path))
+        return os.path.abspath(os.path.join(self._workin_directory_path, relative_path))
 
     def _read_additional_file(self, relative_path):
         """Read an additional file in the archive and return its content."""
         p = self.absolute_temporary_path(relative_path)
         return open(p).read()
-
-    @staticmethod
-    def _create_temporary_folder():
-        return mkdtemp()[1]
 
     def _parse_metadata_file(self):
         """Load the archive (scientific) Metadata file, parse it with
@@ -168,7 +169,7 @@ class DwCAReader(object):
 
     def _unzip(self):
         """Unzip the current archive in a temporary directory and return its path."""
-        unzipped_folder = self._create_temporary_folder()
+        unzipped_folder = mkdtemp()[1]  # Creating a temporary folder
         #TODO: check content of file!!!! It may, for example contains
         #absolute path (see zipfile doc)
         ZipFile(self.archive_path, 'r').extractall(unzipped_folder)
@@ -182,10 +183,11 @@ class DwCAReader(object):
             (see example above).
 
         """
-        self._cleanup_temporary_folder()
+        if self._workin_directory_cleanable:
+            self._cleanup_temporary_folder()
 
     def _cleanup_temporary_folder(self):
-        rmtree(self._unzipped_folder_path, False)
+        rmtree(self._workin_directory_path, False)
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
@@ -199,7 +201,7 @@ class DwCAReader(object):
         cl = self._corefile.get_row_by_index(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor, self._unzipped_folder_path,
+            return CoreRow(cl, self.descriptor, self._workin_directory_path,
                            self.source_metadata)
         else:
             raise StopIteration
@@ -227,7 +229,7 @@ class GBIFResultsReader(DwCAReader):
         self.source_metadata = self._dataset_metadata_to_dict('dataset')
 
     def _dataset_metadata_to_dict(self, folder):
-        dataset_dir = os.path.join(self._unzipped_folder_path, folder)
+        dataset_dir = os.path.join(self._workin_directory_path, folder)
 
         r = {}
         for f in os.listdir(dataset_dir):

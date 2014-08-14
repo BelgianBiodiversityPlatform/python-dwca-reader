@@ -1,6 +1,7 @@
 Current
 =======
 
+- It can now open not zipped (directory) Darwin Core Archives
 - More testing for Descriptor classes.
 
 v0.6.0 (2014-08-08)

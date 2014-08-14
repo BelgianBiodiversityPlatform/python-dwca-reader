@@ -15,12 +15,23 @@ from dwca.descriptors import ArchiveDescriptor
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
-                      IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH)
+                      IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
+                      DIRECTORY_ARCHIVE_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    def test_unzipped_archive(self):
+        """Ensure it works with non-zipped (directory) archives."""
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
+            # See metadata access works...
+            self.assertIsInstance(dwca.metadata, BeautifulSoup)
+
+            # And iterating...
+            for row in dwca:
+                self.assertIsInstance(row, CoreRow)
 
     def test_classic_opening(self):
         """Ensure it also works w/o the 'with' statement."""
@@ -83,7 +94,20 @@ class TestDwCAReader(unittest.TestCase):
             content = f.read()
             self.assertTrue(content.startswith("id"))
 
-    def test_auto_cleanup(self):
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
+            # Also check if the archive is a directory
+            path_to_occ = dwca.absolute_temporary_path('occurrence.txt')
+            
+            # Is it absolute ?
+            self.assertTrue(os.path.isabs(path_to_occ))
+            # Does file exists ?
+            self.assertTrue(os.path.isfile(path_to_occ))
+            # IS it the correct content ?
+            f = open(path_to_occ)
+            content = f.read()
+            self.assertTrue(content.startswith("id"))
+
+    def test_auto_cleanup_zipped(self):
         """Test no temporary files are left after execution (using 'with' statement)."""
         num_files_before = len(os.listdir('.'))
 
@@ -94,7 +118,18 @@ class TestDwCAReader(unittest.TestCase):
 
         self.assertEqual(num_files_before, num_files_after)
 
-    def test_manual_cleanup(self):
+    def test_auto_cleanup_directory(self):
+        """If the source is already a directory, there's nothing to create nor cleanup."""
+
+        num_files_before = len(os.listdir('.'))
+
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH):
+            pass
+
+        num_files_after = len(os.listdir('.'))
+        self.assertEqual(num_files_before, num_files_after)
+
+    def test_manual_cleanup_zipped(self):
         """Test no temporary files are left after execution (calling close() manually)."""
 
         num_files_before = len(os.listdir('.'))
@@ -106,7 +141,21 @@ class TestDwCAReader(unittest.TestCase):
 
         self.assertEqual(num_files_before, num_files_after)
 
-    def test_temporary_folder(self):
+    def test_source_data_not_destroyed_directory(self):
+        """In archive=directory, it should not be destroyed after use.
+
+        (check that the cleanup routine for zipped file is not accidentaly called)
+        """
+
+        r = DwCAReader(DIRECTORY_ARCHIVE_PATH)
+        r.close()
+
+        # If previously destroyed, this will fail...
+        r = DwCAReader(DIRECTORY_ARCHIVE_PATH)
+        self.assertIsInstance(r.metadata, BeautifulSoup)
+        r.close()
+
+    def test_temporary_folder_zipped(self):
         """Test a temporary folder is created during execution
 
         (complementay to test_cleanup()
@@ -117,6 +166,14 @@ class TestDwCAReader(unittest.TestCase):
             num_files_during = len(os.listdir('.'))
 
         self.assertEqual(num_files_before, num_files_during - 1)
+
+    def test_no_temporary_folder_directory(self):
+        """If archive is a directory, no need to create temporary files."""
+        num_files_before = len(os.listdir('.'))
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH):
+            num_files_during = len(os.listdir('.'))
+
+        self.assertEqual(num_files_before, num_files_during)
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute
