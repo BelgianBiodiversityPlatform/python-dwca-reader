@@ -61,6 +61,8 @@ class Row(object):
         #: Example::
         #:
         #:      print myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
+        #:
+        #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is avalaible to make such calls less verbose.
         self.data = {}
 
         for f in descriptor.fields:

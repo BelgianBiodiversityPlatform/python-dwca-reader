@@ -8,24 +8,54 @@ from bs4 import BeautifulSoup
 
 
 class SectionDescriptor(object):
-    """Class used to encapsulate a file section (Core or Extension) in the Archive Descriptor"""
+    """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor."""
     def __init__(self, section_tag):
-        #:
-        self.raw_beautifulsoup = section_tag  # It's a Tag instance
+        #: A :class:`BeautifulSoup.Tag` instance containing the whole XML for this section.
+        self.raw_beautifulsoup = section_tag
 
         if self._autodetect_for_core():
+            #: True if this section is used to represent the core file/section of an archive.
             self.represents_corefile = True
+            #: True if this section is used to represent an extension file/section in an archive.
             self.represents_extensionfile = False
+            #: If the section represents a core data file, the index/position of the id column in
+            #: that file.
             self.id_index = int(self.raw_beautifulsoup.id['index'])
         else:
             self.represents_corefile = False
             self.represents_extensionfile = True
+            #: If the section represents an extension data file, the index/position of the core_id
+            #: column in that file. The `core_id` in an extension is the foreign key to the
+            #: "extended" core row.
             self.coreid_index = int(self.raw_beautifulsoup.coreid['index'])
 
         #:
         self.type = self.raw_beautifulsoup['rowType']
 
+        #: A list of dicts where each entry represent a data field in use.
         #:
+        #: Each dict contains:
+        #:      - The term identifier
+        #:      - (Possibly) a default value
+        #:      - The column index/position in the CSV file (except if we use a default value
+        #:        instead)
+        #:
+        #: Example::
+        #:
+        #:      [{'term': 'http://rs.tdwg.org/dwc/terms/scientificName',
+        #:        'index': '1',
+        #:        'default': None},
+        #:
+        #:       {'term': 'http://rs.tdwg.org/dwc/terms/locality',
+        #:        'index': '2',
+        #:        'default': ''},
+        #:
+        #:       # The data for `country` is a the default value 'Belgium' for all rows, so there's
+        #:       # no column in CSV file.
+        #:
+        #:       {'term': 'http://rs.tdwg.org/dwc/terms/country',
+        #:        'index': None,
+        #:        'default': 'Belgium'}]
         self.fields = []
         for f in self.raw_beautifulsoup.findAll('field'):
             default = (f['default'] if f.has_attr('default') else None)
@@ -35,20 +65,19 @@ class SectionDescriptor(object):
 
             self.fields.append({'term': f['term'], 'index': index, 'default': default})
 
-        # a Set containing all the Darwin Core terms appearing in file
-        #:
+        #: A set containing all the Darwin Core terms appearing in file
         self.terms = set([f['term'] for f in self.fields])
 
-        #:
+        #: The data file location, relative to the archive root.
         self.file_location = self.raw_beautifulsoup.files.location.string
 
-        #:
+        #: The file encoding, as specified in the archive descriptor. Example: "utf-8".
         self.encoding = self.raw_beautifulsoup['encoding']
 
-        #:
+        #: The string or character used as a line separator in the data file. Example: "\\n".
         self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")
 
-        #:
+        #: The string or character used as a field separator in the data file. Example: "\\t".
         self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")
 
     def _autodetect_for_core(self):
@@ -84,17 +113,24 @@ class SectionDescriptor(object):
 class ArchiveDescriptor(object):
     """Class used to encapsulate the whole Archive Descriptor (`meta.xml`)."""
     def __init__(self, metaxml_content):
-        #:
+        #: A :class:`BeautifulSoup` instance containing the whole Archive Descriptor.
         self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')
         
-        #:
-        self.metadata_filename = self.raw_beautifulsoup.archive['metadata']  # Relative to archive
+        #: The (relative to archive root) path to the (scientific) metadata of the archive.
+        self.metadata_filename = self.raw_beautifulsoup.archive['metadata']
 
-        #:
+        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the data core file
+        #: of the archive
         self.core = SectionDescriptor(self.raw_beautifulsoup.core)
 
-        #:
+        #: A list of :class:`dwca.descriptors.SectionDescriptor` instances describing each of the
+        #: archive's extension files
         self.extensions = [SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
 
+        #: A list of extension types in use in the archive.
         #:
+        #: Example::
+        #:
+        #:     ["http://rs.gbif.org/terms/1.0/VernacularName",
+        #:      "http://rs.gbif.org/terms/1.0/Description"]
         self.extensions_type = [e.type for e in self.extensions]

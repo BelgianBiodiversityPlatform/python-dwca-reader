@@ -21,7 +21,7 @@ class DwCAReader(object):
     
     """This class is used to represent a Darwin Core Archive as a whole.
 
-    It gives read access to the (Core file) rows, to the Archive metadata, ...
+    It gives read access to the contained data, to the scientific metadata, ...
 
     :param path: path to the Darwin Core Archive (either a zip file or a directory) to open.
     :type path: str
