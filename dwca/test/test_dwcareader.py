@@ -24,7 +24,9 @@ class TestDwCAReader(unittest.TestCase):
     """Unit tests for DwCAReader class."""
 
     def test_default_values_metafile(self):
-        """Ensure default values are used when optional attributes are absent in metafile."""
+        """Ensure default values are used when optional attributes are absent in metafile.
+
+        Optional attributes tested here: linesTerminatedBy, fieldsTerminatedBy."""
         with DwCAReader(DEFAULT_META_VALUES) as dwca:
             # Test iterating on rows...
             for row in dwca:

@@ -76,12 +76,17 @@ class SectionDescriptor(object):
 
         #: The string or character used as a line separator in the data file. Example: "\\n".
         try:
-            self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")
+            self.lines_terminated_by = (self.raw_beautifulsoup['linesTerminatedBy']
+                                            .decode("string-escape"))
         except KeyError:
             self.lines_terminated_by = '\n'  # Default value according to the standard
 
         #: The string or character used as a field separator in the data file. Example: "\\t".
-        self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")
+        try:
+            self.fields_terminated_by = (self.raw_beautifulsoup['fieldsTerminatedBy']
+                                             .decode("string-escape"))
+        except KeyError:
+            self.fields_terminated_by = '\t'
 
     def _autodetect_for_core(self):
         """Returns True if instance represents a Core file."""
@@ -110,7 +115,7 @@ class SectionDescriptor(object):
         try:
             return int(self.raw_beautifulsoup['ignoreHeaderLines'])
         except KeyError:
-            return 0
+            return 0  # Default value according to the standard
 
 
 class ArchiveDescriptor(object):
