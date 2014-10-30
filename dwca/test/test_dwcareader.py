@@ -16,12 +16,19 @@ from dwca.descriptors import ArchiveDescriptor
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
-                      DIRECTORY_ARCHIVE_PATH)
+                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    def test_default_values_metafile(self):
+        """Ensure default values are used when optional attributes are absent in metafile."""
+        with DwCAReader(DEFAULT_META_VALUES) as dwca:
+            # Test iterating on rows...
+            for row in dwca:
+                self.assertIsInstance(row, CoreRow)
 
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""

@@ -3,6 +3,8 @@ Current
 
 - It can now open not zipped (directory) Darwin Core Archives
 - More testing for Descriptor classes.
+- Better respect of the standard (http://rs.tdwg.org/dwc/terms/guides/text/):
+    * We now support default value (\n) for linesTerminatedBy
 
 v0.6.0 (2014-08-08)
 ===================

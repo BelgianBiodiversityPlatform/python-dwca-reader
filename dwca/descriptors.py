@@ -75,7 +75,10 @@ class SectionDescriptor(object):
         self.encoding = self.raw_beautifulsoup['encoding']
 
         #: The string or character used as a line separator in the data file. Example: "\\n".
-        self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")
+        try:
+            self.lines_terminated_by = self.raw_beautifulsoup['linesTerminatedBy'].decode("string-escape")
+        except KeyError:
+            self.lines_terminated_by = '\n'  # Default value according to the standard
 
         #: The string or character used as a field separator in the data file. Example: "\\t".
         self.fields_terminated_by = self.raw_beautifulsoup['fieldsTerminatedBy'].decode("string-escape")
