@@ -32,6 +32,8 @@ class TestDwCAReader(unittest.TestCase):
             for row in dwca:
                 self.assertIsInstance(row, CoreRow)
 
+            # And verify the values themselves:
+
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""
         with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
