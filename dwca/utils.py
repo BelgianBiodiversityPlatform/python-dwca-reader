@@ -3,6 +3,8 @@
 import io
 import os
 
+from array import array
+
 
 class _EmbeddedCSV(object):
     """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
@@ -66,7 +68,13 @@ def get_all_line_offsets(f, encoding):
     """
 
     f.seek(0, 0)
-    line_offsets = []
+
+    # We use an array of Longs instead of a basic list to store the index.
+    # It's much more memory efficient, and a few tests w/ 1-4Gb uncompressed archives
+    # didn't shown any significant slowdown.
+    #
+    # See mini-benchmark in minibench.py
+    line_offsets = array('L')
     offset = 0
     for line in f:
         line_offsets.append(offset)
