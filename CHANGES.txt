@@ -1,5 +1,5 @@
-Current
-=======
+v0.6.1 (2015-01-09)
+===================
 
 - It can now open not zipped (directory) Darwin Core Archives
 - More testing for Descriptor classes.
