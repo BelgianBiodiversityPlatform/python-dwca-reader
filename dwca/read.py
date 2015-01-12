@@ -12,7 +12,7 @@ from shutil import rmtree
 from bs4 import BeautifulSoup
 
 from dwca.rows import CoreRow
-from dwca.utils import _EmbeddedCSV
+from dwca.utils import _DataFile
 from dwca.descriptors import ArchiveDescriptor
 from dwca.exceptions import RowNotFound
 
@@ -84,8 +84,9 @@ class DwCAReader(object):
         #:
         self.source_metadata = None
 
-        self._corefile = _EmbeddedCSV(self.descriptor.core,
-                                      self._workin_directory_path)
+        self._corefile = _DataFile(self.descriptor.core,
+                                   self._workin_directory_path)
+        self._extensionfiles = [_DataFile(d, self._workin_directory_path) for d in self.descriptor.extensions]
 
     @property
     #TODO: decide, test and document what we guarantee about ordering
@@ -198,10 +199,10 @@ class DwCAReader(object):
         return self
 
     def next(self):
-        cl = self._corefile.get_row_by_index(self._corefile_pointer)
+        cl = self._corefile.get_line_by_position(self._corefile_pointer)
         if cl:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor, self._workin_directory_path,
+            return CoreRow(cl, self.descriptor, self._extensionfiles,
                            self.source_metadata)
         else:
             raise StopIteration

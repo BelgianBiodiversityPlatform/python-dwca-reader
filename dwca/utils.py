@@ -6,34 +6,29 @@ import os
 from array import array
 
 
-class _EmbeddedCSV(object):
-    """Internal use class used to encapsulate a DwcA-enclosed CSV file and its metadata."""
+class _DataFile(object):
+    """Internal use class used to encapsulate a DwcA-enclosed CSV file and its descriptor."""
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     # In the future it could make sense to make it public
     def __init__(self, file_descriptor, unzipped_folder_path):
         #unzipped_folder_path: absolute path to the directory containing the unzipped archive.
         
-        self._file_descriptor = file_descriptor
+        self.file_descriptor = file_descriptor
         self._unzipped_folder_path = unzipped_folder_path
 
-        self._core_fhandler = io.open(self.filepath,
+        self._core_fhandler = io.open(os.path.join(self._unzipped_folder_path,
+                                                   self.file_descriptor.file_location),
                                       mode='r',
-                                      encoding=self._file_descriptor.encoding,
-                                      newline=self._file_descriptor.lines_terminated_by,
+                                      encoding=self.file_descriptor.encoding,
+                                      newline=self.file_descriptor.lines_terminated_by,
                                       errors='replace')
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = get_all_line_offsets(self._core_fhandler, self._file_descriptor.encoding)
+        self._line_offsets = get_all_line_offsets(self._core_fhandler, self.file_descriptor.encoding)
 
-        self.lines_to_ignore = self._file_descriptor.lines_to_ignore
-
-    @property
-    def filepath(self):
-        """Returns the absolute path to the 'subject' file."""
-        return os.path.join(self._unzipped_folder_path,
-                            self._file_descriptor.file_location)
+        self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
     def _position_file_after_header(self):
         self._core_fhandler.seek(0, 0)
@@ -50,9 +45,9 @@ class _EmbeddedCSV(object):
         
         raise StopIteration
     
-    def get_row_by_index(self, index):
+    def get_line_by_position(self, position):
         try:
-            self._core_fhandler.seek(self._line_offsets[index + self.lines_to_ignore], 0)
+            self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
             return self._core_fhandler.readline()
         except IndexError:
             return None

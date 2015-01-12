@@ -4,8 +4,6 @@
 
 """
 
-from dwca.utils import _EmbeddedCSV
-
 
 # Make it abstract ? Private ?
 class Row(object):
@@ -88,7 +86,7 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, archive_descriptor, unzipped_folder, archive_source_metadata=None):
+    def __init__(self, line, archive_descriptor, extension_data_files, archive_source_metadata=None):
         super(CoreRow, self).__init__(line, archive_descriptor.core)
 
         #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the Core file.
@@ -100,10 +98,10 @@ class CoreRow(Row):
         # Load related extension row
         #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
         self.extensions = []
-        for ext_descriptor in archive_descriptor.extensions:
-            csv = _EmbeddedCSV(ext_descriptor, unzipped_folder)
+        for csv in extension_data_files:
+            # TODO: move this iteration to the _DataFile class.
             for l in csv:
-                tmp = ExtensionRow(l, ext_descriptor)
+                tmp = ExtensionRow(l, csv.file_descriptor)
                 if tmp.core_id == self.id:
                     self.extensions.append(tmp)
 

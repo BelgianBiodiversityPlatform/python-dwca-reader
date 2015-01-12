@@ -1,5 +1,5 @@
 # Quick'n'dirty mini benchmark used to compare memory and time performance of
-# array() vs standard list for the _line_offsets attribute of class _EmbeddedCSV
+# array() vs standard list for the _line_offsets attribute of class _DataFile
 #
 # Early 2015 results: array is much more efficient in term of memory, and doesn't
 # seem slower => array wins.
