@@ -35,13 +35,16 @@ class Row(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, csv_line, descriptor):
+        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating data file.
+        self.descriptor = descriptor
+
         #: The csv line type as stated in the archive descriptor.
         #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
-        self.rowtype = descriptor.type
+        self.rowtype = self.descriptor.type
 
-        line_ending = descriptor.lines_terminated_by
-        field_ending = descriptor.fields_terminated_by
+        line_ending = self.descriptor.lines_terminated_by
+        field_ending = self.descriptor.fields_terminated_by
 
         # self.raw_fields is a list of the csv_line's content
         #:
@@ -63,7 +66,7 @@ class Row(object):
         #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is avalaible to make such calls less verbose.
         self.data = {}
 
-        for f in descriptor.fields:
+        for f in self.descriptor.fields:
             # if field by default, we can find its value directly in <field>
             # attribute
             if f['default'] is not None:
@@ -86,22 +89,22 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, section_descriptor, archive_source_metadata=None):
+    def __init__(self, line, section_descriptor):
         super(CoreRow, self).__init__(line, section_descriptor)
-
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the Core file.
-        self.descriptor = section_descriptor
 
         #: The row id (from the data file).
         self.id = self.raw_fields[self.descriptor.id_index]
-        
+
+    def link_source_metadata(self, archive_source_metadata):
         # If we have additional metadata about the dataset we're originally
         # from (AKA source/row-level metadata), make it accessible trough
         # the source_metadata attribute
 
         # If this data is not available
         # (because the archive don't provide source metadata or because it
-        # provide some, but not for this row, it will be set to None)
+        # provide some, but not for this row, it will be set to None).
+        #
+        # If thismethod is never called, the source_metadata attribute will not exist
         field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
 
         if (archive_source_metadata and (field_name in self.data)):
@@ -162,10 +165,6 @@ class ExtensionRow(Row):
 
     def __init__(self, line, descriptor):
         super(ExtensionRow, self).__init__(line, descriptor)
-
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating
-        #: extension data file.
-        self.descriptor = descriptor
 
         #: The id of the core row this extension is reffering to.
         self.core_id = self.raw_fields[descriptor.coreid_index]

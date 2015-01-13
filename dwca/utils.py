@@ -57,12 +57,10 @@ class _DataFile(object):
 
         return rows
 
-    # source_metadata are there to be propagated to CoreRow
-    # constructor... Not so pretty. Should we refactor CoreRow?
-    def get_core_row_by_position(self, position, source_metadata):
+    def get_core_row_by_position(self, position):
         try:
             l = self._get_line_by_position(position)
-            return CoreRow(l, self.file_descriptor, source_metadata)
+            return CoreRow(l, self.file_descriptor)
         except IndexError:
             return None
     
