@@ -57,12 +57,12 @@ class _DataFile(object):
 
         return rows
 
-    # archive_descriptor, extension_files and source_metadata are there to be propagated to CoreRow
+    # source_metadata are there to be propagated to CoreRow
     # constructor... Not so pretty. Should we refactor CoreRow?
-    def get_core_row_by_position(self, position, archive_descriptor, extension_files, source_metadata):
+    def get_core_row_by_position(self, position, source_metadata):
         try:
             l = self._get_line_by_position(position)
-            return CoreRow(l, archive_descriptor, extension_files, source_metadata)
+            return CoreRow(l, self.file_descriptor, source_metadata)
         except IndexError:
             return None
     
@@ -70,7 +70,7 @@ class _DataFile(object):
     def _get_line_by_position(self, position):
         self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
         return self._core_fhandler.readline()
-        
+
 
 def get_all_line_offsets(f, encoding):
     """ Parse the file whose handler is given and return a list of each line beginning positions.

@@ -86,16 +86,14 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, archive_descriptor, extension_data_files, archive_source_metadata=None):
-        super(CoreRow, self).__init__(line, archive_descriptor.core)
+    def __init__(self, line, section_descriptor, archive_source_metadata=None):
+        super(CoreRow, self).__init__(line, section_descriptor)
 
         #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the Core file.
-        self.descriptor = archive_descriptor.core
+        self.descriptor = section_descriptor
 
         #: The row id (from the data file).
         self.id = self.raw_fields[self.descriptor.id_index]
-
-        self.extension_data_files = extension_data_files
         
         # If we have additional metadata about the dataset we're originally
         # from (AKA source/row-level metadata), make it accessible trough
@@ -118,6 +116,9 @@ class CoreRow(Row):
         #: This is a non-standard feature currently only provided when using
         #: :class:`dwca.read.GBIFResultsReader`.
         self.source_metadata = m
+
+    def link_extension_files(self, extension_data_files):
+        self.extension_data_files = extension_data_files
 
     #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
     @property
