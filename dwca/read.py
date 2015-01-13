@@ -11,7 +11,6 @@ from shutil import rmtree
 
 from bs4 import BeautifulSoup
 
-from dwca.rows import CoreRow
 from dwca.utils import _DataFile
 from dwca.descriptors import ArchiveDescriptor
 from dwca.exceptions import RowNotFound
@@ -199,19 +198,12 @@ class DwCAReader(object):
         return self
 
     def next(self):
-        cl = self._corefile.get_line_by_position(self._corefile_pointer)
-        if cl:
+        r = self._corefile.get_core_row_by_position(self._corefile_pointer, self.descriptor, self._extensionfiles, self.source_metadata)
+        if r:
             self._corefile_pointer = self._corefile_pointer + 1
-            return CoreRow(cl, self.descriptor, self._extensionfiles,
-                           self.source_metadata)
+            return r
         else:
             raise StopIteration
-        #self._corefile.get_core_row_by_position(self._corefile_pointer, self._extensionfiles, self.source_metadata)
-        # r = self._corefile.get_core_row_by_position(self._corefile_pointer, self._extensionfiles, self.source_metadata)
-        # if r:
-        #     return r
-        # else:
-        #     raise StopIteration
 
 
 class GBIFResultsReader(DwCAReader):

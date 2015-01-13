@@ -5,7 +5,7 @@ import os
 
 from array import array
 
-from dwca.rows import ExtensionRow
+from dwca.rows import CoreRow, ExtensionRow
 
 
 class _DataFile(object):
@@ -56,15 +56,22 @@ class _DataFile(object):
                 rows.append(tmp)
 
         return rows
-    
-    def get_line_by_position(self, position):
+
+    # archive_descriptor, extension_files and source_metadata are there to be propagated to CoreRow
+    # constructor... Not so pretty. Should we refactor CoreRow?
+    def get_core_row_by_position(self, position, archive_descriptor, extension_files, source_metadata):
         try:
-            self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
-            return self._core_fhandler.readline()
+            l = self._get_line_by_position(position)
+            return CoreRow(l, archive_descriptor, extension_files, source_metadata)
         except IndexError:
             return None
-
     
+    # Raises IndexError if position is incorrect
+    def _get_line_by_position(self, position):
+        self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
+        return self._core_fhandler.readline()
+        
+
 def get_all_line_offsets(f, encoding):
     """ Parse the file whose handler is given and return a list of each line beginning positions.
 
