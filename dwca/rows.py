@@ -95,12 +95,8 @@ class CoreRow(Row):
         #: The row id (from the data file).
         self.id = self.raw_fields[self.descriptor.id_index]
 
-        # Load related extension row
-        #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
-        self.extensions = []
-        for csv in extension_data_files:
-            [self.extensions.append(r) for r in csv.get_all_rows_by_coreid(self.id)]
-
+        self.extension_data_files = extension_data_files
+        
         # If we have additional metadata about the dataset we're originally
         # from (AKA source/row-level metadata), make it accessible trough
         # the source_metadata attribute
@@ -122,6 +118,17 @@ class CoreRow(Row):
         #: This is a non-standard feature currently only provided when using
         #: :class:`dwca.read.GBIFResultsReader`.
         self.source_metadata = m
+
+    #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
+    @property
+    def extensions(self):
+        # We use lazy loading
+        if not hasattr(self, '_extensions'):
+            self._extensions = []
+            for csv in self.extension_data_files:
+                [self._extensions.append(r) for r in csv.get_all_rows_by_coreid(self.id)]
+
+        return self._extensions
 
     # __key is different between CoreRow and ExtensionRow, while eq, ne and hash are identical
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
