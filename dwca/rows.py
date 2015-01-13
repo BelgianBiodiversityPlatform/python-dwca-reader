@@ -99,11 +99,7 @@ class CoreRow(Row):
         #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
         self.extensions = []
         for csv in extension_data_files:
-            # TODO: move this iteration to the _DataFile class.
-            for l in csv:
-                tmp = ExtensionRow(l, csv.file_descriptor)
-                if tmp.core_id == self.id:
-                    self.extensions.append(tmp)
+            [self.extensions.append(r) for r in csv.get_all_rows_by_coreid(self.id)]
 
         # If we have additional metadata about the dataset we're originally
         # from (AKA source/row-level metadata), make it accessible trough

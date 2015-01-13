@@ -5,6 +5,8 @@ import os
 
 from array import array
 
+from dwca.rows import ExtensionRow
+
 
 class _DataFile(object):
     """Internal use class used to encapsulate a DwcA-enclosed CSV file and its descriptor."""
@@ -44,6 +46,16 @@ class _DataFile(object):
             return line
         
         raise StopIteration
+
+    # For ExtensionRow only, generalize ??
+    def get_all_rows_by_coreid(self, core_id):
+        rows = []
+        for l in self:
+            tmp = ExtensionRow(l, self.file_descriptor)
+            if tmp.core_id == core_id:
+                rows.append(tmp)
+
+        return rows
     
     def get_line_by_position(self, position):
         try:

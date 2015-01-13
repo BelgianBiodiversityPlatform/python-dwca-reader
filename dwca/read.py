@@ -206,6 +206,12 @@ class DwCAReader(object):
                            self.source_metadata)
         else:
             raise StopIteration
+        #self._corefile.get_core_row_by_position(self._corefile_pointer, self._extensionfiles, self.source_metadata)
+        # r = self._corefile.get_core_row_by_position(self._corefile_pointer, self._extensionfiles, self.source_metadata)
+        # if r:
+        #     return r
+        # else:
+        #     raise StopIteration
 
 
 class GBIFResultsReader(DwCAReader):
