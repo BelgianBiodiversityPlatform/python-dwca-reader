@@ -47,7 +47,7 @@ class _DataFile(object):
         
         raise StopIteration
 
-    # For ExtensionRow only, generalize ??
+    # For ExtensionRow and finxed field only, generalize ??
     def get_all_rows_by_coreid(self, core_id):
         rows = []
         for l in self:
@@ -57,10 +57,13 @@ class _DataFile(object):
 
         return rows
 
-    def get_core_row_by_position(self, position):
+    def get_row_by_position(self, position):
         try:
             l = self._get_line_by_position(position)
-            return CoreRow(l, self.file_descriptor)
+            if self.file_descriptor.represents_corefile:
+                return CoreRow(l, self.file_descriptor)
+            else:
+                return ExtensionRow(l, self.file_descriptor)
         except IndexError:
             return None
     

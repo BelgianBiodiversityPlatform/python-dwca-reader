@@ -3,5 +3,5 @@
 import unittest
 
 
-class TestEmbeddedCSV(unittest.TestCase):
+class TestDataFile(unittest.TestCase):
     pass

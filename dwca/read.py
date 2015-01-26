@@ -198,12 +198,12 @@ class DwCAReader(object):
         return self
 
     def next(self):
-        r = self._corefile.get_core_row_by_position(self._corefile_pointer)
+        r = self._corefile.get_row_by_position(self._corefile_pointer)
         if r:
             # Set up linked data so the CoreRow will know about them
             r.link_extension_files(self._extensionfiles)
             r.link_source_metadata(self.source_metadata)
-            
+
             self._corefile_pointer = self._corefile_pointer + 1
             return r
         else:
