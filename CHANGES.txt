@@ -1,5 +1,5 @@
-Current
-=======
+v0.6.2 (2015-01-26)
+===================
 
 - Better performance with extensions.
 
