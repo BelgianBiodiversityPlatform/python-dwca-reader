@@ -59,7 +59,7 @@ class SectionDescriptor(object):
         self.fields = []
         for f in self.raw_beautifulsoup.findAll('field'):
             default = (f['default'] if f.has_attr('default') else None)
-            
+
             # Default fields don't have an index attribute
             index = (int(f['index']) if f.has_attr('index') else None)
 
@@ -97,7 +97,7 @@ class SectionDescriptor(object):
         """Returns a list of (ordered) column names that can be used to create a header line."""
 
         columns = {}
-        
+
         for f in self.fields:
             if f['index']:  # Some (default values for example) don't have a corresponding col.
                 columns[f['index']] = f['term']
@@ -120,10 +120,13 @@ class SectionDescriptor(object):
 
 class ArchiveDescriptor(object):
     """Class used to encapsulate the whole Archive Descriptor (`meta.xml`)."""
-    def __init__(self, metaxml_content):
+    def __init__(self, metaxml_content, files_to_ignore=None):
+        if files_to_ignore is None:
+            files_to_ignore = []
+
         #: A :class:`BeautifulSoup` instance containing the whole Archive Descriptor.
         self.raw_beautifulsoup = BeautifulSoup(metaxml_content, 'xml')
-        
+
         #: The (relative to archive root) path to the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_beautifulsoup.archive['metadata']
 
@@ -133,7 +136,10 @@ class ArchiveDescriptor(object):
 
         #: A list of :class:`dwca.descriptors.SectionDescriptor` instances describing each of the
         #: archive's extension files
-        self.extensions = [SectionDescriptor(tag) for tag in self.raw_beautifulsoup.findAll('extension')]
+        self.extensions = []
+        for tag in self.raw_beautifulsoup.findAll('extension'):
+            if tag.files.location.text not in files_to_ignore:
+                self.extensions.append(SectionDescriptor(tag))
 
         #: A list of extension types in use in the archive.
         #:

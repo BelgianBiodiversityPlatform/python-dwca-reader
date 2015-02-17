@@ -1,3 +1,13 @@
+v0.6.4 (2015-02-17)
+===================
+
+- Performance: an optional 'extension_to_ignores' parameter (List) can be passed to DwCAReader's constructor. In cases where an archive contains large but unneeded extensions, this can greatly improve memory consumption. A typical case fot that would be the huge 'verbatim.txt' contained in GBIF downloads.
+
+v0.6.3 (2015-02-16)
+===================
+
+- Performance: we now use core_id based indexes for extensions. There's a memory penalty, but extension file parsing is now only done once. 
+
 v0.6.2 (2015-01-26)
 ===================
 

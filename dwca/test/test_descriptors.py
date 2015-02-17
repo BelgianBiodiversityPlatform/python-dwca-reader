@@ -401,6 +401,48 @@ class TestArchiveDescriptor(unittest.TestCase):
 
         self.assertEqual(len(d.extensions), 2)
 
+    # Test the files_to_ignore optional argument work as expected
+    def test_exposes_extensions_2ext_ignore(self):
+        all_metaxml = """
+        <archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+          <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Taxon">
+            <files>
+              <location>taxon.txt</location>
+            </files>
+            <id index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/order"/>
+            <field index="2" term="http://rs.tdwg.org/dwc/terms/class"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+            <field index="4" term="http://rs.tdwg.org/dwc/terms/phylum"/>
+            <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
+            <field index="6" term="http://rs.tdwg.org/dwc/terms/family"/>
+          </core>
+          <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
+            <files>
+              <location>description.txt</location>
+            </files>
+            <coreid index="0" />
+            <field index="1" term="http://purl.org/dc/terms/type"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://purl.org/dc/terms/description"/>
+          </extension>
+          <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/VernacularName">
+            <files>
+              <location>vernacularname.txt</location>
+            </files>
+            <coreid index="0" />
+            <field index="1" term="http://rs.tdwg.org/dwc/terms/countryCode"/>
+            <field index="2" term="http://purl.org/dc/terms/language"/>
+            <field index="3" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
+          </extension>
+        </archive>
+        """
+
+        d = ArchiveDescriptor(all_metaxml, files_to_ignore="description.txt")
+
+        self.assertEqual(len(d.extensions), 1)
+        self.assertEqual(d.extensions[0].file_location, 'vernacularname.txt')
+
     def test_exposes_extensions_none(self):
         all_metaxml = """
         <archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">

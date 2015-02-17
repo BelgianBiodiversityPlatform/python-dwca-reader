@@ -372,6 +372,32 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(0, len(rows[2].extensions))
             # No vernacular name, 1 taxon description
 
+    def test_ignore_extension(self):
+        """Ensure the extensions_to_ignore argument work as expected."""
+
+        # This archive has two extensions, but we ask to ignore one...
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH,
+                        extensions_to_ignore="description.txt") as multi_dwca:
+
+            rows = list(multi_dwca)
+
+            # 3 vernacular names
+            self.assertEqual(3, len(rows[0].extensions))
+            # 1 Vernacular name
+            self.assertEqual(1, len(rows[1].extensions))
+            # No extensions for this core line
+            self.assertEqual(0, len(rows[2].extensions))
+
+        # Here, we ignore the only extension of an archive
+        with DwCAReader(EXTENSION_ARCHIVE_PATH,
+                        extensions_to_ignore="vernacularname.txt") as star_dwca:
+                rows = list(star_dwca)
+
+                self.assertEqual(0, len(rows[0].extensions))
+                self.assertEqual(0, len(rows[1].extensions))
+                self.assertEqual(0, len(rows[2].extensions))
+                self.assertEqual(0, len(rows[3].extensions))
+
     def test_row_rowtype(self):
         """Test the rowtype attribute of rows (for Core and extensions)."""
 

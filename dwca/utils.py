@@ -14,8 +14,8 @@ class _DataFile(object):
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     # In the future it could make sense to make it public
     def __init__(self, file_descriptor, unzipped_folder_path):
-        #unzipped_folder_path: absolute path to the directory containing the unzipped archive.
-        
+        # unzipped_folder_path: absolute path to the directory containing the unzipped archive.
+
         self.file_descriptor = file_descriptor
         self._unzipped_folder_path = unzipped_folder_path
 
@@ -44,18 +44,36 @@ class _DataFile(object):
     def next(self):
         for line in self._core_fhandler:
             return line
-        
+
         raise StopIteration
 
-    # For ExtensionRow and finxed field only, generalize ??
-    def get_all_rows_by_coreid(self, core_id):
-        rows = []
+    # Returns a index of the per code_id positions of Rows in the file:
+    # {core_id1: []}
+
+    # TODO: Generalize this so we can create indexes on any field ?
+    def _build_coreid_index(self):
+        index = {}
+        pos = 0
         for l in self:
             tmp = ExtensionRow(l, self.file_descriptor)
-            if tmp.core_id == core_id:
-                rows.append(tmp)
+            if tmp.core_id not in index:
+                index[tmp.core_id] = [pos]
+            else:
+                index[tmp.core_id].append(pos)
 
-        return rows
+            pos = pos + 1
+        return index
+
+    # TODO: For ExtensionRow and finxed field only, generalize ??
+    def get_all_rows_by_coreid(self, core_id):
+        # If we don't already have an index of core ids, it's time to build it.
+        if not hasattr(self, '_coreid_index'):
+            self._coreid_index = self._build_coreid_index()
+
+        if core_id not in self._coreid_index:
+            return []
+        else:
+            return [self.get_row_by_position(p) for p in self._coreid_index[core_id]]
 
     def get_row_by_position(self, position):
         try:
@@ -66,7 +84,7 @@ class _DataFile(object):
                 return ExtensionRow(l, self.file_descriptor)
         except IndexError:
             return None
-    
+
     # Raises IndexError if position is incorrect
     def _get_line_by_position(self, position):
         self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
@@ -94,6 +112,6 @@ def get_all_line_offsets(f, encoding):
     for line in f:
         line_offsets.append(offset)
         offset += len(line.encode(encoding))
-    
+
     f.seek(0, 0)
     return line_offsets

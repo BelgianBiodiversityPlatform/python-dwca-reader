@@ -17,7 +17,7 @@ from dwca.exceptions import RowNotFound
 
 
 class DwCAReader(object):
-    
+
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the contained data, to the scientific metadata, ...
@@ -28,7 +28,7 @@ class DwCAReader(object):
     A short usage example::
 
         from dwca import DwCAReader
-        
+
         dwca = DwCAReader('my_archive.zip')
         # Iterating on core rows is easy:
         for core_row in dwca:
@@ -61,10 +61,14 @@ class DwCAReader(object):
     def __exit__(self, type, value, traceback):
         self.close()
 
-    def __init__(self, path):
+    def __init__(self, path, extensions_to_ignore=None):
         """Open the file, reads all metadata and store it in self.metadata (BeautifulSoup obj.)
         Also already open the core file so we've a file descriptor for further access.
         """
+
+        if extensions_to_ignore is None:
+            extensions_to_ignore = []
+
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path
 
@@ -74,9 +78,10 @@ class DwCAReader(object):
         else:  # Archive is zipped, we have to unzip it
             self._workin_directory_path = self._unzip()
             self._workin_directory_cleanable = True
-        
+
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive descriptor (``meta.xml``)
-        self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'))
+        self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
+                                            files_to_ignore=extensions_to_ignore)
 
         #: A :class:`BeautifulSoup` instance containing the (scientific) metadata of the archive.
         self.metadata = self._parse_metadata_file()
@@ -88,7 +93,7 @@ class DwCAReader(object):
         self._extensionfiles = [_DataFile(d, self._workin_directory_path) for d in self.descriptor.extensions]
 
     @property
-    #TODO: decide, test and document what we guarantee about ordering
+    # TODO: decide, test and document what we guarantee about ordering
     def rows(self):
         """A list of :class:`rows.CoreRow` instances representing the content of the archive.
 
@@ -211,7 +216,7 @@ class DwCAReader(object):
 
 
 class GBIFResultsReader(DwCAReader):
-    
+
     """This class is used to represent the slightly augmented variant of Darwin Core Archive
     produced by the new GBIF Data Portal when exporting occurrences.
 
@@ -224,7 +229,7 @@ class GBIFResultsReader(DwCAReader):
         access to the metadata of the originating dataset.
 
     """
-    
+
     def __init__(self, path):
         super(GBIFResultsReader, self).__init__(path)
         #: A dict containing source/original metadata of the archive, such as
