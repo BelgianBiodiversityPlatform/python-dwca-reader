@@ -1,3 +1,8 @@
+v0.6.5 (2015-08-18)
+===================
+
+- New InvalidArchive exception. Currrently, it is only raised when a DwC-A references a metadata file that's not present in the archive.  
+
 v0.6.4 (2015-02-17)
 ===================
 

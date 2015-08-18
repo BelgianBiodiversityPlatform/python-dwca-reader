@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='python-dwca-reader',
-    version='0.6.4',
+    version='0.6.5',
     author=u'Nicolas Noé - Belgian Biodiversity Platform',
     author_email='n.noe@biodiversity.be',
     packages=['dwca', 'dwca.darwincore', 'dwca.test'],

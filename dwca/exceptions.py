@@ -7,3 +7,7 @@
 
 class RowNotFound(Exception):
     """The DwC-A Row cannot be found."""
+
+
+class InvalidArchive(Exception):
+    """The archive appears to be invalid."""

@@ -8,12 +8,13 @@ import os
 from tempfile import mkdtemp
 from zipfile import ZipFile
 from shutil import rmtree
+from errno import ENOENT
 
 from bs4 import BeautifulSoup
 
 from dwca.utils import _DataFile
 from dwca.descriptors import ArchiveDescriptor
-from dwca.exceptions import RowNotFound
+from dwca.exceptions import RowNotFound, InvalidArchive
 
 
 class DwCAReader(object):
@@ -163,9 +164,20 @@ class DwCAReader(object):
 
     def _parse_metadata_file(self):
         """Load the archive (scientific) Metadata file, parse it with
-        BeautifulSoup and return its content."""
+        BeautifulSoup and return its content.
 
-        return self._parse_xml_included_file(self.descriptor.metadata_filename)
+        :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
+        metadata file.
+        """
+
+        fn = self.descriptor.metadata_filename
+
+        try:
+            return self._parse_xml_included_file(fn)
+        except IOError as e:
+            if e.errno == ENOENT:  # File not found
+                msg = "{} is referenced in the archive descriptor but missing.".format(fn)
+                raise InvalidArchive(msg)
 
     def _parse_xml_included_file(self, relative_path):
         """Load, parse with BeautifulSoup and returns XML file located
