@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from bs4 import Tag, BeautifulSoup
+import xml.etree.ElementTree as ET
 
 from dwca.descriptors import SectionDescriptor, ArchiveDescriptor
 from dwca.darwincore.utils import qualname as qn
@@ -13,7 +13,7 @@ from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
 
 class TestSectionDescriptor(unittest.TestCase):
     """Unit tests for SectionDescriptor class."""
-    
+
     def test_lines_to_ignore(self):
         # With explicit "0"
         metaxml_section = """
@@ -27,8 +27,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 
@@ -44,8 +43,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 1)
 
@@ -61,8 +59,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 

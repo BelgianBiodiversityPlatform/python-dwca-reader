@@ -1,3 +1,11 @@
+TODO:
+    - Really remove BS+lxml from environments, setup.py, ...
+    - Document the change
+    - Clean code in descriptors (repeated namespace for example)
+
+Current (remove beautifulSoup)
+==============================
+
 v0.6.5 (2015-08-18)
 ===================
 
