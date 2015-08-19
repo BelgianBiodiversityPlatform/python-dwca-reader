@@ -4,6 +4,7 @@
 
 """
 
+import re
 import xml.etree.ElementTree as ET
 
 
@@ -20,14 +21,14 @@ class SectionDescriptor(object):
             self.represents_extensionfile = False
             #: If the section represents a core data file, the index/position of the id column in
             #: that file.
-            self.id_index = int(self.raw_element.find('{http://rs.tdwg.org/dwc/text/}id').get('index'))
+            self.id_index = int(self.raw_element.find('id').get('index'))
         else:
             self.represents_corefile = False
             self.represents_extensionfile = True
             #: If the section represents an extension data file, the index/position of the core_id
             #: column in that file. The `core_id` in an extension is the foreign key to the
             #: "extended" core row.
-            self.coreid_index = int(self.raw_element.find('{http://rs.tdwg.org/dwc/text/}coreid').get('index'))
+            self.coreid_index = int(self.raw_element.find('coreid').get('index'))
 
         #:
         self.type = self.raw_element.get('rowType')
@@ -58,12 +59,10 @@ class SectionDescriptor(object):
         #:        'default': 'Belgium'}]
         self.fields = []
 
-        for f in self.raw_element.findall('{http://rs.tdwg.org/dwc/text/}field'):
-            #default = (f['default'] if f.has_attr('default') else None)
+        for f in self.raw_element.findall('field'):
             default = f.get('default', None)
 
             # Default fields don't have an index attribute
-            #index = (int(f['index']) if f.has_attr('index') else None)
             index = (int(f.get('index')) if f.get('index') else None)
 
             self.fields.append({'term': f.get('term'), 'index': index, 'default': default})
@@ -72,7 +71,7 @@ class SectionDescriptor(object):
         self.terms = set([f['term'] for f in self.fields])
 
         #: The data file location, relative to the archive root.
-        self.file_location = self.raw_element.find('{http://rs.tdwg.org/dwc/text/}files').find('{http://rs.tdwg.org/dwc/text/}location').text
+        self.file_location = self.raw_element.find('files').find('location').text
 
         #: The file encoding, as specified in the archive descriptor. Example: "utf-8".
         self.encoding = self.raw_element.get('encoding')
@@ -93,7 +92,7 @@ class SectionDescriptor(object):
 
     def _autodetect_for_core(self):
         """Returns True if instance represents a Core file."""
-        return self.raw_element.tag == '{http://rs.tdwg.org/dwc/text/}core'
+        return self.raw_element.tag == 'core'
 
     @property
     def headers(self):
@@ -124,6 +123,9 @@ class ArchiveDescriptor(object):
         if files_to_ignore is None:
             files_to_ignore = []
 
+        # Let's drop the XML namespace to avoid prefixes 
+        metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
+
         #: A :class:`xml.etree.ElementTree.Element` instance containing the full Archive Descriptor.
         self.raw_element = ET.fromstring(metaxml_content)
 
@@ -134,15 +136,15 @@ class ArchiveDescriptor(object):
         #: of the archive
         #self.core = SectionDescriptor(self.raw_element.find('core'))
 
-        core_element = self.raw_element.find('{http://rs.tdwg.org/dwc/text/}core')
+        core_element = self.raw_element.find('core')
         self.core = SectionDescriptor(core_element)
 
         #: A list of :class:`dwca.descriptors.SectionDescriptor` instances describing each of the
         #: archive's extension files
         self.extensions = []
-        for tag in self.raw_element.findall('{http://rs.tdwg.org/dwc/text/}extension'):
+        for tag in self.raw_element.findall('extension'):
             #from nose.tools import set_trace; set_trace()
-            if tag.find('{http://rs.tdwg.org/dwc/text/}files').find('{http://rs.tdwg.org/dwc/text/}location').text not in files_to_ignore:
+            if tag.find('files').find('location').text not in files_to_ignore:
                 #self.extensions.append(SectionDescriptor(tag))
                 
 

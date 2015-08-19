@@ -79,8 +79,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.file_location, "occurrence.txt")
         self.assertEqual(core_descriptor.encoding, "utf-8")
@@ -104,8 +103,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         # .fields is supposed to return a list of dicts like those
         expected_fields = (
@@ -143,7 +141,7 @@ class TestSectionDescriptor(unittest.TestCase):
                                                 'http://purl.org/dc/terms/type',
                                                 'http://purl.org/dc/terms/language',
                                                 'http://purl.org/dc/terms/description']
-            
+
             desc_ext_descriptor = next(d for d in dwca.descriptor.extensions
                                        if d.type == 'http://rs.gbif.org/terms/1.0/Description')
 
@@ -177,8 +175,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/scientificName',
@@ -204,8 +201,7 @@ class TestSectionDescriptor(unittest.TestCase):
             <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
         </core>
         """
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/order',
@@ -217,12 +213,12 @@ class TestSectionDescriptor(unittest.TestCase):
 
         self.assertEqual(core_descriptor.headers, expected_headers_core)
 
-    def test_exposes_raw_beautifulsoup_tag(self):
+    def test_exposes_raw_element_tag(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
-            self.assertIsInstance(dwca.descriptor.core.raw_beautifulsoup, Tag)
+            self.assertIsInstance(dwca.descriptor.core.raw_element, ET.Element)
 
-    def test_content_raw_beautifulsoup_tag(self):
-        """ Test the content ofraw_beautifulsoup seems decent. """
+    def test_content_raw_element_tag(self):
+        """ Test the content of raw_element seems decent. """
         ext_section = """
         <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
         fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.gbif.org/terms/1.0/Description">
@@ -234,12 +230,11 @@ class TestSectionDescriptor(unittest.TestCase):
         </extension>
         """
 
-        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
-        ext_descriptor = SectionDescriptor(as_tag)
+        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
 
-        self.assertEqual(ext_descriptor.raw_beautifulsoup.name, 'extension')
-        self.assertEqual(ext_descriptor.raw_beautifulsoup['encoding'], 'utf-8')
-        self.assertEqual(len(ext_descriptor.raw_beautifulsoup.findAll('field')), 3)
+        self.assertEqual(ext_descriptor.raw_element.tag, 'extension')
+        self.assertEqual(ext_descriptor.raw_element.get('encoding'), 'utf-8')
+        self.assertEqual(len(ext_descriptor.raw_element.findall('field')), 3)
 
     def test_tell_if_represents_core(self):
         # 1. Test with core
@@ -260,8 +255,7 @@ class TestSectionDescriptor(unittest.TestCase):
         """
 
         # 2. And with extension
-        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
-        ext_descriptor = SectionDescriptor(as_tag)
+        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
         self.assertFalse(ext_descriptor.represents_corefile)
         self.assertTrue(ext_descriptor.represents_extensionfile)
 
@@ -276,8 +270,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </extension>
         """
 
-        as_tag = BeautifulSoup(ext_section, 'xml').contents[0]
-        ext_descriptor = SectionDescriptor(as_tag)
+        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
 
         self.assertEqual(ext_descriptor.coreid_index, 0)
 
@@ -301,8 +294,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        as_tag = BeautifulSoup(metaxml_section, 'xml').contents[0]
-        core_descriptor = SectionDescriptor(as_tag)
+        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.id_index, 0)
 
@@ -339,11 +331,11 @@ class TestSectionDescriptor(unittest.TestCase):
 
             # Assert correct content (should be a set, so unordered)
             fields = set([u'http://rs.tdwg.org/dwc/terms/kingdom',
-                         u'http://rs.tdwg.org/dwc/terms/order',
-                         u'http://rs.tdwg.org/dwc/terms/class',
-                         u'http://rs.tdwg.org/dwc/terms/genus',
-                         u'http://rs.tdwg.org/dwc/terms/family',
-                         u'http://rs.tdwg.org/dwc/terms/phylum'])
+                          u'http://rs.tdwg.org/dwc/terms/order',
+                          u'http://rs.tdwg.org/dwc/terms/class',
+                          u'http://rs.tdwg.org/dwc/terms/genus',
+                          u'http://rs.tdwg.org/dwc/terms/family',
+                          u'http://rs.tdwg.org/dwc/terms/phylum'])
 
             self.assertEqual(fields, descriptor.core.terms)
 
@@ -457,14 +449,6 @@ class TestArchiveDescriptor(unittest.TestCase):
         """
         d = ArchiveDescriptor(all_metaxml)
         self.assertEqual(len(d.extensions), 0)
-
-    def test_exposes_raw_beautifulsoup(self):
-        with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            descriptor = basic_dwca.descriptor
-
-            # Test that it exposes a 'raw_beautifulsoup' attribute w/ decent content
-            self.assertIsInstance(descriptor.raw_beautifulsoup, BeautifulSoup)
-            self.assertEqual(descriptor.raw_beautifulsoup.archive["metadata"], 'eml.xml')
 
     def test_exposes_extensions_type(self):
         vn = 'http://rs.gbif.org/terms/1.0/VernacularName'
