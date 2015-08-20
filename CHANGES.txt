@@ -1,12 +1,9 @@
-TODO:
-    - Really remove BS+lxml from environments, setup.py, ...
-    - Document the change
-    - Clean code in descriptors (repeated namespace for example)
-    - Search all strings for BeautifulSoup
-    - Check tutorial still works (no rely on metadata's being beautifulsoup obj for example)
+v0.7.0 (2015-08-20)
+===================
 
-Current (remove beautifulSoup)
-==============================
+- Python-dwca-reader doesn't rely anymore on BeautifulSoup/lxml, using ElementTree from the standard library instead fot its XML parsing needs. This has a series of consequences:
+  * It should be easier to install and deploy (also on platforms such as Jython).
+  * All methods and attributes that used to return BeautifulSoup objects will now return xml.etree.ElementTree.Element instances. This includes DwCAReader.metadata. SectionDescriptor.raw_beautifulsoup and ArchiveDescriptor.raw_beautifulsoup have been replaced by SectionDescriptor.raw_element and ArchiveDescriptor.raw_element (Element objects).
 
 v0.6.5 (2015-08-18)
 ===================

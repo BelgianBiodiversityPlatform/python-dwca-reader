@@ -45,13 +45,11 @@ Example use
     with DwCAReader('my-archive.zip') as dwca:
         # We can now interact with the 'dwca' object
 
-        # We can read scientific metadata (EML) through a BeautifulSoup object in the 'metadata'
+        # We can read scientific metadata (EML) through a xml.etree.ElementTree.Element object in the 'metadata'
         # attribute.
+        dwca.metadata
 
-        # See BeautifulSoup 4 documentation: http://www.crummy.com/software/BeautifulSoup/bs4/doc
-        print dwca.metadata.prettify()
-
-        # The 'descriptor' attributes gives access to the Archive Descriptor (meta.xml) and allow
+        # The 'descriptor' attribute gives access to the Archive Descriptor (meta.xml) and allow
         # inspecting the archive:
         # For example, discover what the type the Core file is: (Occurrence, Taxon, ...)
         print "Core type is: %s" % dwca.descriptor.core.type
@@ -185,14 +183,14 @@ The new version of the GBIF Data Portal allow users to export searched occurrenc
 
         # 2.1) At the archive level, they can be accessed as a dict:
         print results.source_metadata
-        # {'dataset1_UUID': <dataset1 EML (BeautifulSoup instance)>,
-        #  'dataset2_UUID': <dataset2 EML (BeautifulSoup instance)>, ...}
+        # {'dataset1_UUID': <dataset1 EML (xml.etree.ElementTree.Element instance)>,
+        #  'dataset2_UUID': <dataset2 EML (xml.etree.ElementTree.Element instance)>, ...}
 
         # 2.2 From a CoreRow instance, we can get back to the metadata of its source dataset:
         first_row = results.get_row_by_index(0)
         
         print first_row.source_metadata
-        # => <Source dataset EML (BeautifulSoup instance)>
+        # => <Source dataset EML (Element instance)>
 
 
 More info:
