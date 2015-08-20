@@ -2,6 +2,8 @@ TODO:
     - Really remove BS+lxml from environments, setup.py, ...
     - Document the change
     - Clean code in descriptors (repeated namespace for example)
+    - Search all strings for BeautifulSoup
+    - Check tutorial still works (no rely on metadata's being beautifulsoup obj for example)
 
 Current (remove beautifulSoup)
 ==============================

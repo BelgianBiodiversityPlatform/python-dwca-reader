@@ -25,7 +25,11 @@ class Row(object):
                "--\n")
 
         extension_flag = "Yes" if (hasattr(self, 'extensions') and (len(self.extensions) > 0)) else "No"
-        source_metadata_flag = "Yes" if (hasattr(self, 'source_metadata') and self.source_metadata) else "No"
+
+        if hasattr(self, 'source_metadata') and (self.source_metadata is not None):
+            source_metadata_flag = 'Yes'
+        else:
+            source_metadata_flag = 'No'
 
         return txt.format(rowtype=self.rowtype,
                           source_str=source_str,
@@ -35,7 +39,8 @@ class Row(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, csv_line, descriptor):
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating data file.
+        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating
+        #: data file.
         self.descriptor = descriptor
 
         #: The csv line type as stated in the archive descriptor.
@@ -77,14 +82,14 @@ class Row(object):
 
 
 class CoreRow(Row):
-    
+
     """ This class is used to represent a row/line from a Darwin Core Archive core file.
 
     You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
     or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_row_by_index,
     get_row_by_id, ...).
     """
-    
+
     def __str__(self):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
@@ -104,7 +109,7 @@ class CoreRow(Row):
         # (because the archive don't provide source metadata or because it
         # provide some, but not for this row, it will be set to None).
         #
-        # If thismethod is never called, the source_metadata attribute will not exist
+        # If this method is never called, the source_metadata attribute will not exist
         field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
 
         if (archive_source_metadata and (field_name in self.data)):

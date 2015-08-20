@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides classes that represents the descriptor (meta.xml) file in a DarwinCore Archive.
+"""This module provides classes to represents the descriptor (meta.xml) file of a DwC-A.
 
 """
 
@@ -11,7 +11,8 @@ import xml.etree.ElementTree as ET
 class SectionDescriptor(object):
     """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor."""
     def __init__(self, section_tag):
-        #: A :class:`xml.etree.ElementTree.Element` instance containing the whole XML for this section.
+        #: A :class:`xml.etree.ElementTree.Element` instance containing the whole XML for this
+        #: section.
         self.raw_element = section_tag
 
         if self._autodetect_for_core():
@@ -123,10 +124,11 @@ class ArchiveDescriptor(object):
         if files_to_ignore is None:
             files_to_ignore = []
 
-        # Let's drop the XML namespace to avoid prefixes 
+        # Let's drop the XML namespace to avoid prefixes
         metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
 
-        #: A :class:`xml.etree.ElementTree.Element` instance containing the full Archive Descriptor.
+        #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive
+        #: Descriptor.
         self.raw_element = ET.fromstring(metaxml_content)
 
         #: The (relative to archive root) path to the (scientific) metadata of the archive.
@@ -134,20 +136,13 @@ class ArchiveDescriptor(object):
 
         #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the data core file
         #: of the archive
-        #self.core = SectionDescriptor(self.raw_element.find('core'))
-
-        core_element = self.raw_element.find('core')
-        self.core = SectionDescriptor(core_element)
+        self.core = SectionDescriptor(self.raw_element.find('core'))
 
         #: A list of :class:`dwca.descriptors.SectionDescriptor` instances describing each of the
         #: archive's extension files
         self.extensions = []
         for tag in self.raw_element.findall('extension'):
-            #from nose.tools import set_trace; set_trace()
             if tag.find('files').find('location').text not in files_to_ignore:
-                #self.extensions.append(SectionDescriptor(tag))
-                
-
                 self.extensions.append(SectionDescriptor(tag))
 
         #: A list of extension types in use in the archive.

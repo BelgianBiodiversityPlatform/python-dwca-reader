@@ -5,7 +5,7 @@ import os
 import tempfile
 
 from zipfile import BadZipfile
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
@@ -53,7 +53,7 @@ class TestDwCAReader(unittest.TestCase):
         """Ensure it works with non-zipped (directory) archives."""
         with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
             # See metadata access works...
-            self.assertIsInstance(dwca.metadata, BeautifulSoup)
+            self.assertIsInstance(dwca.metadata, ET.Element)
 
             # And iterating...
             for row in dwca:
@@ -62,7 +62,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_classic_opening(self):
         """Ensure it also works w/o the 'with' statement."""
         dwca = DwCAReader(BASIC_ARCHIVE_PATH)
-        self.assertIsInstance(dwca.metadata, BeautifulSoup)
+        self.assertIsInstance(dwca.metadata, ET.Element)
         dwca.close()
 
     def test_descriptor(self):
@@ -178,7 +178,7 @@ class TestDwCAReader(unittest.TestCase):
 
         # If previously destroyed, this will fail...
         r = DwCAReader(DIRECTORY_ARCHIVE_PATH)
-        self.assertIsInstance(r.metadata, BeautifulSoup)
+        self.assertIsInstance(r.metadata, ET.Element)
         r.close()
 
     def test_temporary_folder_zipped(self):
@@ -208,13 +208,13 @@ class TestDwCAReader(unittest.TestCase):
         """
 
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
-            # Assert metadata is an instance of BeautifulSoup
-            self.assertIsInstance(dwca.metadata, BeautifulSoup)
+            # Assert metadata is an instance of ElementTree.Element
+            self.assertIsInstance(dwca.metadata, ET.Element)
 
             # Assert we can read basic fields from EML:
-            self.assertEqual(dwca.metadata.dataset.creator.
-                             individualName.givenName.contents[0],
-                             'Nicolas')
+            v = (dwca.metadata.find('dataset').find('creator').find('individualName')
+                     .find('givenName').text)
+            self.assertEqual(v, 'Nicolas')
 
     def test_core_contains_term(self):
         """Test the core_contains_term method."""

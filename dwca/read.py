@@ -10,7 +10,7 @@ from zipfile import ZipFile
 from shutil import rmtree
 from errno import ENOENT
 
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 from dwca.utils import _DataFile
 from dwca.descriptors import ArchiveDescriptor
@@ -36,7 +36,7 @@ class DwCAReader(object):
             # core_row is an instance of rows.CoreRow
             print core_row
 
-        # Scientific metadata (EML) is available as a BeautifulSoup object
+        # Scientific metadata (EML) is available as an ElementTree.Element object
         print dwca.metadata.prettify()
 
         # Close the archive to free resources
@@ -63,7 +63,7 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None):
-        """Open the file, reads all metadata and store it in self.metadata (BeautifulSoup obj.)
+        """Open the file, reads all metadata and store it in self.metadata
         Also already open the core file so we've a file descriptor for further access.
         """
 
@@ -80,11 +80,13 @@ class DwCAReader(object):
             self._workin_directory_path = self._unzip()
             self._workin_directory_cleanable = True
 
-        #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive descriptor (``meta.xml``)
+        #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
+        #: descriptor (``meta.xml``)
         self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
                                             files_to_ignore=extensions_to_ignore)
 
-        #: A :class:`BeautifulSoup` instance containing the (scientific) metadata of the archive.
+        #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
+        #: of the archive.
         self.metadata = self._parse_metadata_file()
         #:
         self.source_metadata = None
@@ -164,7 +166,7 @@ class DwCAReader(object):
 
     def _parse_metadata_file(self):
         """Load the archive (scientific) Metadata file, parse it with
-        BeautifulSoup and return its content.
+        ElementTree and return its content.
 
         :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
         metadata file.
@@ -180,15 +182,16 @@ class DwCAReader(object):
                 raise InvalidArchive(msg)
 
     def _parse_xml_included_file(self, relative_path):
-        """Load, parse with BeautifulSoup and returns XML file located
+        """Load, parse and returns (as ElementTree.Element) XML file located
         at relative_path."""
-        return BeautifulSoup(self._read_additional_file(relative_path), "xml")
+
+        return ET.fromstring(self._read_additional_file(relative_path))
 
     def _unzip(self):
         """Unzip the current archive in a temporary directory and return its path."""
         unzipped_folder = mkdtemp()[1]  # Creating a temporary folder
-        #TODO: check content of file!!!! It may, for example contains
-        #absolute path (see zipfile doc)
+        # TODO: check content of file!!!! It may, for example contains
+        # absolute path (see zipfile doc)
         ZipFile(self.archive_path, 'r').extractall(unzipped_folder)
         return unzipped_folder
 
@@ -256,7 +259,6 @@ class GBIFResultsReader(DwCAReader):
             if os.path.isfile(os.path.join(dataset_dir, f)):
                 key = os.path.splitext(f)[0]
                 r[key] = self._parse_xml_included_file(os.path.join(folder, f))
-
         return r
 
     # Compared to a standard DwC-A, GBIF results export contains
