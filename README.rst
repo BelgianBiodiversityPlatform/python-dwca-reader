@@ -1,3 +1,6 @@
+.. image:: https://badge.fury.io/py/python-dwca-reader.svg
+    :target: https://badge.fury.io/py/python-dwca-reader
+
 What is it ?
 ============
 
