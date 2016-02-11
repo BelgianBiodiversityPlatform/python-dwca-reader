@@ -4,6 +4,7 @@
 
 """
 
+import sys
 import re
 import xml.etree.ElementTree as ET
 
@@ -80,14 +81,20 @@ class SectionDescriptor(object):
         #: The string or character used as a line separator in the data file. Example: "\\n".
         raw_ltb = self.raw_element.get('linesTerminatedBy')
         if raw_ltb:
-            self.lines_terminated_by = raw_ltb.decode("string-escape")
+            if sys.version_info[0] == 2:  # Python 2
+                self.lines_terminated_by = raw_ltb.decode("string-escape")
+            else:
+                self.lines_terminated_by = bytes(raw_ltb, self.encoding).decode("unicode-escape")
         else:
             self.lines_terminated_by = '\n'  # Default value according to the standard
 
         #: The string or character used as a field separator in the data file. Example: "\\t".
         raw_ftb = self.raw_element.get('fieldsTerminatedBy')
         if raw_ftb:
-            self.fields_terminated_by = raw_ftb.decode("string-escape")
+            if sys.version_info[0] == 2:  # Python 2
+                self.fields_terminated_by = raw_ftb.decode("string-escape")
+            else:
+                self.fields_terminated_by = bytes(raw_ftb, self.encoding).decode("unicode-escape")
         else:
             self.fields_terminated_by = '\t'
 
@@ -111,7 +118,7 @@ class SectionDescriptor(object):
         if hasattr(self, 'coreid_index'):
             columns[self.coreid_index] = 'coreid'
 
-        return [columns[f] for f in sorted(columns.iterkeys())]
+        return [columns[f] for f in sorted(columns.keys())]
 
     @property
     def lines_to_ignore(self):

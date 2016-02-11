@@ -41,6 +41,9 @@ class _DataFile(object):
         self._position_file_after_header()
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         for line in self._core_fhandler:
             return line

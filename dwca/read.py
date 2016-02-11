@@ -217,6 +217,9 @@ class DwCAReader(object):
         self._corefile_pointer = 0
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         r = self._corefile.get_row_by_position(self._corefile_pointer)
         if r:

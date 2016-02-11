@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import unittest
 import os
 import tempfile
@@ -33,8 +34,9 @@ class TestDwCAReader(unittest.TestCase):
             a.close()
 
         the_exception = cm.exception
+
         expected_message = "eml.xml is referenced in the archive descriptor but missing."
-        self.assertEqual(the_exception.message, expected_message)
+        self.assertEqual(str(the_exception), expected_message)
 
         # TODO: Once implemented, test here other cases of InvalidArchive exceptions.
 
@@ -78,8 +80,13 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("Row id:", l_repr)
             self.assertIn("Reference extension rows: No", l_repr)
             self.assertIn("Reference source metadata: No", l_repr)
-            self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
-                          l_repr)
+
+            if sys.version_info[0] == 2:  # Python 2
+                self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
+                              l_repr)
+            else:
+                self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'",
+                              l_repr)
 
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             l = star_dwca.rows[0]
@@ -353,7 +360,7 @@ class TestDwCAReader(unittest.TestCase):
         # line
         with DwCAReader(BASIC_ARCHIVE_PATH) as simple_dwca:
             for l in simple_dwca:
-                for k, v in l.data.iteritems():
+                for k, v in l.data.items():
                     self.assertFalse(v.endswith("\n"))
 
     def test_correct_extension_rows_per_core_row(self):

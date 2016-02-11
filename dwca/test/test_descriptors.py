@@ -330,12 +330,12 @@ class TestSectionDescriptor(unittest.TestCase):
             self.assertEqual(6, len(descriptor.core.terms))
 
             # Assert correct content (should be a set, so unordered)
-            fields = set([u'http://rs.tdwg.org/dwc/terms/kingdom',
-                          u'http://rs.tdwg.org/dwc/terms/order',
-                          u'http://rs.tdwg.org/dwc/terms/class',
-                          u'http://rs.tdwg.org/dwc/terms/genus',
-                          u'http://rs.tdwg.org/dwc/terms/family',
-                          u'http://rs.tdwg.org/dwc/terms/phylum'])
+            fields = set(['http://rs.tdwg.org/dwc/terms/kingdom',
+                          'http://rs.tdwg.org/dwc/terms/order',
+                          'http://rs.tdwg.org/dwc/terms/class',
+                          'http://rs.tdwg.org/dwc/terms/genus',
+                          'http://rs.tdwg.org/dwc/terms/family',
+                          'http://rs.tdwg.org/dwc/terms/phylum'])
 
             self.assertEqual(fields, descriptor.core.terms)
 

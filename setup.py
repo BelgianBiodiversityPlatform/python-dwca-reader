@@ -10,5 +10,9 @@ setup(
     url="https://github.com/BelgianBiodiversityPlatform/python-dwca-reader",
     license='BSD licence, see LICENCE.txt',
     description='A simple Python package to read Darwin Core Archive (DwC-A) files.',
-    long_description=open('README.rst').read()
+    long_description=open('README.rst').read(),
+    classifiers=[
+        'Programming Language :: Python :: 2.7',
+	'Programming Language :: Python :: 3'
+    ]
 )
