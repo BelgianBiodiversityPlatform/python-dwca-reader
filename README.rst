@@ -1,6 +1,9 @@
 .. image:: https://badge.fury.io/py/python-dwca-reader.svg
     :target: https://badge.fury.io/py/python-dwca-reader
 
+.. image:: https://travis-ci.org/BelgianBiodiversityPlatform/python-dwca-reader.svg?branch=master
+    :target: https://travis-ci.org/BelgianBiodiversityPlatform/python-dwca-reader
+
 What is it ?
 ============
 
