@@ -1,3 +1,8 @@
+v0.8.0 (2016-02-11)
+===================
+
+- Experimental support for Python 3.5 (while maintaining compatibility with 2.7)
+
 v0.7.0 (2015-08-20)
 ===================
 
