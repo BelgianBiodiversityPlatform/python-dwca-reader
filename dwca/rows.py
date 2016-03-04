@@ -39,7 +39,7 @@ class Row(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, csv_line, descriptor):
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
         self.descriptor = descriptor
 

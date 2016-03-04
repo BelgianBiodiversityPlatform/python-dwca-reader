@@ -17,7 +17,8 @@ from dwca.descriptors import ArchiveDescriptor
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
-                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA)
+                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
+                      SIMPLE_CSV)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -50,6 +51,44 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertIsInstance(row, CoreRow)
 
             # And verify the values themselves:
+
+    def test_simplecsv_archive(self):
+        """ Ensure the reader works with archives consiting of a single CSV file.
+
+        As described in page #2 of http://www.gbif.org/resource/80639, those archives consists
+        of a single core data file where the first line provides the names of the Darwin Core terms
+        represented in the published data. That also seems to match quite well the definition of
+        Simple Darwin Core expressed as text: http://rs.tdwg.org/dwc/terms/simple/index.htm.
+        """
+        with DwCAReader(SIMPLE_CSV) as dwca:
+            # Ensure we get the correct number of rows
+            self.assertEqual(len(dwca.rows), 3)
+            # Ensure we can access arbitrary data
+            self.assertEqual(dwca.get_row_by_index[1].data['decimallatitude'], '-31.98333')
+            # Archive descriptor should be None
+            self.assertIsNone(dwca.descriptor)
+            # (scientific) metadata should be None
+            self.assertIsNone(dwca.metadata)
+
+    def test_simplecsv_archive_eml(self):
+        """ Test Archive witthout metafile, but containing metadata.
+
+        Similar to test_simplecsv_archive, except the archive also contains a Metadata file named
+        EML.xml. This correspond to the second case on page #2 of 
+        http://www.gbif.org/resource/80639. The metadata file having the "standard name", it should
+        properly handled. 
+
+        """
+        with DwCAReader(SIMPLE_CSV) as dwca:
+            # Ensure we get the correct number of rows
+            self.assertEqual(len(dwca.rows), 3)
+            # Ensure we can access arbitrary data
+            self.assertEqual(dwca.get_row_by_index[1].data['decimallatitude'], '-31.98333')
+            # Archive descriptor should be None
+            self.assertIsNone(dwca.descriptor)
+            # (scientific) metadata should be None
+            self.assertIsInstance(dwca.metadata, ET.Element)
+            # TODO: also access a metadata element to ensure this really works?
 
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""

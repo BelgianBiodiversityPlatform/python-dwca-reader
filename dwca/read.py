@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files.
-
-"""
+"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files."""
 
 import os
 from tempfile import mkdtemp
@@ -18,10 +16,11 @@ from dwca.exceptions import RowNotFound, InvalidArchive
 
 
 class DwCAReader(object):
-
     """This class is used to represent a Darwin Core Archive as a whole.
 
-    It gives read access to the contained data, to the scientific metadata, ...
+    It gives read access to the contained data, to the scientific metadata, ... It supports
+    archives with or without Metafiles, such as described on page 2 of the Reference Guide
+    to the XML Descriptor (http://www.gbif.org/resource/80639).
 
     :param path: path to the Darwin Core Archive (either a zip file or a directory) to open.
     :type path: str
@@ -63,10 +62,7 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None):
-        """Open the file, reads all metadata and store it in self.metadata
-        Also already open the core file so we've a file descriptor for further access.
-        """
-
+        """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
 
@@ -76,14 +72,17 @@ class DwCAReader(object):
         if os.path.isdir(self.archive_path):  # Archive as a directly readable directory
             self._workin_directory_path = self.archive_path
             self._workin_directory_cleanable = False
-        else:  # Archive is zipped, we have to unzip it
+        else:  # Archive is zipped, we first have to unzip it
             self._workin_directory_path = self._unzip()
             self._workin_directory_cleanable = True
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor (``meta.xml``)
-        self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
-                                            files_to_ignore=extensions_to_ignore)
+        try:
+            self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
+                                                files_to_ignore=extensions_to_ignore)
+        except FileNotFoundError:
+            self.descriptor = None
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive.
@@ -91,9 +90,15 @@ class DwCAReader(object):
         #:
         self.source_metadata = None
 
-        self._corefile = _DataFile(self.descriptor.core,
-                                   self._workin_directory_path)
-        self._extensionfiles = [_DataFile(d, self._workin_directory_path) for d in self.descriptor.extensions]
+        if self.descriptor:
+            #  We have an Archive descriptor that we can use to access data files.
+            self._corefile = _DataFile(self._workin_directory_path, self.descriptor.core)
+            self._extensionfiles = [_DataFile(self._workin_directory_path, d)
+                                    for d in self.descriptor.extensions]
+        else:
+            # Archive without descriptor, we'll have to find and inspect the data file
+            self._corefile = _DataFile(self._workin_directory_path, )
+            self._extensionfiles = []
 
     @property
     # TODO: decide, test and document what we guarantee about ordering
@@ -166,25 +171,30 @@ class DwCAReader(object):
 
     def _parse_metadata_file(self):
         """Load the archive (scientific) Metadata file, parse it with
-        ElementTree and return its content.
+        ElementTree and return its content (or None if the Archive contains no metadata).
 
         :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
         metadata file.
         """
+        if self.descriptor:  # If the archive has descriptor, find the metadata filename there
+            fn = self.descriptor.metadata_filename
 
-        fn = self.descriptor.metadata_filename
+            try:
+                return self._parse_xml_included_file(fn)
+            except IOError as e:
+                if e.errno == ENOENT:  # File not found
+                    msg = "{} is referenced in the archive descriptor but missing.".format(fn)
+                    raise InvalidArchive(msg)
 
-        try:
-            return self._parse_xml_included_file(fn)
-        except IOError as e:
-            if e.errno == ENOENT:  # File not found
-                msg = "{} is referenced in the archive descriptor but missing.".format(fn)
-                raise InvalidArchive(msg)
+        else:  # Otherwise, the metadata file has to be named 'EML.xml'
+            try:
+                return self._parse_xml_included_file('EML.xml')
+            except IOError as e:
+                if e.errno == ENOENT:  # File not found, this is an archive without metadata
+                    return None
 
     def _parse_xml_included_file(self, relative_path):
-        """Load, parse and returns (as ElementTree.Element) XML file located
-        at relative_path."""
-
+        """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
         return ET.fromstring(self._read_additional_file(relative_path))
 
     def _unzip(self):
@@ -234,7 +244,6 @@ class DwCAReader(object):
 
 
 class GBIFResultsReader(DwCAReader):
-
     """This class is used to represent the slightly augmented variant of Darwin Core Archive
     produced by the new GBIF Data Portal when exporting occurrences.
 

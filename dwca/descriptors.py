@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides classes to represents the descriptor (meta.xml) file of a DwC-A.
+"""This module provides classes to represents descriptors of a DwC-A.
 
+- :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the metafile.
+- :class:`DataFileDescriptor describes characteristics of a given data file in the archive. It's
+generally initialized from a subsection of the ArchiveDescriptor, but in case the Archives contains
+no metafile, it can also be created by introspecting the CSV data file.
 """
 
 import sys
@@ -9,11 +13,28 @@ import re
 import xml.etree.ElementTree as ET
 
 
-class SectionDescriptor(object):
+class DataFileDescriptor(object):
     """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor."""
-    def __init__(self, section_tag):
-        #: A :class:`xml.etree.ElementTree.Element` instance containing the whole XML for this
-        #: section.
+
+    def __init__(self, section_tag=None, datafile=None):
+        # Args:
+        # - section_tag :class:`xml.etree.ElementTree.Element` instance containing the whole
+        #   XML for this section (in case we want to build a descriptor based on the metafile).
+        # - datafile: the data file (in case we want to build a descriptor based on file analysis-
+        #   needed for archive without metafile)
+
+        if section_tag is not None:
+            self._init_from_metafile_section(section_tag)
+        else:
+            self._init_from_file(datafile)
+
+    def _init_from_file(self, datafile):
+        self.raw_element = None  # No metafile, so no XML session to store
+        self.represents_corefile = True  # In archives without metafiles, there's only a core data file
+        self.represents_extension = False
+        self.type = None  # No metafile => no rowType information
+
+    def _init_from_metafile_section(self, section_tag):
         self.raw_element = section_tag
 
         if self._autodetect_for_core():
@@ -99,13 +120,12 @@ class SectionDescriptor(object):
             self.fields_terminated_by = '\t'
 
     def _autodetect_for_core(self):
-        """Returns True if instance represents a Core file."""
+        """Return True if instance represents a Core file."""
         return self.raw_element.tag == 'core'
 
     @property
     def headers(self):
-        """Returns a list of (ordered) column names that can be used to create a header line."""
-
+        """Return a list of (ordered) column names that can be used to create a header line."""
         columns = {}
 
         for f in self.fields:
@@ -127,6 +147,7 @@ class SectionDescriptor(object):
 
 class ArchiveDescriptor(object):
     """Class used to encapsulate the whole Archive Descriptor (`meta.xml`)."""
+
     def __init__(self, metaxml_content, files_to_ignore=None):
         if files_to_ignore is None:
             files_to_ignore = []
@@ -141,16 +162,16 @@ class ArchiveDescriptor(object):
         #: The (relative to archive root) path to the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_element.attrib['metadata']
 
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the data core file
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the data core file
         #: of the archive
-        self.core = SectionDescriptor(self.raw_element.find('core'))
+        self.core = DataFileDescriptor(self.raw_element.find('core'))
 
-        #: A list of :class:`dwca.descriptors.SectionDescriptor` instances describing each of the
+        #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the
         #: archive's extension files
         self.extensions = []
         for tag in self.raw_element.findall('extension'):
             if tag.find('files').find('location').text not in files_to_ignore:
-                self.extensions.append(SectionDescriptor(tag))
+                self.extensions.append(DataFileDescriptor(tag))
 
         #: A list of extension types in use in the archive.
         #:

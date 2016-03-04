@@ -1,18 +1,40 @@
 # -*- coding: utf-8 -*-
 import unittest
+import zipfile
 
 import xml.etree.ElementTree as ET
 
-from dwca.descriptors import SectionDescriptor, ArchiveDescriptor
+from dwca.descriptors import DataFileDescriptor, ArchiveDescriptor
 from dwca.darwincore.utils import qualname as qn
 from dwca.read import DwCAReader
 
 from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
-                      MULTIEXTENSIONS_ARCHIVE_PATH)
+                      MULTIEXTENSIONS_ARCHIVE_PATH, SIMPLE_CSV)
 
 
-class TestSectionDescriptor(unittest.TestCase):
-    """Unit tests for SectionDescriptor class."""
+class TestDataFileDescriptor(unittest.TestCase):
+    """Unit tests for DataFileDescriptor class."""
+
+    def test_init_from_file(self):
+        """ Ensure a DataFileDescriptor can be constructed directly from a CSV file.
+
+        This is necessary for archives sans metafile.
+        """
+        archive = zipfile.ZipFile(SIMPLE_CSV, 'r')
+        datafile = archive.read('0008333-160118175350007.csv')
+        d = DataFileDescriptor(section_tag=None, datafile=datafile)
+
+        # Check basic metadata with the file
+        self.assertIsNone(d.raw_element)
+        self.assertTrue(d.represents_corefile)
+        self.assertFalse(d.represents_extension)
+        self.assertIsNone(d.type)
+
+        # Check fields are populated
+        # TODO
+
+        # Check .terms, .file_location, .encoding, .lines_terminated_by, .fields_terminated_by
+        # TODO
 
     def test_lines_to_ignore(self):
         # With explicit "0"
@@ -27,7 +49,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 
@@ -43,7 +65,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 1)
 
@@ -59,7 +81,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 
@@ -79,7 +101,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.file_location, "occurrence.txt")
         self.assertEqual(core_descriptor.encoding, "utf-8")
@@ -103,7 +125,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         # .fields is supposed to return a list of dicts like those
         expected_fields = (
@@ -175,7 +197,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/scientificName',
@@ -201,7 +223,7 @@ class TestSectionDescriptor(unittest.TestCase):
             <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
         </core>
         """
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/order',
@@ -230,7 +252,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </extension>
         """
 
-        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
 
         self.assertEqual(ext_descriptor.raw_element.tag, 'extension')
         self.assertEqual(ext_descriptor.raw_element.get('encoding'), 'utf-8')
@@ -255,7 +277,7 @@ class TestSectionDescriptor(unittest.TestCase):
         """
 
         # 2. And with extension
-        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
         self.assertFalse(ext_descriptor.represents_corefile)
         self.assertTrue(ext_descriptor.represents_extensionfile)
 
@@ -270,7 +292,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </extension>
         """
 
-        ext_descriptor = SectionDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
 
         self.assertEqual(ext_descriptor.coreid_index, 0)
 
@@ -294,7 +316,7 @@ class TestSectionDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = SectionDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.id_index, 0)
 
@@ -345,7 +367,7 @@ class TestArchiveDescriptor(unittest.TestCase):
 
     def test_exposes_coredescriptor(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor.core, SectionDescriptor)
+            self.assertIsInstance(basic_dwca.descriptor.core, DataFileDescriptor)
 
     def test_exposes_extensions_2ext(self):
         all_metaxml = """
