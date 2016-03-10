@@ -17,16 +17,39 @@ from dwca.descriptors import ArchiveDescriptor
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
-                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA)
+                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
+                      SUBFOLDER_ARCHIVE_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
+    def test_subfolder_archive(self):
+        """Ensure we support Archives where all the content is under a single directory."""
+        num_files_before = len(os.listdir('.'))
+        num_files_during = None
+        with DwCAReader(SUBFOLDER_ARCHIVE_PATH) as dwca:
+            # Ensure we have access to metadata
+            self.assertIsInstance(dwca.metadata, ET.Element)
+
+            # And to the rows themselves
+            for row in dwca:
+                self.assertIsInstance(row, CoreRow)
+
+            rows = list(dwca)
+            self.assertEqual('Borneo', rows[0].data[qn('locality')])
+
+            num_files_during = len(os.listdir('.'))
+
+        num_files_after = len(os.listdir('.'))
+
+        # Let's also check temporary dir is correctly created and removed.
+        self.assertEqual(num_files_before + 1, num_files_during)
+        self.assertEqual(num_files_before, num_files_after)
+
     def test_exception_invalid_archives(self):
         """Ensure an InvalidArchive exception is raised when the archive is invalid."""
-
         # Sometimes, the archive metafile references a metadata file that's not present in the
         # archive. See for example http://dev.gbif.org/issues/browse/PF-2125
         with self.assertRaises(InvalidArchive) as cm:
@@ -41,9 +64,11 @@ class TestDwCAReader(unittest.TestCase):
         # TODO: Once implemented, test here other cases of InvalidArchive exceptions.
 
     def test_default_values_metafile(self):
-        """Ensure default values are used when optional attributes are absent in metafile.
+        """
+        Ensure default values are used when optional attributes are absent in metafile.
 
-        Optional attributes tested here: linesTerminatedBy, fieldsTerminatedBy."""
+        Optional attributes tested here: linesTerminatedBy, fieldsTerminatedBy.
+        """
         with DwCAReader(DEFAULT_META_VALUES) as dwca:
             # Test iterating on rows...
             for row in dwca:
@@ -153,7 +178,6 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_auto_cleanup_directory(self):
         """If the source is already a directory, there's nothing to create nor cleanup."""
-
         num_files_before = len(os.listdir('.'))
 
         with DwCAReader(DIRECTORY_ARCHIVE_PATH):
@@ -164,7 +188,6 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_manual_cleanup_zipped(self):
         """Test no temporary files are left after execution (calling close() manually)."""
-
         num_files_before = len(os.listdir('.'))
 
         r = DwCAReader(BASIC_ARCHIVE_PATH)
@@ -179,7 +202,6 @@ class TestDwCAReader(unittest.TestCase):
 
         (check that the cleanup routine for zipped file is not accidentaly called)
         """
-
         r = DwCAReader(DIRECTORY_ARCHIVE_PATH)
         r.close()
 
@@ -189,11 +211,10 @@ class TestDwCAReader(unittest.TestCase):
         r.close()
 
     def test_temporary_folder_zipped(self):
-        """Test a temporary folder is created during execution
+        """Test a temporary folder is created during execution.
 
         (complementay to test_cleanup()
         """
-
         num_files_before = len(os.listdir('.'))
         with DwCAReader(BASIC_ARCHIVE_PATH):
             num_files_during = len(os.listdir('.'))

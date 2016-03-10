@@ -1,3 +1,8 @@
+Current
+=======
+
+- Support for archives contained in a single (sub)directory. See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
+
 v0.8.0 (2016-02-11)
 ===================
 
@@ -18,7 +23,7 @@ v0.6.5 (2015-08-18)
 v0.6.4 (2015-02-17)
 ===================
 
-- Performance: an optional 'extension_to_ignores' parameter (List) can be passed to DwCAReader's constructor. In cases where an archive contains large but unneeded extensions, this can greatly improve memory consumption. A typical case fot that would be the huge 'verbatim.txt' contained in GBIF downloads.
+- Performance: an optional 'extension_to_ignores' parameter (List) can be passed to DwCAReader's constructor. In cases where an archive contains large but unneeded extensions, this can greatly improve memory consumption. A typical use-case for that would be the huge 'verbatim.txt' contained in GBIF downloads.
 
 v0.6.3 (2015-02-16)
 ===================

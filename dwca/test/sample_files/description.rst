@@ -12,3 +12,4 @@ Description of sample DwcA
 * dwca-utf8-eol-test.zip: For regression test of https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/20
 * dwca-ids: The core rows contains unordered ids, for testing "get by ID" vs "get by index"
 * dwca-invalid-lacks-metadata: Invalid archive: the metafile reference an unexisting eml.xml file.
+* dwca-simple-subfolder.zip: An archive that have all its content under a single root directory. This is probably an invalid archive, but this is neverthless quite common.

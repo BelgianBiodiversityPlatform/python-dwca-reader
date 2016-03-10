@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files.
-
-"""
+"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files."""
 
 import os
 from tempfile import mkdtemp
@@ -18,7 +16,6 @@ from dwca.exceptions import RowNotFound, InvalidArchive
 
 
 class DwCAReader(object):
-
     """This class is used to represent a Darwin Core Archive as a whole.
 
     It gives read access to the contained data, to the scientific metadata, ...
@@ -63,10 +60,10 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None):
-        """Open the file, reads all metadata and store it in self.metadata
+        """Open the file, reads all metadata and store it in self.metadata.
+
         Also already open the core file so we've a file descriptor for further access.
         """
-
         if extensions_to_ignore is None:
             extensions_to_ignore = []
 
@@ -75,10 +72,9 @@ class DwCAReader(object):
 
         if os.path.isdir(self.archive_path):  # Archive as a directly readable directory
             self._workin_directory_path = self.archive_path
-            self._workin_directory_cleanable = False
+            self._directory_to_clean = None
         else:  # Archive is zipped, we have to unzip it
-            self._workin_directory_path = self._unzip()
-            self._workin_directory_cleanable = True
+            self._directory_to_clean, self._workin_directory_path = self._unzip()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor (``meta.xml``)
@@ -93,7 +89,8 @@ class DwCAReader(object):
 
         self._corefile = _DataFile(self.descriptor.core,
                                    self._workin_directory_path)
-        self._extensionfiles = [_DataFile(d, self._workin_directory_path) for d in self.descriptor.extensions]
+        self._extensionfiles = [_DataFile(d, self._workin_directory_path)
+                                for d in self.descriptor.extensions]
 
     @property
     # TODO: decide, test and document what we guarantee about ordering
@@ -171,7 +168,6 @@ class DwCAReader(object):
         :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
         metadata file.
         """
-
         fn = self.descriptor.metadata_filename
 
         try:
@@ -182,18 +178,31 @@ class DwCAReader(object):
                 raise InvalidArchive(msg)
 
     def _parse_xml_included_file(self, relative_path):
-        """Load, parse and returns (as ElementTree.Element) XML file located
-        at relative_path."""
-
+        """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
         return ET.fromstring(self._read_additional_file(relative_path))
 
     def _unzip(self):
-        """Unzip the current archive in a temporary directory and return its path."""
+        """Unzip the current archive in a temporary directory and return paths.
+
+        Returns (path_to_clean_afterwards, path_to_content)
+        """
         unzipped_folder = mkdtemp()[1]  # Creating a temporary folder
         # TODO: check content of file!!!! It may, for example contains
         # absolute path (see zipfile doc)
         ZipFile(self.archive_path, 'r').extractall(unzipped_folder)
-        return unzipped_folder
+
+        # If the archive contains a single directory, we assume the real content is indeed under
+        # this directory.
+        #
+        # See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
+        content = os.listdir(unzipped_folder)
+
+        if len(content) == 1 and os.path.isdir(os.path.join(unzipped_folder, content[0])):
+            content_folder = os.path.join(unzipped_folder, content[0])
+        else:
+            content_folder = unzipped_folder
+
+        return (unzipped_folder, content_folder)
 
     def close(self):
         """Close the Darwin Core Archive and cleanup temporary/working files.
@@ -203,11 +212,11 @@ class DwCAReader(object):
             (see example above).
 
         """
-        if self._workin_directory_cleanable:
+        if self._directory_to_clean:
             self._cleanup_temporary_folder()
 
     def _cleanup_temporary_folder(self):
-        rmtree(self._workin_directory_path, False)
+        rmtree(self._directory_to_clean, False)
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
