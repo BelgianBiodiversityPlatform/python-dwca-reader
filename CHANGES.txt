@@ -1,5 +1,5 @@
-Current
-=======
+v0.8.1 (2016-03-10)
+===================
 
 - Support for archives contained in a single (sub)directory. See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
 
