@@ -39,7 +39,7 @@ class Row(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, csv_line, descriptor):
-        #: An instance of :class:`dwca.descriptors.SectionDescriptor` describing the originating
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
         self.descriptor = descriptor
 
@@ -51,9 +51,14 @@ class Row(object):
         line_ending = self.descriptor.lines_terminated_by
         field_ending = self.descriptor.fields_terminated_by
 
+        fields_enclosed_by = self.descriptor.fields_enclosed_by
+
         # self.raw_fields is a list of the csv_line's content
         #:
-        self.raw_fields = csv_line.rstrip(line_ending).split(field_ending)
+        self.raw_fields = []
+        for f in csv_line.rstrip(line_ending).split(field_ending):
+            self.raw_fields.append(f.strip(fields_enclosed_by))
+
         # TODO: raw_fields is a new property: to test
 
         # TODO: Consistency chek ?? self.raw_fields length should be :
@@ -98,7 +103,10 @@ class CoreRow(Row):
         super(CoreRow, self).__init__(line, section_descriptor)
 
         #: The row id (from the data file).
-        self.id = self.raw_fields[self.descriptor.id_index]
+        if self.descriptor.id_index is not None:
+            self.id = self.raw_fields[self.descriptor.id_index]
+        else:
+            self.id = None
 
     def link_source_metadata(self, archive_source_metadata):
         # If we have additional metadata about the dataset we're originally

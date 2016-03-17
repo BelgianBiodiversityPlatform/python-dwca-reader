@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provide specific exceptions for the whole package.
-
-"""
+"""This module provide specific exceptions for the whole package."""
 
 
 class RowNotFound(Exception):
@@ -11,3 +9,7 @@ class RowNotFound(Exception):
 
 class InvalidArchive(Exception):
     """The archive appears to be invalid."""
+
+
+class InvalidSimpleArchive(InvalidArchive):
+    """The simple archive appears to be invalid."""
