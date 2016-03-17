@@ -95,7 +95,8 @@ class DwCAReader(object):
         if self.descriptor:
             #  We have an Archive descriptor that we can use to access data files.
             self._corefile = _DataFile(self._workin_directory_path, self.descriptor.core)
-            self._extensionfiles = [_DataFile(self._workin_directory_path, d)
+            self._extensionfiles = [_DataFile(work_folder=self._workin_directory_path,
+                                              file_descriptor=d)
                                     for d in self.descriptor.extensions]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
@@ -103,7 +104,8 @@ class DwCAReader(object):
                 d = DataFileDescriptor(datafile_path=os.path.join(self._workin_directory_path,
                                                                   datafile_name))
 
-                self._corefile = _DataFile(self._workin_directory_path, d)
+                self._corefile = _DataFile(work_folder=self._workin_directory_path,
+                                           file_descriptor=d)
                 self._extensionfiles = []
             except InvalidSimpleArchive:
                 msg = "No metafile was found, but archive includes multiple files/directories."
