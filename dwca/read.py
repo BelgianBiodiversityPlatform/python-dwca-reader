@@ -11,8 +11,10 @@ from errno import ENOENT
 import xml.etree.ElementTree as ET
 
 from dwca.utils import _DataFile
-from dwca.descriptors import ArchiveDescriptor
-from dwca.exceptions import RowNotFound, InvalidArchive
+from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
+from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
+
+DEFAULT_METADATA_FILENAME = "EML.xml"
 
 
 class DwCAReader(object):
@@ -96,9 +98,28 @@ class DwCAReader(object):
             self._extensionfiles = [_DataFile(self._workin_directory_path, d)
                                     for d in self.descriptor.extensions]
         else:
+            try:
+                datafile_name = self._is_valid_simple_archive()
+                d = DataFileDescriptor(datafile_path=os.path.join(self._workin_directory_path,
+                                                                  datafile_name))
+
+                self._corefile = _DataFile(self._workin_directory_path, d)
+                self._extensionfiles = []
+            except InvalidSimpleArchive:
+                msg = "No metafile was found, but archive includes multiple files/directories."
+                raise InvalidSimpleArchive(msg)
+
             # Archive without descriptor, we'll have to find and inspect the data file
-            self._corefile = _DataFile(self._workin_directory_path, )
-            self._extensionfiles = []
+            # path, dirs, files = next(os.walk(self._workin_directory_path))
+            # if len(files) == 1:  # We found a single file
+            #     filepath = os.path.join(self._workin_directory_path, files[0])
+            #     d = DataFileDescriptor(datafile_path=filepath)
+
+            #     self._corefile = _DataFile(self._workin_directory_path, d)
+            #     self._extensionfiles = []
+            # else:
+            #     msg = 
+            #     raise InvalidArchive(msg)
 
     @property
     # TODO: decide, test and document what we guarantee about ordering
@@ -164,6 +185,27 @@ class DwCAReader(object):
         """
         return os.path.abspath(os.path.join(self._workin_directory_path, relative_path))
 
+    def _is_valid_simple_archive(self):
+        # If the working dir appear to contains a valid simple darwin core archive
+        # (one single data file + possibly some metadata), returns the name of the data file.
+        #
+        # Otherwise, throws an InvalidSimpleArchive exception.
+        path, dirs, files = next(os.walk(self._workin_directory_path))
+
+        if len(files) == 1:  # We found a single file
+            return files[0]
+        elif len(files) == 2:
+            # Two files found: if one of them is EML.xml, the other is considered as the data file
+            if DEFAULT_METADATA_FILENAME in files:
+                return [f for f in files if f is not DEFAULT_METADATA_FILENAME][0]
+            else:
+                invalid = True
+        else:
+            invalid = True
+
+        if invalid:
+            raise InvalidSimpleArchive()
+
     def _read_additional_file(self, relative_path):
         """Read an additional file in the archive and return its content."""
         p = self.absolute_temporary_path(relative_path)
@@ -188,7 +230,7 @@ class DwCAReader(object):
 
         else:  # Otherwise, the metadata file has to be named 'EML.xml'
             try:
-                return self._parse_xml_included_file('EML.xml')
+                return self._parse_xml_included_file(DEFAULT_METADATA_FILENAME)
             except IOError as e:
                 if e.errno == ENOENT:  # File not found, this is an archive without metadata
                     return None

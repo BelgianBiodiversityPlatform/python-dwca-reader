@@ -16,7 +16,6 @@ class _DataFile(object):
     def __init__(self, work_folder, file_descriptor):
         # work_folder: absolute path to the target directory (archive, previously
         # unzipped if necessary).
-
         self.file_descriptor = file_descriptor
 
         self._core_fhandler = io.open(os.path.join(work_folder,

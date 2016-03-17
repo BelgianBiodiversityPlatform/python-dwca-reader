@@ -8,15 +8,18 @@ generally initialized from a subsection of the ArchiveDescriptor, but in case th
 no metafile, it can also be created by introspecting the CSV data file.
 """
 
+import csv
+import os
 import sys
 import re
+import io
 import xml.etree.ElementTree as ET
 
 
 class DataFileDescriptor(object):
     """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor."""
 
-    def __init__(self, section_tag=None, datafile=None):
+    def __init__(self, section_tag=None, datafile_path=None):
         # Args:
         # - section_tag :class:`xml.etree.ElementTree.Element` instance containing the whole
         #   XML for this section (in case we want to build a descriptor based on the metafile).
@@ -25,14 +28,39 @@ class DataFileDescriptor(object):
 
         if section_tag is not None:
             self._init_from_metafile_section(section_tag)
+            self.created_from_file = False
         else:
-            self._init_from_file(datafile)
+            self._init_from_file(datafile_path)
+            self.created_from_file = True
 
-    def _init_from_file(self, datafile):
+    def _init_from_file(self, datafile_path):
         self.raw_element = None  # No metafile, so no XML session to store
-        self.represents_corefile = True  # In archives without metafiles, there's only a core data file
+        self.represents_corefile = True  # In archives without metafiles, there's only core data
         self.represents_extension = False
         self.type = None  # No metafile => no rowType information
+        self.file_location = os.path.basename(datafile_path)  # datafile_path also contains the dir
+        self.encoding = "utf-8"
+        self.id_index = None
+
+        with io.open(datafile_path, 'rU', encoding=self.encoding) as datafile:
+            # Autodetect fields/lines termination
+            dialect = csv.Sniffer().sniff(datafile.readline())
+
+            # Normally, EOL characters should be available in dialect.lineterminator, but it
+            # seems it always returns \r\n. The workaround therefore consists to open the file
+            # in universal-newline mode, which adds a newlines attribute.
+            self.lines_terminated_by = datafile.newlines
+
+            self.fields_terminated_by = dialect.delimiter
+            self.fields_enclosed_by = dialect.quotechar
+
+            datafile.seek(0)
+            dr = csv.reader(datafile, dialect)
+            columns = next(dr)
+
+            self.fields = []
+            for i, c in enumerate(columns):
+                self.fields.append({'index': i, 'term': c, 'default': None})
 
     def _init_from_metafile_section(self, section_tag):
         self.raw_element = section_tag
@@ -119,6 +147,15 @@ class DataFileDescriptor(object):
         else:
             self.fields_terminated_by = '\t'
 
+        raw_feb = self.raw_element.get('fieldsEnclosedBy')
+        if raw_feb:
+            if sys.version.info[0] == 2:
+                self.fields_enclosed_by = raw_feb.decode("string-escape")
+            else:
+                self.fields_enclosed_by = bytes(raw_feb, self.encoding).decode("unicode-escape")
+        else:
+            self.fields_enclosed_by = ''
+
     def _autodetect_for_core(self):
         """Return True if instance represents a Core file."""
         return self.raw_element.tag == 'core'
@@ -142,7 +179,11 @@ class DataFileDescriptor(object):
 
     @property
     def lines_to_ignore(self):
-        return int(self.raw_element.get('ignoreHeaderLines', 0))
+        if self.created_from_file:
+            # Single-file archives also have a header line with DwC terms
+            return 1
+        else:
+            return int(self.raw_element.get('ignoreHeaderLines', 0))
 
 
 class ArchiveDescriptor(object):

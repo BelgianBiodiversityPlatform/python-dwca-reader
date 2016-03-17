@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import unittest
 import zipfile
 
@@ -20,21 +21,27 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         This is necessary for archives sans metafile.
         """
-        archive = zipfile.ZipFile(SIMPLE_CSV, 'r')
-        datafile = archive.read('0008333-160118175350007.csv')
-        d = DataFileDescriptor(section_tag=None, datafile=datafile)
+        with zipfile.ZipFile(SIMPLE_CSV, 'r') as archive:
+            datafile_path = archive.extract('0008333-160118175350007.csv')
 
-        # Check basic metadata with the file
-        self.assertIsNone(d.raw_element)
-        self.assertTrue(d.represents_corefile)
-        self.assertFalse(d.represents_extension)
-        self.assertIsNone(d.type)
+            d = DataFileDescriptor(section_tag=None, datafile_path=datafile_path)
+            # Check basic metadata with the file
+            self.assertIsNone(d.raw_element)
+            self.assertTrue(d.represents_corefile)
+            self.assertFalse(d.represents_extension)
+            self.assertIsNone(d.type)
+            self.assertEqual(d.file_location, '0008333-160118175350007.csv')
+            self.assertEqual(d.encoding, 'utf-8')
+            self.assertEqual(d.lines_terminated_by, "\n")
+            self.assertEqual(d.fields_terminated_by, "\t")
 
-        # Check fields are populated
-        # TODO
+            # Check fields are populated
+            # TODO
+            # Check .terms,
+            # TODO
 
-        # Check .terms, .file_location, .encoding, .lines_terminated_by, .fields_terminated_by
-        # TODO
+            # Cleanup extracted file
+            os.remove(datafile_path)
 
     def test_lines_to_ignore(self):
         # With explicit "0"
