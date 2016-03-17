@@ -33,6 +33,9 @@ class DataFileDescriptor(object):
             self._init_from_file(datafile_path)
             self.created_from_file = True
 
+        #: A Python set containing all the Darwin Core terms appearing in file
+        self.terms = set([f['term'] for f in self.fields])
+
     def _init_from_file(self, datafile_path):
         self.raw_element = None  # No metafile, so no XML session to store
         self.represents_corefile = True  # In archives without metafiles, there's only core data
@@ -121,9 +124,6 @@ class DataFileDescriptor(object):
             index = (int(f.get('index')) if f.get('index') else None)
 
             self.fields.append({'term': f.get('term'), 'index': index, 'default': default})
-
-        #: A set containing all the Darwin Core terms appearing in file
-        self.terms = set([f['term'] for f in self.fields])
 
         #: The data file location, relative to the archive root.
         self.file_location = self.raw_element.find('files').find('location').text

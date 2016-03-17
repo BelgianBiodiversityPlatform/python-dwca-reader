@@ -4,6 +4,7 @@ current
 - Support for archives without metafile (see page 2 of http://www.gbif.org/resource/80639)
 - API change: SectionDescriptor => DataFileDescriptor
 
+- TODO: Add API archive.use_extensions
 
 - TODO: document different kinds of supported archives
 - TODO: Add an archive attribute to say what kind or archive is there

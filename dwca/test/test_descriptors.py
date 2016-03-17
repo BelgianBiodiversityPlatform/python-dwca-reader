@@ -35,10 +35,24 @@ class TestDataFileDescriptor(unittest.TestCase):
             self.assertEqual(d.lines_terminated_by, "\n")
             self.assertEqual(d.fields_terminated_by, "\t")
 
-            # Check fields are populated
-            # TODO
-            # Check .terms,
-            # TODO
+            # Some checks on fields...
+
+            # A few fields are checked
+            expected_fields = ({'default': None, 'index': 0, 'term': 'gbifid'},
+                               {'default': None, 'index': 3, 'term': 'kingdom'})
+
+            for ef in expected_fields:
+                self.assertTrue(ef in d.fields)
+
+            # In total, there are 42 fields in this data file
+            self.assertEqual(len(d.fields), 42)
+
+            # No fields should have a default value (there's no metafile to set it!)
+            for f in d.fields:
+                self.assertIsNone(f['default'])
+
+            # Ensure .terms is also set:
+            self.assertEqual(len(d.terms), 42)
 
             # Cleanup extracted file
             os.remove(datafile_path)

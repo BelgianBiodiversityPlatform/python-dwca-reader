@@ -27,7 +27,6 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_exception_invalid_archives(self):
         """Ensure an InvalidArchive exception is raised when the archive is invalid."""
-
         # Sometimes, the archive metafile references a metadata file that's not present in the
         # archive. See for example http://dev.gbif.org/issues/browse/PF-2125
         with self.assertRaises(InvalidArchive) as cm:
@@ -44,7 +43,8 @@ class TestDwCAReader(unittest.TestCase):
     def test_default_values_metafile(self):
         """Ensure default values are used when optional attributes are absent in metafile.
 
-        Optional attributes tested here: linesTerminatedBy, fieldsTerminatedBy."""
+        Optional attributes tested here: linesTerminatedBy, fieldsTerminatedBy.
+        """
         with DwCAReader(DEFAULT_META_VALUES) as dwca:
             # Test iterating on rows...
             for row in dwca:
@@ -53,7 +53,7 @@ class TestDwCAReader(unittest.TestCase):
             # And verify the values themselves:
 
     def test_simplecsv_archive(self):
-        """ Ensure the reader works with archives consiting of a single CSV file.
+        """Ensure the reader works with archives consiting of a single CSV file.
 
         As described in page #2 of http://www.gbif.org/resource/80639, those archives consists
         of a single core data file where the first line provides the names of the Darwin Core terms
@@ -71,7 +71,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsNone(dwca.metadata)
 
     def test_simplecsv_archive_eml(self):
-        """ Test Archive witthout metafile, but containing metadata.
+        """Test Archive witthout metafile, but containing metadata.
 
         Similar to test_simplecsv_archive, except the archive also contains a Metadata file named
         EML.xml. This correspond to the second case on page #2 of
@@ -86,9 +86,11 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
             # Archive descriptor should be None
             self.assertIsNone(dwca.descriptor)
-            # (scientific) metadata should be None
+            # (scientific) metadata is found
             self.assertIsInstance(dwca.metadata, ET.Element)
             # TODO: also access a metadata element to ensure this really works?
+            v = (dwca.metadata.find('dataset').find('language').text)
+            self.assertEqual(v, 'en')
 
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""
