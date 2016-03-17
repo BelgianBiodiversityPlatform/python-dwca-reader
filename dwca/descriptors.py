@@ -55,6 +55,10 @@ class DataFileDescriptor(object):
             self.fields_enclosed_by = dialect.quotechar
 
             datafile.seek(0)
+
+            dialect.delimiter = str(dialect.delimiter)  # Python 2 fix
+            dialect.quotechar = str(dialect.quotechar)  # Python 2 fix
+
             dr = csv.reader(datafile, dialect)
             columns = next(dr)
 

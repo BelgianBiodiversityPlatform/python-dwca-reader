@@ -83,8 +83,9 @@ class DwCAReader(object):
         try:
             self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
                                                 files_to_ignore=extensions_to_ignore)
-        except FileNotFoundError:
-            self.descriptor = None
+        except IOError as e:
+            if e.errno == ENOENT:
+                self.descriptor = None
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive.
