@@ -18,7 +18,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
-                      SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML)
+                      SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -85,6 +85,17 @@ class TestDwCAReader(unittest.TestCase):
         Simple Darwin Core expressed as text: http://rs.tdwg.org/dwc/terms/simple/index.htm.
         """
         with DwCAReader(SIMPLE_CSV) as dwca:
+            # Ensure we get the correct number of rows
+            self.assertEqual(len(dwca.rows), 3)
+            # Ensure we can access arbitrary data
+            self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
+            # Archive descriptor should be None
+            self.assertIsNone(dwca.descriptor)
+            # (scientific) metadata should be None
+            self.assertIsNone(dwca.metadata)
+
+        # Let's do the same tests again but with DOS line endings in the data file
+        with DwCAReader(SIMPLE_CSV_DOS) as dwca:
             # Ensure we get the correct number of rows
             self.assertEqual(len(dwca.rows), 3)
             # Ensure we can access arbitrary data
