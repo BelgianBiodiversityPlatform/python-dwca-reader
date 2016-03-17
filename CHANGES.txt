@@ -1,7 +1,9 @@
 current
 =======
 
-- Support for archives without metafile (see page 2 of http://www.gbif.org/resource/80639)
+- Support for new types of archives:
+	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), with or without Metadata document (EML.xml)
+
 - API change: SectionDescriptor => DataFileDescriptor
 
 - TODO: Add API archive.use_extensions
@@ -15,9 +17,8 @@ current
 - TODO: also test with simple CSV archives with DOS line endings
 - TODO: make sure standard archives works when fields are enclosed (for example in "")
 - TODO: alternatively, make sure simple CSV archives works with NON enclosed fields.
-- TODO: cleanup: factorize py2/3 code in _init_from_metafile_section
 - TODO: format of DataFileDescriptor.fields is a bit weird... simplify?
-- TODO: Improve test_simplecsv_archive, test_simplecsv_archive_eml and test_init_from_file
+- TODO: fix Flake8 various warnings
 
 v0.8.0 (2016-02-11)
 ===================

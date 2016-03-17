@@ -132,33 +132,22 @@ class DataFileDescriptor(object):
         self.encoding = self.raw_element.get('encoding')
 
         #: The string or character used as a line separator in the data file. Example: "\\n".
-        raw_ltb = self.raw_element.get('linesTerminatedBy')
-        if raw_ltb:
-            if sys.version_info[0] == 2:  # Python 2
-                self.lines_terminated_by = raw_ltb.decode("string-escape")
-            else:
-                self.lines_terminated_by = bytes(raw_ltb, self.encoding).decode("unicode-escape")
-        else:
-            self.lines_terminated_by = '\n'  # Default value according to the standard
+        self.lines_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
+                                                         attribute_name='linesTerminatedBy',
+                                                         default_value='\n',
+                                                         encoding=self.encoding)
 
         #: The string or character used as a field separator in the data file. Example: "\\t".
-        raw_ftb = self.raw_element.get('fieldsTerminatedBy')
-        if raw_ftb:
-            if sys.version_info[0] == 2:  # Python 2
-                self.fields_terminated_by = raw_ftb.decode("string-escape")
-            else:
-                self.fields_terminated_by = bytes(raw_ftb, self.encoding).decode("unicode-escape")
-        else:
-            self.fields_terminated_by = '\t'
+        self.fields_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
+                                                          attribute_name='fieldsTerminatedBy',
+                                                          default_value='\t',
+                                                          encoding=self.encoding)
 
-        raw_feb = self.raw_element.get('fieldsEnclosedBy')
-        if raw_feb:
-            if sys.version.info[0] == 2:
-                self.fields_enclosed_by = raw_feb.decode("string-escape")
-            else:
-                self.fields_enclosed_by = bytes(raw_feb, self.encoding).decode("unicode-escape")
-        else:
-            self.fields_enclosed_by = ''
+        #: The string or character used to enclose fields in the data file.
+        self.fields_enclosed_by = _decode_xml_attribute(raw_element=self.raw_element,
+                                                        attribute_name='fieldsEnclosedBy',
+                                                        default_value='',
+                                                        encoding=self.encoding)
 
     def _autodetect_for_core(self):
         """Return True if instance represents a Core file."""
@@ -225,3 +214,18 @@ class ArchiveDescriptor(object):
         #:     ["http://rs.gbif.org/terms/1.0/VernacularName",
         #:      "http://rs.gbif.org/terms/1.0/Description"]
         self.extensions_type = [e.type for e in self.extensions]
+
+
+def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
+    # Gets XML attribute and decode it to make it usable. If it doesn't exists, it returns
+    # default_value.
+
+    # It takes data in self.raw_element, but also relies on self.encoding
+    raw_attribute = raw_element.get(attribute_name)
+    if raw_attribute:
+        if sys.version_info[0] == 2:  # Python 2
+            return raw_attribute.decode("string_escape")
+        else:
+            return bytes(raw_attribute, encoding).decode("unicode-escape")
+    else:
+            return default_value
