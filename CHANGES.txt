@@ -12,7 +12,6 @@ current
 
 - TODO: document different kinds of supported archives and how to detect which one is in use.
 - TODO: deprecated GBIFResultsReader (by moving things to DwCARreader, and document the changes.)
-- TODO: test that invalidArchive is thrown when an archive without metafile contains multiple files.
 - TODO: api: change datafiledescriptor.encoding to datafiledescriptor.file_encoding?
 - TODO: also support case when metadata is not set in metafile
 - TODO: alternatively, make sure simple CSV archives works with NON enclosed fields.

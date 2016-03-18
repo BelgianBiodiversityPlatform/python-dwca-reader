@@ -19,7 +19,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
                       SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
-                      BASIC_ENCLOSED_ARCHIVE_PATH)
+                      BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -70,9 +70,15 @@ class TestDwCAReader(unittest.TestCase):
         python-dwca-reader can't detect the data file and should throw an InvalidArchive exception.
         """
 
-        # with self.assertRaises(InvalidArchive) as cm:
-        #     a = DwCAReader(INVALID_SIMPLE_ARCHIVE)
-        #     a.close()
+        # There's a random file (in addition to data and EML.xml) in this one, so we can't choose
+        # which file is the datafile.
+        with self.assertRaises(InvalidArchive):
+            a = DwCAReader(INVALID_SIMPLE_TOOMUCH)
+            a.close()
+
+        with self.assertRaises(InvalidArchive):
+            a = DwCAReader(INVALID_SIMPLE_TWO)
+            a.close()
 
     def test_default_values_metafile(self):
         """
