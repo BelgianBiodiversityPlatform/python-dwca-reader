@@ -34,6 +34,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             self.assertEqual(d.encoding, 'utf-8')
             self.assertEqual(d.lines_terminated_by, "\n")
             self.assertEqual(d.fields_terminated_by, "\t")
+            self.assertEqual(d.fields_enclosed_by, '"')
 
             # Some checks on fields...
 

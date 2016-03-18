@@ -18,7 +18,8 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
-                      SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS)
+                      SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
+                      BASIC_ENCLOSED_ARCHIVE_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -400,6 +401,19 @@ class TestDwCAReader(unittest.TestCase):
             # Check basic locality values from sample file
             self.assertEqual('Borneo', rows[0].data[qn('locality')])
             self.assertEqual('Mumbai', rows[1].data[qn('locality')])
+
+    def test_enclosed_data(self):
+        """Ensure data is properly trimmed when fieldsEnclosedBy is in use."""
+        with DwCAReader(BASIC_ENCLOSED_ARCHIVE_PATH) as dwca:
+            rows = list(dwca)
+
+            # Locality is enclosed in "'" chars, they should be trimmed...
+            self.assertEqual('Borneo', rows[0].data[qn('locality')])
+            self.assertEqual('Mumbai', rows[1].data[qn('locality')])
+
+            # But family isn't, so it shouldn't be altered
+            self.assertEqual('Tetraodontidae', rows[0].data[qn('family')])
+            self.assertEqual('Osphronemidae', rows[1].data[qn('family')])
 
     def test_read_core_value_default(self):
         """Retrieve a (default) value from core

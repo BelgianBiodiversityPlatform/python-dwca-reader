@@ -2,19 +2,19 @@ current
 =======
 
 - Support for new types of archives:
-	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml)
+	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.
+	- DwCA where data fields are enclosed by some character (using fieldsEnclosedBy when the Archive provides a Metafile, autodetection otherwise). Fixes issue #53.
 
-- API change: SectionDescriptor => DataFileDescriptor
+- API change: SectionDescriptor is renamed to DataFileDescriptor
+- API addition: DataFileDescriptor.fields_enclosed_by
 
 - TODO: Add API archive.use_extensions
 
-- TODO: document different kinds of supported archives
-- TODO: Add an archive attribute to say what kind or archive is there
+- TODO: document different kinds of supported archives and how to detect which one is in use.
 - TODO: deprecated GBIFResultsReader (by moving things to DwCARreader, and document the changes.)
 - TODO: test that invalidArchive is thrown when an archive without metafile contains multiple files.
 - TODO: api: change datafiledescriptor.encoding to datafiledescriptor.file_encoding?
 - TODO: also support case when metadata is not set in metafile
-- TODO: make sure standard archives works when fields are enclosed (for example in "")
 - TODO: alternatively, make sure simple CSV archives works with NON enclosed fields.
 - TODO: format of DataFileDescriptor.fields is a bit weird... simplify?
 - TODO: fix Flake8 various warnings
