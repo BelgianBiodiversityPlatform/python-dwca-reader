@@ -14,7 +14,6 @@ current
 - TODO: deprecated GBIFResultsReader (by moving things to DwCARreader, and document the changes.)
 - TODO: api: change datafiledescriptor.encoding to datafiledescriptor.file_encoding?
 - TODO: also support case when metadata is not set in metafile
-- TODO: alternatively, make sure simple CSV archives works with NON enclosed fields.
 - TODO: format of DataFileDescriptor.fields is a bit weird... simplify?
 - TODO: fix Flake8 various warnings
 

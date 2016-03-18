@@ -18,3 +18,4 @@ Description of sample DwcA
 * dwca-simple-csv-dos.zip: similar to dwca-simple-csv, but DOS line endings are used in the data file.
 * dwca-invalid-simple-toomuch: a simple DwCA comprising a single data file, EMX.xml but also a random file, making it invalid.
 * dwca-invalid-simple-two: a simple DwCA containing two files, but the non-data one is not named EML.xml, making the archive invalid.
+* dwca-simple-csv-notenclosed.zip: identical to dwca-simple-csv, except the data is not enclosed in double quotes.
