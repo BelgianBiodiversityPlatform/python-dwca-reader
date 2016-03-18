@@ -20,12 +20,24 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
                       SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
-                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH)
+                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    def test_default_metadata_filename(self):
+        """Ensure that metadata is found by it's default name.
+
+        Metadata is named "EML.xml", but no metadata attribute in Metafile.
+        """
+        with DwCAReader(DEFAULT_METADATA_FILENAME) as dwca:
+            self.assertIsInstance(dwca.metadata, ET.Element)
+
+            v = (dwca.metadata.find('dataset').find('creator').find('individualName')
+                     .find('givenName').text)
+            self.assertEqual(v, 'Nicolas')
 
     def test_subfolder_archive(self):
         """Ensure we support Archives where all the content is under a single directory."""

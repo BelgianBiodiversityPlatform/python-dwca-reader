@@ -11,7 +11,6 @@ current
 - API addition: DataFileDescriptor.fields_enclosed_by
 
 - TODO: Add API archive.use_extensions
-- TODO: test that if an archive has a metafile without metadata attribute but there is a default EML.xml found, it is correctly found (but maybe it's alrteady done and/or tested?)
 
 - TODO: document different kinds of supported archives and how to detect which one is in use.
 - TODO: deprecated GBIFResultsReader (by moving things to DwCARreader, and document the changes.)
