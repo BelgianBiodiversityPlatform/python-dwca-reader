@@ -20,7 +20,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
                       SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
-                      SIMPLE_CSV_NOTENCLOSED)
+                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -70,7 +70,6 @@ class TestDwCAReader(unittest.TestCase):
         and possibly some metadata in EML.xml. If the archive doesn't follow this structure,
         python-dwca-reader can't detect the data file and should throw an InvalidArchive exception.
         """
-
         # There's a random file (in addition to data and EML.xml) in this one, so we can't choose
         # which file is the datafile.
         with self.assertRaises(InvalidArchive):
@@ -93,6 +92,7 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertIsInstance(row, CoreRow)
 
             # And verify the values themselves:
+            # Test also "fieldsenclosedBy"?
 
     def test_simplecsv_archive(self):
         """Ensure the reader works with archives consiting of a single CSV file.
@@ -308,6 +308,17 @@ class TestDwCAReader(unittest.TestCase):
             num_files_during = len(os.listdir('.'))
 
         self.assertEqual(num_files_before, num_files_during)
+
+    def test_archives_without_metadata(self):
+        """Ensure we can deal with an archive containing a metafile, but no metadata."""
+        with DwCAReader(NOMETADATA_PATH) as dwca:
+            self.assertIsNone(dwca.metadata)
+
+            # But the data is nevertheless accessible
+            rows = list(dwca)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual('Borneo', rows[0].data[qn('locality')])
+            self.assertEqual('Mumbai', rows[1].data[qn('locality')])
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute

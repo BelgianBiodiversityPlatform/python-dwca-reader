@@ -86,6 +86,7 @@ class DwCAReader(object):
             if e.errno == ENOENT:
                 self.descriptor = None
 
+
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive.
         self.metadata = self._parse_metadata_file()
@@ -209,7 +210,8 @@ class DwCAReader(object):
         metadata file.
         """
 
-        if self.descriptor:  # If the archive has descriptor, find the metadata filename there
+        # If the archive has descriptor, look for the metadata filename there.
+        if self.descriptor and self.descriptor.metadata_filename:
             fn = self.descriptor.metadata_filename
 
             try:

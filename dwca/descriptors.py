@@ -194,10 +194,10 @@ class ArchiveDescriptor(object):
         self.raw_element = ET.fromstring(metaxml_content)
 
         #: The (relative to archive root) path to the (scientific) metadata of the archive.
-        self.metadata_filename = self.raw_element.attrib['metadata']
+        self.metadata_filename = self.raw_element.get('metadata', None)
 
-        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the data core file
-        #: of the archive
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the data core
+        # file of the archive
         self.core = DataFileDescriptor(self.raw_element.find('core'))
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the
