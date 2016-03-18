@@ -1,0 +1,5 @@
+id	family	phylum	order	genus	kingdom	class
+1	Struthionidae	Chordata	Struthioniformes	Struthio	Animalia	Aves
+2	Phasianidae	Chordata	Galliformes	Alectoris	Animalia	Aves
+3	Phasianidae	Chordata	Galliformes	Peliperdix		Aves
+4	Phasianidae	Chordata	Galliformes	Dendroperdix	Animalie	Aves

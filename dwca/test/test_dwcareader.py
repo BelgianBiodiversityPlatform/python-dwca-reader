@@ -27,6 +27,24 @@ class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
 
+    def test_use_extensions(self):
+        """Ensure the .use_extensions attribute of DwCAReader works as intended."""
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            self.assertFalse(dwca.use_extensions)  # Basic archive without extensions
+
+        with DwCAReader(SIMPLE_CSV) as dwca:  # Just a CSV file, so no extensions
+            self.assertFalse(dwca.use_extensions)
+
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as dwca:
+            self.assertTrue(dwca.use_extensions)
+
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            self.assertTrue(dwca.use_extensions)
+
+        with DwCAReader(EXTENSION_ARCHIVE_PATH, extensions_to_ignore="vernacularname.txt") as dwca:
+            # We ignore the extension, so archive appears without
+            self.assertFalse(dwca.use_extensions)
+
     def test_default_metadata_filename(self):
         """Ensure that metadata is found by it's default name.
 

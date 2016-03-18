@@ -86,7 +86,6 @@ class DwCAReader(object):
             if e.errno == ENOENT:
                 self.descriptor = None
 
-
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive.
         self.metadata = self._parse_metadata_file()
@@ -111,6 +110,11 @@ class DwCAReader(object):
             except InvalidSimpleArchive:
                 msg = "No metafile was found, but archive includes multiple files/directories."
                 raise InvalidSimpleArchive(msg)
+
+    @property
+    def use_extensions(self):
+        """Return True if the Archive makes use of extensions."""
+        return (self.descriptor is not None) and self.descriptor.extensions
 
     @property
     # TODO: decide, test and document what we guarantee about ordering

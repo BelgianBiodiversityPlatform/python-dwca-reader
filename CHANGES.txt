@@ -8,9 +8,8 @@ current
 
 - API change: SectionDescriptor => DataFileDescriptor
 - API change: DataFileDescriptor.encoding => DataFileDescriptor.file_encoding
-- API addition: DataFileDescriptor.fields_enclosed_by
-
-- TODO: Add API archive.use_extensions
+- API new: DataFileDescriptor.fields_enclosed_by
+- API new: DwCAReader.use_extensions
 
 - TODO: document different kinds of supported archives and how to detect which one is in use.
 - TODO: deprecated GBIFResultsReader (by moving things to DwCARreader, and document the changes.)
