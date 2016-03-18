@@ -21,13 +21,14 @@ class _DataFile(object):
         self._core_fhandler = io.open(os.path.join(work_folder,
                                                    self.file_descriptor.file_location),
                                       mode='r',
-                                      encoding=self.file_descriptor.encoding,
+                                      encoding=self.file_descriptor.file_encoding,
                                       newline=self.file_descriptor.lines_terminated_by,
                                       errors='replace')
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = get_all_line_offsets(self._core_fhandler, self.file_descriptor.encoding)
+        self._line_offsets = get_all_line_offsets(self._core_fhandler,
+                                                  self.file_descriptor.file_encoding)
 
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 

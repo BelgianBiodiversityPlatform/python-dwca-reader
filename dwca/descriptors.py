@@ -42,10 +42,10 @@ class DataFileDescriptor(object):
         self.represents_extension = False
         self.type = None  # No metafile => no rowType information
         self.file_location = os.path.basename(datafile_path)  # datafile_path also contains the dir
-        self.encoding = "utf-8"
+        self.file_encoding = "utf-8"
         self.id_index = None
 
-        with io.open(datafile_path, 'rU', encoding=self.encoding) as datafile:
+        with io.open(datafile_path, 'rU', encoding=self.file_encoding) as datafile:
             # Autodetect fields/lines termination
             dialect = csv.Sniffer().sniff(datafile.readline())
 
@@ -129,25 +129,25 @@ class DataFileDescriptor(object):
         self.file_location = self.raw_element.find('files').find('location').text
 
         #: The file encoding, as specified in the archive descriptor. Example: "utf-8".
-        self.encoding = self.raw_element.get('encoding')
+        self.file_encoding = self.raw_element.get('encoding')
 
         #: The string or character used as a line separator in the data file. Example: "\\n".
         self.lines_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
                                                          attribute_name='linesTerminatedBy',
                                                          default_value='\n',
-                                                         encoding=self.encoding)
+                                                         encoding=self.file_encoding)
 
         #: The string or character used as a field separator in the data file. Example: "\\t".
         self.fields_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
                                                           attribute_name='fieldsTerminatedBy',
                                                           default_value='\t',
-                                                          encoding=self.encoding)
+                                                          encoding=self.file_encoding)
 
         #: The string or character used to enclose fields in the data file.
         self.fields_enclosed_by = _decode_xml_attribute(raw_element=self.raw_element,
                                                         attribute_name='fieldsEnclosedBy',
                                                         default_value='',
-                                                        encoding=self.encoding)
+                                                        encoding=self.file_encoding)
 
     def _autodetect_for_core(self):
         """Return True if instance represents a Core file."""
@@ -220,7 +220,6 @@ def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
     # Gets XML attribute and decode it to make it usable. If it doesn't exists, it returns
     # default_value.
 
-    # It takes data in self.raw_element, but also relies on self.encoding
     raw_attribute = raw_element.get(attribute_name)
     if raw_attribute:
         if sys.version_info[0] == 2:  # Python 2

@@ -5,7 +5,8 @@ current
 	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.
 	- DwCA where data fields are enclosed by some character (using fieldsEnclosedBy when the Archive provides a Metafile, autodetection otherwise). Fixes issue #53.
 
-- API change: SectionDescriptor is renamed to DataFileDescriptor
+- API change: SectionDescriptor => DataFileDescriptor
+- API change: DataFileDescriptor.encoding => DataFileDescriptor.file_encoding
 - API addition: DataFileDescriptor.fields_enclosed_by
 
 - TODO: Add API archive.use_extensions

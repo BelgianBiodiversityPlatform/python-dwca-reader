@@ -31,7 +31,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             self.assertFalse(d.represents_extension)
             self.assertIsNone(d.type)
             self.assertEqual(d.file_location, '0008333-160118175350007.csv')
-            self.assertEqual(d.encoding, 'utf-8')
+            self.assertEqual(d.file_encoding, 'utf-8')
             self.assertEqual(d.lines_terminated_by, "\n")
             self.assertEqual(d.fields_terminated_by, "\t")
             self.assertEqual(d.fields_enclosed_by, '"')
@@ -126,7 +126,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.file_location, "occurrence.txt")
-        self.assertEqual(core_descriptor.encoding, "utf-8")
+        self.assertEqual(core_descriptor.file_encoding, "utf-8")
         # TODO: Also test .lines_terminated_by and .fields_terminated_by
         # (this seems a bit tricky, and it's already tested indirectly - many things would fail
         # without them)
