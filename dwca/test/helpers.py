@@ -8,7 +8,7 @@ def _sample_data_path(filename):
 
 GBIF_RESULTS_PATH = _sample_data_path('gbif-results.zip')
 BASIC_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive.zip')
-BASIC_ENCLOSED_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive-enclosed')
+BASIC_ENCLOSED_ARCHIVE_PATH = _sample_data_path('dwca-simple-test-archive-enclosed.zip')
 NOHEADERS1_PATH = _sample_data_path('dwca-noheaders-1.zip')
 NOHEADERS2_PATH = _sample_data_path('dwca-noheaders-2.zip')
 DEFAULT_VAL_PATH = _sample_data_path('dwca-test-default.zip')

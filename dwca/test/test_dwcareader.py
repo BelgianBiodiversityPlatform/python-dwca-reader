@@ -49,8 +49,8 @@ class TestDwCAReader(unittest.TestCase):
         self.assertEqual(num_files_before + 1, num_files_during)
         self.assertEqual(num_files_before, num_files_after)
 
-    def test_exception_invalid_archives(self):
-        """Ensure an InvalidArchive exception is raised when the archive is invalid."""
+    def test_exception_invalid_archives_missing_metadata(self):
+        """Ensure an exception is raised when referencing a missing metadata file."""
         # Sometimes, the archive metafile references a metadata file that's not present in the
         # archive. See for example http://dev.gbif.org/issues/browse/PF-2125
         with self.assertRaises(InvalidArchive) as cm:
@@ -62,7 +62,17 @@ class TestDwCAReader(unittest.TestCase):
         expected_message = "eml.xml is referenced in the archive descriptor but missing."
         self.assertEqual(str(the_exception), expected_message)
 
-        # TODO: Once implemented, test here other cases of InvalidArchive exceptions.
+    def test_exception_invalid_simple_archives(self):
+        """Ensure an exception is raised when simple archives can't be interpreted.
+
+        When there's no metafile in an archive, this one consists of a single data core file,
+        and possibly some metadata in EML.xml. If the archive doesn't follow this structure,
+        python-dwca-reader can't detect the data file and should throw an InvalidArchive exception.
+        """
+
+        # with self.assertRaises(InvalidArchive) as cm:
+        #     a = DwCAReader(INVALID_SIMPLE_ARCHIVE)
+        #     a.close()
 
     def test_default_values_metafile(self):
         """
