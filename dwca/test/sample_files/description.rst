@@ -21,3 +21,4 @@ Description of sample DwcA
 * dwca-simple-csv-notenclosed.zip: identical to dwca-simple-csv, except the data is not enclosed in double quotes.
 * dwca-nometadata.zip: an Archive that contains a Metafile, but no metadata (no metadata attribute in meta.xml, nor default EML.xml file)
 * dwca-default-metadata-filename.zip: a valid Archive that contains a Metafile and a metadata file, but the metadata file is not referenced in the metafile since its name is EML.xml (the default value)
+* dwca-simple-test-archive.tgz: standard/classig basic archive, but compressed in .tgz instead of .zip 

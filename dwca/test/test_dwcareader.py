@@ -5,7 +5,6 @@ import unittest
 import os
 import tempfile
 
-from zipfile import BadZipfile
 import xml.etree.ElementTree as ET
 
 from dwca.read import DwCAReader, GBIFResultsReader
@@ -20,7 +19,8 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
                       SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
-                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME)
+                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME,
+                      BASIC_ARCHIVE_TGZ_PATH)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -195,6 +195,19 @@ class TestDwCAReader(unittest.TestCase):
             # And iterating...
             for row in dwca:
                 self.assertIsInstance(row, CoreRow)
+
+    def test_tgz_archives(self):
+        """Ensure the reader (basic features) works with a .tgz Archive."""
+        with DwCAReader(BASIC_ARCHIVE_TGZ_PATH) as dwca:
+            self.assertIsInstance(dwca.metadata, ET.Element)
+
+            for row in dwca:
+                self.assertIsInstance(row, CoreRow)
+
+            rows = list(dwca)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual('Borneo', rows[0].data[qn('locality')])
+            self.assertEqual('Mumbai', rows[1].data[qn('locality')])
 
     def test_classic_opening(self):
         """Ensure it also works w/o the 'with' statement."""
@@ -635,11 +648,11 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             self.assertEqual(None, star_dwca.rows[0].source_metadata)
 
-    def test_not_zipfile(self):
-        """ Ensure BadZipfile is raised when passed archive is not a zip file."""
+    def test_unknown_archive_format(self):
+        """ Ensure InvalidArchive is raised when passed file is not a .zip not .tgz."""
         invalid_origin_file = tempfile.NamedTemporaryFile()
 
-        with self.assertRaises(BadZipfile):
+        with self.assertRaises(InvalidArchive):
             with DwCAReader(invalid_origin_file.name):
                 pass
 

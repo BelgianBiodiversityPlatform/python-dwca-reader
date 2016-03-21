@@ -3,8 +3,9 @@
 """This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files."""
 
 import os
+import zipfile
+import tarfile
 from tempfile import mkdtemp
-from zipfile import ZipFile
 from shutil import rmtree
 from errno import ENOENT
 
@@ -75,7 +76,7 @@ class DwCAReader(object):
             self._workin_directory_path = self.archive_path
             self._directory_to_clean = None
         else:  # Archive is zipped, we have to unzip it
-            self._directory_to_clean, self._workin_directory_path = self._unzip()
+            self._directory_to_clean, self._workin_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor (``meta.xml``)
@@ -236,31 +237,50 @@ class DwCAReader(object):
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
         return ET.fromstring(self._read_additional_file(relative_path))
 
-    def _unzip(self):
-        """Unzip the current archive in a temporary directory and return paths.
+    def _unzip_or_untar(self):
+        """Create a temporary dir. and uncompress/unarchive self.archive_path there.
+
+        Returns the path to that temporary directory.
+
+        Raises InvalidArchive if not a zip nor a tgz file.
+        """
+        extracted_folder = mkdtemp()[1]  # Creating a temporary folder
+
+        # We first try to unzip (most common archives)
+        try:
+            # Security note: with Python < 2.7.4, a zip file may be able to write outside of the
+            # directory using absolute paths, parent (..) path, ... See note in ZipFile.extract doc
+            zipfile.ZipFile(self.archive_path, 'r').extractall(extracted_folder)
+        except zipfile.BadZipFile:
+            # Doesn't look like a valid zip, let's see if it's a tar archive (possibly compressed)
+            try:
+                tarfile.open(self.archive_path, 'r:*').extractall(extracted_folder)
+            except tarfile.ReadError:
+                raise InvalidArchive("The archive cannot be read. Is it a .zip or .tgz file?")
+
+        return extracted_folder
+
+    def _extract(self):
+        """Extract the current (Zip of Tar) archive in a temporary directory and return paths.
 
         Returns (path_to_clean_afterwards, path_to_content)
         """
-        unzipped_folder = mkdtemp()[1]  # Creating a temporary folder
-        # TODO: check content of file!!!! It may, for example contains
-        # absolute path (see zipfile doc)
-        ZipFile(self.archive_path, 'r').extractall(unzipped_folder)
 
+        extracted_folder = self._unzip_or_untar()
+        content = os.listdir(extracted_folder)
         # If the archive contains a single directory, we assume the real content is indeed under
         # this directory.
         #
         # See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
-        content = os.listdir(unzipped_folder)
-
-        if len(content) == 1 and os.path.isdir(os.path.join(unzipped_folder, content[0])):
-            content_folder = os.path.join(unzipped_folder, content[0])
+        if len(content) == 1 and os.path.isdir(os.path.join(extracted_folder, content[0])):
+            content_folder = os.path.join(extracted_folder, content[0])
         else:
-            content_folder = unzipped_folder
+            content_folder = extracted_folder
 
-        return (unzipped_folder, content_folder)
+        return (extracted_folder, content_folder)
 
     def close(self):
-        """Close the Darwin Core Archive and cleanup temporary/working files.
+        r"""Close the Darwin Core Archive and cleanup temporary/working files.
 
         .. note::
             - Alternatively, :class:`.DwCAReader` can be instanciated using the `with` statement.\
