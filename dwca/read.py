@@ -25,7 +25,7 @@ class DwCAReader(object):
     archives with or without Metafiles, such as described on page 2 of the Reference Guide
     to the XML Descriptor (http://www.gbif.org/resource/80639).
 
-    :param path: path to the Darwin Core Archive (either a zip file or a directory) to open.
+    :param path: path to the Darwin Core Archive (either a zip/tgz file or a directory) to open.
     :type path: str
 
     A short usage example::
@@ -39,7 +39,7 @@ class DwCAReader(object):
             print core_row
 
         # Scientific metadata (EML) is available as an ElementTree.Element object
-        print dwca.metadata.prettify()
+        print dwca.metadata
 
         # Close the archive to free resources
         dwca.close()
@@ -208,13 +208,12 @@ class DwCAReader(object):
         return open(p).read()
 
     def _parse_metadata_file(self):
-        """Load the archive (scientific) Metadata file, parse it with
+        """Load the archive (scientific) Metadata file, parse it with\
         ElementTree and return its content (or None if the Archive contains no metadata).
 
         :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
         metadata file.
         """
-
         # If the archive has descriptor, look for the metadata filename there.
         if self.descriptor and self.descriptor.metadata_filename:
             fn = self.descriptor.metadata_filename
@@ -280,7 +279,7 @@ class DwCAReader(object):
         return (extracted_dir, content_dir)
 
     def close(self):
-        r"""Close the Darwin Core Archive and cleanup temporary/working files.
+        """Close the Darwin Core Archive and cleanup temporary/working files.
 
         .. note::
             - Alternatively, :class:`.DwCAReader` can be instanciated using the `with` statement.\

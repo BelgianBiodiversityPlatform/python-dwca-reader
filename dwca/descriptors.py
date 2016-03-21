@@ -3,9 +3,9 @@
 """This module provides classes to represents descriptors of a DwC-A.
 
 - :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the metafile.
-- :class:`DataFileDescriptor describes characteristics of a given data file in the archive. It's
-generally initialized from a subsection of the ArchiveDescriptor, but in case the Archives contains
-no metafile, it can also be created by introspecting the CSV data file.
+- :class:`DataFileDescriptor` describes characteristics of a given data file in the archive. It's\
+generally initialized from a subsection of the ArchiveDescriptor, but in case the Archive \
+contains no metafile, it can also be created by introspecting the CSV data file.
 """
 
 import csv

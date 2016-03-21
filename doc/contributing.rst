@@ -1,7 +1,7 @@
 Contributing
 ============
 
-Contributions are more than welcome !
+Contributions are more than welcome! Please also provide tests and documentation for your contributions.
 
 Running the test suite
 ----------------------
@@ -16,21 +16,23 @@ Test coverage can be obtained after installing `coverage.py`_
 ::
 
     $ nosetests --with-coverage --cover-erase --cover-package=dwca
-    .....................................
-    Name                    Stmts   Miss  Cover   Missing
-    -----------------------------------------------------
-    dwca                        1      0   100%
-    dwca.darwincore             0      0   100%
-    dwca.darwincore.terms       1      0   100%
-    dwca.darwincore.utils       3      0   100%
-    dwca.dwca                  91      0   100%
-    dwca.rows                  65      4    94%   143, 146, 181, 184
-    dwca.utils                 45      9    80%   28-41
-    -----------------------------------------------------
-    TOTAL                     206     13    94%
-    ----------------------------------------------------------------------
-    Ran 37 tests in 3.995s
 
+    Name                       Stmts   Miss  Cover   Missing
+    --------------------------------------------------------
+    dwca.py                        0      0   100%
+    dwca/darwincore.py             0      0   100%
+    dwca/darwincore/terms.py       1      0   100%
+    dwca/darwincore/utils.py       4      0   100%
+    dwca/descriptors.py           92      1    99%   226
+    dwca/exceptions.py             4      0   100%
+    dwca/read.py                 142      1    99%   198
+    dwca/rows.py                  72      4    94%   161, 164, 193, 196
+    dwca/utils.py                 59      0   100%
+    --------------------------------------------------------
+    TOTAL                        374      6    98%
+    ----------------------------------------------------------------------
+    Ran 71 tests in 1.608s
+    
     OK
 
 Building the documentation
@@ -44,7 +46,7 @@ Locally:
 
 Online at http://python-dwca-reader.readthedocs.org/:
 
-The docs will be updated automagically upon commit on GitHub thanks to Webhooks.
+The docs will be updated automagically upon commit on GitHub (thanks to Webhooks).
 
 
 Releasing at PyPI

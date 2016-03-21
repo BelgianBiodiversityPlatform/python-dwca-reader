@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""This module provides helpers for python-dwca-reader's test suite."""
+
 import os
 
 
