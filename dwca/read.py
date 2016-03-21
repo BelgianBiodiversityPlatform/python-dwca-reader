@@ -251,7 +251,7 @@ class DwCAReader(object):
             # Security note: with Python < 2.7.4, a zip file may be able to write outside of the
             # directory using absolute paths, parent (..) path, ... See note in ZipFile.extract doc
             zipfile.ZipFile(self.archive_path, 'r').extractall(extracted_folder)
-        except zipfile.BadZipFile:
+        except zipfile.BadZipfile:
             # Doesn't look like a valid zip, let's see if it's a tar archive (possibly compressed)
             try:
                 tarfile.open(self.archive_path, 'r:*').extractall(extracted_folder)
