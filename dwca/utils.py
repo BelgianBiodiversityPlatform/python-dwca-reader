@@ -13,12 +13,12 @@ class _DataFile(object):
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     # In the future it could make sense to make it public
-    def __init__(self, work_folder, file_descriptor):
-        # work_folder: absolute path to the target directory (archive, previously
-        # unzipped if necessary).
+    def __init__(self, work_directory, file_descriptor):
+        # work_directory: absolute path to the target directory (archive, previously
+        # extracted if necessary).
         self.file_descriptor = file_descriptor
 
-        self._core_fhandler = io.open(os.path.join(work_folder,
+        self._core_fhandler = io.open(os.path.join(work_directory,
                                                    self.file_descriptor.file_location),
                                       mode='r',
                                       encoding=self.file_descriptor.file_encoding,

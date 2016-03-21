@@ -96,7 +96,7 @@ class DwCAReader(object):
         if self.descriptor:
             #  We have an Archive descriptor that we can use to access data files.
             self._corefile = _DataFile(self._workin_directory_path, self.descriptor.core)
-            self._extensionfiles = [_DataFile(work_folder=self._workin_directory_path,
+            self._extensionfiles = [_DataFile(work_directory=self._workin_directory_path,
                                               file_descriptor=d)
                                     for d in self.descriptor.extensions]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
@@ -105,7 +105,7 @@ class DwCAReader(object):
                 d = DataFileDescriptor(datafile_path=os.path.join(self._workin_directory_path,
                                                                   datafile_name))
 
-                self._corefile = _DataFile(work_folder=self._workin_directory_path,
+                self._corefile = _DataFile(work_directory=self._workin_directory_path,
                                            file_descriptor=d)
                 self._extensionfiles = []
             except InvalidSimpleArchive:
@@ -244,21 +244,21 @@ class DwCAReader(object):
 
         Raises InvalidArchive if not a zip nor a tgz file.
         """
-        extracted_folder = mkdtemp()[1]  # Creating a temporary folder
+        tmp_dir = mkdtemp()[1]  # Creating a temporary directory
 
         # We first try to unzip (most common archives)
         try:
             # Security note: with Python < 2.7.4, a zip file may be able to write outside of the
             # directory using absolute paths, parent (..) path, ... See note in ZipFile.extract doc
-            zipfile.ZipFile(self.archive_path, 'r').extractall(extracted_folder)
+            zipfile.ZipFile(self.archive_path, 'r').extractall(tmp_dir)
         except zipfile.BadZipfile:
             # Doesn't look like a valid zip, let's see if it's a tar archive (possibly compressed)
             try:
-                tarfile.open(self.archive_path, 'r:*').extractall(extracted_folder)
+                tarfile.open(self.archive_path, 'r:*').extractall(tmp_dir)
             except tarfile.ReadError:
                 raise InvalidArchive("The archive cannot be read. Is it a .zip or .tgz file?")
 
-        return extracted_folder
+        return tmp_dir
 
     def _extract(self):
         """Extract the current (Zip of Tar) archive in a temporary directory and return paths.
@@ -266,18 +266,18 @@ class DwCAReader(object):
         Returns (path_to_clean_afterwards, path_to_content)
         """
 
-        extracted_folder = self._unzip_or_untar()
-        content = os.listdir(extracted_folder)
+        extracted_dir = self._unzip_or_untar()
+        content = os.listdir(extracted_dir)
         # If the archive contains a single directory, we assume the real content is indeed under
         # this directory.
         #
         # See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
-        if len(content) == 1 and os.path.isdir(os.path.join(extracted_folder, content[0])):
-            content_folder = os.path.join(extracted_folder, content[0])
+        if len(content) == 1 and os.path.isdir(os.path.join(extracted_dir, content[0])):
+            content_dir = os.path.join(extracted_dir, content[0])
         else:
-            content_folder = extracted_folder
+            content_dir = extracted_dir
 
-        return (extracted_folder, content_folder)
+        return (extracted_dir, content_dir)
 
     def close(self):
         r"""Close the Darwin Core Archive and cleanup temporary/working files.
@@ -288,9 +288,9 @@ class DwCAReader(object):
 
         """
         if self._directory_to_clean:
-            self._cleanup_temporary_folder()
+            self._cleanup_temporary_dir()
 
-    def _cleanup_temporary_folder(self):
+    def _cleanup_temporary_dir(self):
         rmtree(self._directory_to_clean, False)
 
     def core_contains_term(self, term_url):
@@ -337,14 +337,14 @@ class GBIFResultsReader(DwCAReader):
         #: {'dataset_uuid': 'dataset_metadata', ...}
         self.source_metadata = self._dataset_metadata_to_dict('dataset')
 
-    def _dataset_metadata_to_dict(self, folder):
-        dataset_dir = os.path.join(self._workin_directory_path, folder)
+    def _dataset_metadata_to_dict(self, directory):
+        dataset_dir = os.path.join(self._workin_directory_path, directory)
 
         r = {}
         for f in os.listdir(dataset_dir):
             if os.path.isfile(os.path.join(dataset_dir, f)):
                 key = os.path.splitext(f)[0]
-                r[key] = self._parse_xml_included_file(os.path.join(folder, f))
+                r[key] = self._parse_xml_included_file(os.path.join(directory, f))
         return r
 
     # Compared to a standard DwC-A, GBIF results export contains

@@ -12,7 +12,7 @@ Description of sample DwcA
 * dwca-utf8-eol-test.zip: For regression test of https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/20
 * dwca-ids: The core rows contains unordered ids, for testing "get by ID" vs "get by index"
 * dwca-invalid-lacks-metadata: Invalid archive: the metafile reference an unexisting eml.xml file.
-* dwca-simple-subfolder.zip: An archive that have all its content under a single root directory. This is probably an invalid archive, but this is neverthless quite common.
+* dwca-simple-subdir.zip: An archive that have all its content under a single root directory. This is probably an invalid archive, but this is neverthless quite common.
 * dwca-simple-csv: an Archive containing a single, core CSV file (no metafile nor scientific metadata). Column headers=DwC terms. Similar to SimpleDWC (http://rs.tdwg.org/dwc/terms/simple/index.htm) and described in page 2 of the Darwin Core Archive Format, Reference Guide to the XML Descriptor File (http://www.gbif.org/resource/80639)
 * dwca-simple-csv-eml: An archive without metafile, containing a single core file (similar to dwca-simple-csv) but also a metadata file (EML.xml). Given this metadata file is named according to the standard, it should be properly handled.
 * dwca-simple-csv-dos.zip: similar to dwca-simple-csv, but DOS line endings are used in the data file.

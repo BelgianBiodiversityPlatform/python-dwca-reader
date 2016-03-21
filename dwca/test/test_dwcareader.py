@@ -17,7 +17,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
                       DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
-                      SUBFOLDER_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
+                      SUBDIR_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
                       SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME,
                       BASIC_ARCHIVE_TGZ_PATH)
@@ -57,11 +57,11 @@ class TestDwCAReader(unittest.TestCase):
                      .find('givenName').text)
             self.assertEqual(v, 'Nicolas')
 
-    def test_subfolder_archive(self):
+    def test_subdirectory_archive(self):
         """Ensure we support Archives where all the content is under a single directory."""
         num_files_before = len(os.listdir('.'))
         num_files_during = None
-        with DwCAReader(SUBFOLDER_ARCHIVE_PATH) as dwca:
+        with DwCAReader(SUBDIR_ARCHIVE_PATH) as dwca:
             # Ensure we have access to metadata
             self.assertIsInstance(dwca.metadata, ET.Element)
 
@@ -333,8 +333,8 @@ class TestDwCAReader(unittest.TestCase):
         self.assertIsInstance(r.metadata, ET.Element)
         r.close()
 
-    def test_temporary_folder_zipped(self):
-        """Test a temporary folder is created during execution.
+    def test_temporary_dir_zipped(self):
+        """Test a temporary directory is created during execution.
 
         (complementay to test_cleanup()
         """
@@ -344,7 +344,7 @@ class TestDwCAReader(unittest.TestCase):
 
         self.assertEqual(num_files_before, num_files_during - 1)
 
-    def test_no_temporary_folder_directory(self):
+    def test_no_temporary_dir_directory(self):
         """If archive is a directory, no need to create temporary files."""
         num_files_before = len(os.listdir('.'))
         with DwCAReader(DIRECTORY_ARCHIVE_PATH):
