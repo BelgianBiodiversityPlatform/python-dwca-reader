@@ -27,19 +27,25 @@ class DwCAReader(object):
 
     :param path: path to the Darwin Core Archive (either a zip/tgz file or a directory) to open.
     :type path: str
+    :param extensions_to_ignore: relative path (within the archive) of extension data files to\
+    ignore. This will improve performances and memory consumption with large archives.
+    :type extensions_to_ignore: list
 
-    A short usage example::
+    :raises: :class:`dwca.exceptions.InvalidArchive`
+    :raises: :class:`dwca.exceptions.InvalidSimpleArchive`
 
-        from dwca import DwCAReader
+    A simple usage example::
+
+        from dwca.read import DwCAReader
 
         dwca = DwCAReader('my_archive.zip')
         # Iterating on core rows is easy:
         for core_row in dwca:
-            # core_row is an instance of rows.CoreRow
-            print core_row
+            # core_row is an instance of dwca.rows.CoreRow
+            print(core_row)
 
         # Scientific metadata (EML) is available as an ElementTree.Element object
-        print dwca.metadata
+        print(dwca.metadata)
 
         # Close the archive to free resources
         dwca.close()
@@ -49,7 +55,7 @@ class DwCAReader(object):
 
     ::
 
-        from dwca import DwCAReader
+        from dwca.read import DwCAReader
 
         with DwCAReader('my-archive.zip') as dwca:
             pass  # Do what you want
@@ -88,7 +94,7 @@ class DwCAReader(object):
                 self.descriptor = None
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
-        #: of the archive.
+        #: of the archive, or None if the Archive contains no metadata.
         self.metadata = self._parse_metadata_file()
         #:
         self.source_metadata = None
@@ -175,7 +181,9 @@ class DwCAReader(object):
         .. note::
             - This method allows raw access to the files contained in the archive. It is for\
             example useful to open additional, non-standard files embedded in the archive.
-            - The file at this path is temporary and will be removed when closing the instance.
+            - If the archive is contained in a zip or tgz file, the returned path will point to a\
+            temporary file that will be removed when closing the :class:`dwca.read.DwCAReader`\
+            instance.
             - File existence is not tested.
 
         """
@@ -264,7 +272,6 @@ class DwCAReader(object):
 
         Returns (path_to_clean_afterwards, path_to_content)
         """
-
         extracted_dir = self._unzip_or_untar()
         content = os.listdir(extracted_dir)
         # If the archive contains a single directory, we assume the real content is indeed under
@@ -279,7 +286,7 @@ class DwCAReader(object):
         return (extracted_dir, content_dir)
 
     def close(self):
-        """Close the Darwin Core Archive and cleanup temporary/working files.
+        """Close the Darwin Core Archive and remove temporary/working files.
 
         .. note::
             - Alternatively, :class:`.DwCAReader` can be instanciated using the `with` statement.\
@@ -317,9 +324,8 @@ class DwCAReader(object):
 
 
 class GBIFResultsReader(DwCAReader):
-    """This class is used to represent the slightly augmented variant of Darwin Core Archive
+    """This class is used to represent the slightly augmented variant of Darwin Core Archive\
     produced by the new GBIF Data Portal when exporting occurrences.
-
 
     It provides a few additions to :class:`.DwCAReader` that reflect the additional data provided
     in these specific archives:
