@@ -2,10 +2,12 @@
 
 """This module provides classes to represents descriptors of a DwC-A.
 
-- :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the metafile.
-- :class:`DataFileDescriptor` describes characteristics of a given data file in the archive. It's\
-generally initialized from a subsection of the ArchiveDescriptor, but in case the Archive \
-contains no metafile, it can also be created by introspecting the CSV data file.
+- :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the \
+metafile content.
+- :class:`DataFileDescriptor` describes characteristics of a given data file in the archive. It's \
+either created from a subsection of the ArchiveDescriptor describing the data file, either by \
+introspecting the CSV data file (useful for Archives without metafile).
+
 """
 
 import csv
@@ -19,23 +21,17 @@ import xml.etree.ElementTree as ET
 class DataFileDescriptor(object):
     """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor.
 
-    It can be instanciated either from a <section> tag found in the :class:`ArchiveDescriptor`,\
-    either by analyzing a data file whose path is given to the constructor.
-
-    :param section_tag: The XML Element section containing details about the data file.
-    :type section_tag: :class:`xml.etree.ElementTree.Element`
-    :param datafile_path: Relative path to a data file to analyze in order to instantiate the\
-    descriptor.
-    :type datafile_path: str
-
+    It can be created from a <section> tag found in the :class:`ArchiveDescriptor` \
+    (see make_from_metafile_section) either by analyzing a data file (see make_from_file).
     """
 
     def __init__(self, created_from_file, raw_element, represents_corefile, datafile_type,
                  file_location, file_encoding, id_index, coreid_index, fields,
                  lines_terminated_by, fields_enclosed_by, fields_terminated_by):
-        #:
+        #: True if this descriptor was created by analyzing the data file.
         self.created_from_file = created_from_file
-        #:
+        #: The <section> element describing the data file, from the metafile. None if the
+        #: archive contains no metafile.
         self.raw_element = raw_element
         #: True if this descriptor is used to represent the core file an archive.
         self.represents_corefile = represents_corefile
@@ -89,7 +85,12 @@ class DataFileDescriptor(object):
 
     @classmethod
     def make_from_file(cls, datafile_path):
-        """Create and return a DataFileDescriptor by analyzing the file at datafile_path."""
+        """Create and return a DataFileDescriptor by analyzing the file at datafile_path.
+
+        :param datafile_path: Relative path to a data file to analyze in order to instantiate the\
+        descriptor.
+        :type datafile_path: str
+        """
         file_encoding = "utf-8"
 
         with io.open(datafile_path, 'rU', encoding=file_encoding) as datafile:
@@ -99,7 +100,6 @@ class DataFileDescriptor(object):
             # Normally, EOL characters should be available in dialect.lineterminator, but it
             # seems it always returns \r\n. The workaround therefore consists to open the file
             # in universal-newline mode, which adds a newlines attribute.
-            #:
             lines_terminated_by = datafile.newlines
 
             fields_terminated_by = dialect.delimiter
@@ -133,7 +133,11 @@ class DataFileDescriptor(object):
 
     @classmethod
     def make_from_metafile_section(cls, section_tag):
-        """Create and return a DataFileDescriptor from a metafile <section> tag."""
+        """Create and return a DataFileDescriptor from a metafile <section> tag.
+
+        :param section_tag: The XML Element section containing details about the data file.
+        :type section_tag: :class:`xml.etree.ElementTree.Element`
+        """
         if section_tag.tag == 'core':
             id_index = int(section_tag.find('id').get('index'))
             coreid_index = None
@@ -142,7 +146,6 @@ class DataFileDescriptor(object):
             coreid_index = int(section_tag.find('coreid').get('index'))
 
         fields = []
-
         for f in section_tag.findall('field'):
             default = f.get('default', None)
 
@@ -153,7 +156,6 @@ class DataFileDescriptor(object):
 
         file_encoding = section_tag.get('encoding')
 
-        #: The string or character used as a line separator in the data file. Example: "\\n".
         lines_terminated_by = _decode_xml_attribute(raw_element=section_tag,
                                                     attribute_name='linesTerminatedBy',
                                                     default_value='\n',
@@ -182,10 +184,6 @@ class DataFileDescriptor(object):
                    fields_enclosed_by=fields_enclosed_by,
                    fields_terminated_by=fields_terminated_by)
 
-    # def _section_describes_core(self):
-    #     """Return True if instance represents a Core file."""
-    #     return self.raw_element.tag == 'core'
-
     @property
     def terms(self):
         """Return a Python set containing all the Darwin Core terms appearing in file."""
@@ -210,6 +208,7 @@ class DataFileDescriptor(object):
 
     @property
     def lines_to_ignore(self):
+        """Return the number of header lines/lines to ignore in the data file."""
         if self.created_from_file:
             # Single-file archives also have a header line with DwC terms
             return 1
@@ -218,7 +217,7 @@ class DataFileDescriptor(object):
 
 
 class ArchiveDescriptor(object):
-    """Class used to encapsulate the whole Archive Descriptor (`meta.xml`)."""
+    """Class used to encapsulate the whole Metafile (`meta.xml`)."""
 
     def __init__(self, metaxml_content, files_to_ignore=None):
         if files_to_ignore is None:

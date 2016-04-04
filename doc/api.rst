@@ -20,6 +20,7 @@ Descriptor objects
 
 .. automodule:: dwca.descriptors
     :members:
+    :show-inheritance:
 
 
 Helpers
