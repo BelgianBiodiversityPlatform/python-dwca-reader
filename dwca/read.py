@@ -109,8 +109,7 @@ class DwCAReader(object):
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
-                d = DataFileDescriptor(datafile_path=os.path.join(self._workin_directory_path,
-                                                                  datafile_name))
+                d = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
 
                 self._corefile = _DataFile(work_directory=self._workin_directory_path,
                                            file_descriptor=d)

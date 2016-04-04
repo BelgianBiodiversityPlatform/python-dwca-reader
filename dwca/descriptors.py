@@ -30,79 +30,30 @@ class DataFileDescriptor(object):
 
     """
 
-    def __init__(self, section_tag=None, datafile_path=None):
-        # - datafile: the data file (in case we want to build a descriptor based on file analysis-
-        #   needed for archive without metafile)
-
-        if section_tag is not None:
-            self.make_from_metafile_section(section_tag)
-            #: True if this instance was created by analyzing the data file, False if it was \
-            #: created from the Archive Descriptor.
-        else:
-            self.make_from_file(datafile_path)
-
-
-    def make_from_file(self, datafile_path):
-        self.created_from_file = True
-        self.raw_element = None  # No metafile, so no XML session to store
-        self.represents_corefile = True  # In archives without metafiles, there's only core data
-        self.represents_extension = False
-        self.type = None  # No metafile => no rowType information
-        self.file_location = os.path.basename(datafile_path)  # datafile_path also contains the dir
-        self.file_encoding = "utf-8"
-        self.id_index = None
-
-        with io.open(datafile_path, 'rU', encoding=self.file_encoding) as datafile:
-            # Autodetect fields/lines termination
-            dialect = csv.Sniffer().sniff(datafile.readline())
-
-            # Normally, EOL characters should be available in dialect.lineterminator, but it
-            # seems it always returns \r\n. The workaround therefore consists to open the file
-            # in universal-newline mode, which adds a newlines attribute.
-            #:
-            self.lines_terminated_by = datafile.newlines
-
-            #:
-            self.fields_terminated_by = dialect.delimiter
-            #:
-            self.fields_enclosed_by = dialect.quotechar
-
-            datafile.seek(0)
-
-            dialect.delimiter = str(dialect.delimiter)  # Python 2 fix
-            dialect.quotechar = str(dialect.quotechar)  # Python 2 fix
-
-            dr = csv.reader(datafile, dialect)
-            columns = next(dr)
-
-            #:
-            self.fields = []
-            for i, c in enumerate(columns):
-                self.fields.append({'index': i, 'term': c, 'default': None})
-
-    def make_from_metafile_section(self, section_tag):
-        self.created_from_file = False
-        self.raw_element = section_tag
-
-        if self._autodetect_for_core():
-            #: True if this section is used to represent the core file/section of an archive.
-            self.represents_corefile = True
-            #: True if this section is used to represent an extension file/section in an archive.
-            self.represents_extensionfile = False
-            #: If the section represents a core data file, the index/position of the id column in
-            #: that file.
-            self.id_index = int(self.raw_element.find('id').get('index'))
-        else:
-            self.represents_corefile = False
-            self.represents_extensionfile = True
-            #: If the section represents an extension data file, the index/position of the core_id
-            #: column in that file. The `core_id` in an extension is the foreign key to the
-            #: "extended" core row.
-            self.coreid_index = int(self.raw_element.find('coreid').get('index'))
-
+    def __init__(self, created_from_file, raw_element, represents_corefile, datafile_type,
+                 file_location, file_encoding, id_index, coreid_index, fields,
+                 lines_terminated_by, fields_enclosed_by, fields_terminated_by):
         #:
-        self.type = self.raw_element.get('rowType')
-
+        self.created_from_file = created_from_file
+        #:
+        self.raw_element = raw_element
+        #: True if this descriptor is used to represent the core file an archive.
+        self.represents_corefile = represents_corefile
+        #: True if this descriptor is used to represent an extension file in an archive.
+        self.represents_extension = not represents_corefile
+        #:
+        self.type = datafile_type
+        #: The data file location, relative to the archive root.
+        self.file_location = file_location
+        #: The encoding of the data file. Example: "utf-8".
+        self.file_encoding = file_encoding
+        #: If the section represents a core data file, the index/position of the id column in
+        #: that file.
+        self.id_index = id_index
+        #: If the section represents an extension data file, the index/position of the core_id
+        #: column in that file. The `core_id` in an extension is the foreign key to the
+        #: "extended" core row.
+        self.coreid_index = coreid_index
         #: A list of dicts where each entry represent a data field in use.
         #:
         #: Each dict contains:
@@ -127,43 +78,113 @@ class DataFileDescriptor(object):
         #:       {'term': 'http://rs.tdwg.org/dwc/terms/country',
         #:        'index': None,
         #:        'default': 'Belgium'}]
-        self.fields = []
+        self.fields = fields
 
-        for f in self.raw_element.findall('field'):
+        #: The string or character used as a line separator in the data file. Example: "\\n".
+        self.lines_terminated_by = lines_terminated_by
+        #: The string or character used to enclose fields in the data file.
+        self.fields_enclosed_by = fields_enclosed_by
+        #: The string or character used as a field separator in the data file. Example: "\\t".
+        self.fields_terminated_by = fields_terminated_by
+
+    @classmethod
+    def make_from_file(cls, datafile_path):
+        """Create and return a DataFileDescriptor by analyzing the file at datafile_path."""
+        file_encoding = "utf-8"
+
+        with io.open(datafile_path, 'rU', encoding=file_encoding) as datafile:
+            # Autodetect fields/lines termination
+            dialect = csv.Sniffer().sniff(datafile.readline())
+
+            # Normally, EOL characters should be available in dialect.lineterminator, but it
+            # seems it always returns \r\n. The workaround therefore consists to open the file
+            # in universal-newline mode, which adds a newlines attribute.
+            #:
+            lines_terminated_by = datafile.newlines
+
+            fields_terminated_by = dialect.delimiter
+            fields_enclosed_by = dialect.quotechar
+
+            datafile.seek(0)
+
+            dialect.delimiter = str(dialect.delimiter)  # Python 2 fix
+            dialect.quotechar = str(dialect.quotechar)  # Python 2 fix
+
+            dr = csv.reader(datafile, dialect)
+            columns = next(dr)
+
+            fields = []
+            for i, c in enumerate(columns):
+                fields.append({'index': i, 'term': c, 'default': None})
+
+        return cls(created_from_file=True,
+                   raw_element=None,  # No metafile, so no XML section to store
+                   represents_corefile=True,  # In archives w/o metafiles, there's only core data
+                   datafile_type=None,  # No metafile => no rowType information
+                   file_location=os.path.basename(datafile_path),  # datafile_path also has the dir
+                   file_encoding=file_encoding,
+                   id_index=None,
+                   coreid_index=None,
+                   fields=fields,
+                   lines_terminated_by=lines_terminated_by,
+                   fields_enclosed_by=fields_enclosed_by,
+                   fields_terminated_by=fields_terminated_by
+                   )
+
+    @classmethod
+    def make_from_metafile_section(cls, section_tag):
+        """Create and return a DataFileDescriptor from a metafile <section> tag."""
+        if section_tag.tag == 'core':
+            id_index = int(section_tag.find('id').get('index'))
+            coreid_index = None
+        else:
+            id_index = None
+            coreid_index = int(section_tag.find('coreid').get('index'))
+
+        fields = []
+
+        for f in section_tag.findall('field'):
             default = f.get('default', None)
 
             # Default fields don't have an index attribute
             index = (int(f.get('index')) if f.get('index') else None)
 
-            self.fields.append({'term': f.get('term'), 'index': index, 'default': default})
+            fields.append({'term': f.get('term'), 'index': index, 'default': default})
 
-        #: The data file location, relative to the archive root.
-        self.file_location = self.raw_element.find('files').find('location').text
-
-        #: The file encoding, as specified in the archive descriptor. Example: "utf-8".
-        self.file_encoding = self.raw_element.get('encoding')
+        file_encoding = section_tag.get('encoding')
 
         #: The string or character used as a line separator in the data file. Example: "\\n".
-        self.lines_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
-                                                         attribute_name='linesTerminatedBy',
-                                                         default_value='\n',
-                                                         encoding=self.file_encoding)
+        lines_terminated_by = _decode_xml_attribute(raw_element=section_tag,
+                                                    attribute_name='linesTerminatedBy',
+                                                    default_value='\n',
+                                                    encoding=file_encoding)
 
-        #: The string or character used as a field separator in the data file. Example: "\\t".
-        self.fields_terminated_by = _decode_xml_attribute(raw_element=self.raw_element,
-                                                          attribute_name='fieldsTerminatedBy',
-                                                          default_value='\t',
-                                                          encoding=self.file_encoding)
+        fields_terminated_by = _decode_xml_attribute(raw_element=section_tag,
+                                                     attribute_name='fieldsTerminatedBy',
+                                                     default_value='\t',
+                                                     encoding=file_encoding)
 
-        #: The string or character used to enclose fields in the data file.
-        self.fields_enclosed_by = _decode_xml_attribute(raw_element=self.raw_element,
-                                                        attribute_name='fieldsEnclosedBy',
-                                                        default_value='',
-                                                        encoding=self.file_encoding)
+        fields_enclosed_by = _decode_xml_attribute(raw_element=section_tag,
+                                                   attribute_name='fieldsEnclosedBy',
+                                                   default_value='',
+                                                   encoding=file_encoding)
 
-    def _autodetect_for_core(self):
-        """Return True if instance represents a Core file."""
-        return self.raw_element.tag == 'core'
+        return cls(created_from_file=False,
+                   raw_element=section_tag,
+                   represents_corefile=(section_tag.tag == 'core'),
+                   datafile_type=section_tag.get('rowType'),
+                   file_location=section_tag.find('files').find('location').text,
+                   file_encoding=file_encoding,
+                   id_index=id_index,
+                   coreid_index=coreid_index,
+                   fields=fields,
+                   lines_terminated_by=lines_terminated_by,
+                   fields_enclosed_by=fields_enclosed_by,
+                   fields_terminated_by=fields_terminated_by)
+
+    # def _section_describes_core(self):
+    #     """Return True if instance represents a Core file."""
+    #     return self.raw_element.tag == 'core'
 
     @property
     def terms(self):
@@ -180,9 +201,9 @@ class DataFileDescriptor(object):
                 columns[f['index']] = f['term']
 
         # In addition to DwC terms, we may also have id (Core) or core_id (Extensions) columns
-        if hasattr(self, 'id_index'):
+        if self.id_index is not None:
             columns[self.id_index] = 'id'
-        if hasattr(self, 'coreid_index'):
+        if self.coreid_index is not None:
             columns[self.coreid_index] = 'coreid'
 
         return [columns[f] for f in sorted(columns.keys())]
@@ -215,14 +236,14 @@ class ArchiveDescriptor(object):
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the data core
         # file of the archive
-        self.core = DataFileDescriptor(self.raw_element.find('core'))
+        self.core = DataFileDescriptor.make_from_metafile_section(self.raw_element.find('core'))
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the
         #: archive's extension files
         self.extensions = []
         for tag in self.raw_element.findall('extension'):
             if tag.find('files').find('location').text not in files_to_ignore:
-                self.extensions.append(DataFileDescriptor(tag))
+                self.extensions.append(DataFileDescriptor.make_from_metafile_section(tag))
 
         #: A list of extension types in use in the archive.
         #:

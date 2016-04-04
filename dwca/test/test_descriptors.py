@@ -24,7 +24,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         with zipfile.ZipFile(SIMPLE_CSV, 'r') as archive:
             datafile_path = archive.extract('0008333-160118175350007.csv')
 
-            d = DataFileDescriptor(section_tag=None, datafile_path=datafile_path)
+            d = DataFileDescriptor.make_from_file(datafile_path)
             # Check basic metadata with the file
             self.assertIsNone(d.raw_element)
             self.assertTrue(d.represents_corefile)
@@ -71,7 +71,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 
@@ -87,7 +87,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 1)
 
@@ -103,7 +103,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.lines_to_ignore, 0)
 
@@ -123,7 +123,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.file_location, "occurrence.txt")
         self.assertEqual(core_descriptor.file_encoding, "utf-8")
@@ -147,7 +147,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         # .fields is supposed to return a list of dicts like those
         expected_fields = (
@@ -219,7 +219,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/scientificName',
@@ -245,7 +245,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             <field index="5" term="http://rs.tdwg.org/dwc/terms/genus"/>
         </core>
         """
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         expected_headers_core = ['id',
                                  'http://rs.tdwg.org/dwc/terms/order',
@@ -274,7 +274,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         </extension>
         """
 
-        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
 
         self.assertEqual(ext_descriptor.raw_element.tag, 'extension')
         self.assertEqual(ext_descriptor.raw_element.get('encoding'), 'utf-8')
@@ -285,7 +285,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             core_descriptor = dwca.descriptor.core
             self.assertTrue(core_descriptor.represents_corefile)
-            self.assertFalse(core_descriptor.represents_extensionfile)
+            self.assertFalse(core_descriptor.represents_extension)
 
         ext_section = """
         <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
@@ -299,9 +299,9 @@ class TestDataFileDescriptor(unittest.TestCase):
         """
 
         # 2. And with extension
-        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
         self.assertFalse(ext_descriptor.represents_corefile)
-        self.assertTrue(ext_descriptor.represents_extensionfile)
+        self.assertTrue(ext_descriptor.represents_extension)
 
     def test_exposes_coreid_index_of_extensions(self):
         ext_section = """
@@ -314,13 +314,12 @@ class TestDataFileDescriptor(unittest.TestCase):
         </extension>
         """
 
-        ext_descriptor = DataFileDescriptor(ET.fromstring(ext_section))
+        ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
 
         self.assertEqual(ext_descriptor.coreid_index, 0)
 
         # ... but it doesn't have .id_index (only for core!)
-        with self.assertRaises(AttributeError):
-            ext_descriptor.id_index
+        self.assertIsNone(ext_descriptor.id_index)
 
     def test_exposes_id_index_of_core(self):
         metaxml_section = """
@@ -338,13 +337,12 @@ class TestDataFileDescriptor(unittest.TestCase):
         </core>
         """
 
-        core_descriptor = DataFileDescriptor(ET.fromstring(metaxml_section))
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
         self.assertEqual(core_descriptor.id_index, 0)
 
         # ... but it doesn't have .coreid_index (only for extensions!)
-        with self.assertRaises(AttributeError):
-            core_descriptor.coreid_index
+        self.assertIsNone(core_descriptor.coreid_index)
 
     def test_exposes_core_type(self):
         """Test that it exposes the Archive Core Type as type"""
