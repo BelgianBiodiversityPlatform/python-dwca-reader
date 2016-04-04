@@ -13,6 +13,9 @@ current
 - API new: DataFileDescriptor.fields_enclosed_by
 - API new: DwCAReader.use_extensions
 
+TODO: check core_contains_term probably doesn't work with archives without metafile.
+TODO: update doc index page.
+
 v0.8.1 (2016-03-10)
 ===================
 

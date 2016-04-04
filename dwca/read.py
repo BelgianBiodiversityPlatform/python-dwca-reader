@@ -16,6 +16,7 @@ from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
 
 DEFAULT_METADATA_FILENAME = "EML.xml"
+METAFILE_NAME = "meta.xml"
 
 
 class DwCAReader(object):
@@ -78,16 +79,16 @@ class DwCAReader(object):
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path
 
-        if os.path.isdir(self.archive_path):  # Archive as a directly readable directory
+        if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
             self._workin_directory_path = self.archive_path
             self._directory_to_clean = None
-        else:  # Archive is zipped, we have to unzip it
+        else:  # Archive is zipped/tgzipped, we have to extract it first.
             self._directory_to_clean, self._workin_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor (``meta.xml``)
         try:
-            self.descriptor = ArchiveDescriptor(self._read_additional_file('meta.xml'),
+            self.descriptor = ArchiveDescriptor(self._read_additional_file(METAFILE_NAME),
                                                 files_to_ignore=extensions_to_ignore)
         except IOError as e:
             if e.errno == ENOENT:

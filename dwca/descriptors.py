@@ -17,26 +17,33 @@ import xml.etree.ElementTree as ET
 
 
 class DataFileDescriptor(object):
-    """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor."""
+    """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor.
+
+    It can be instanciated either from a <section> tag found in the :class:`ArchiveDescriptor`,\
+    either by analyzing a data file whose path is given to the constructor.
+
+    :param section_tag: The XML Element section containing details about the data file.
+    :type section_tag: :class:`xml.etree.ElementTree.Element`
+    :param datafile_path: Relative path to a data file to analyze in order to instantiate the\
+    descriptor.
+    :type datafile_path: str
+
+    """
 
     def __init__(self, section_tag=None, datafile_path=None):
-        # Args:
-        # - section_tag :class:`xml.etree.ElementTree.Element` instance containing the whole
-        #   XML for this section (in case we want to build a descriptor based on the metafile).
         # - datafile: the data file (in case we want to build a descriptor based on file analysis-
         #   needed for archive without metafile)
 
         if section_tag is not None:
-            self._init_from_metafile_section(section_tag)
-            self.created_from_file = False
+            self.make_from_metafile_section(section_tag)
+            #: True if this instance was created by analyzing the data file, False if it was \
+            #: created from the Archive Descriptor.
         else:
-            self._init_from_file(datafile_path)
-            self.created_from_file = True
+            self.make_from_file(datafile_path)
 
-        #: A Python set containing all the Darwin Core terms appearing in file
-        self.terms = set([f['term'] for f in self.fields])
 
-    def _init_from_file(self, datafile_path):
+    def make_from_file(self, datafile_path):
+        self.created_from_file = True
         self.raw_element = None  # No metafile, so no XML session to store
         self.represents_corefile = True  # In archives without metafiles, there's only core data
         self.represents_extension = False
@@ -52,9 +59,12 @@ class DataFileDescriptor(object):
             # Normally, EOL characters should be available in dialect.lineterminator, but it
             # seems it always returns \r\n. The workaround therefore consists to open the file
             # in universal-newline mode, which adds a newlines attribute.
+            #:
             self.lines_terminated_by = datafile.newlines
 
+            #:
             self.fields_terminated_by = dialect.delimiter
+            #:
             self.fields_enclosed_by = dialect.quotechar
 
             datafile.seek(0)
@@ -65,11 +75,13 @@ class DataFileDescriptor(object):
             dr = csv.reader(datafile, dialect)
             columns = next(dr)
 
+            #:
             self.fields = []
             for i, c in enumerate(columns):
                 self.fields.append({'index': i, 'term': c, 'default': None})
 
-    def _init_from_metafile_section(self, section_tag):
+    def make_from_metafile_section(self, section_tag):
+        self.created_from_file = False
         self.raw_element = section_tag
 
         if self._autodetect_for_core():
@@ -152,6 +164,11 @@ class DataFileDescriptor(object):
     def _autodetect_for_core(self):
         """Return True if instance represents a Core file."""
         return self.raw_element.tag == 'core'
+
+    @property
+    def terms(self):
+        """Return a Python set containing all the Darwin Core terms appearing in file."""
+        return set([f['term'] for f in self.fields])
 
     @property
     def headers(self):

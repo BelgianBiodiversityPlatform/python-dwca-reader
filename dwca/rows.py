@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides classes that encapsulate data rows from DarwinCore Archive (DwC-A) files.
-
-"""
+"""This module provides objects that represents data rows coming from DarwinCore Archive."""
 
 
-# Make it abstract ? Private ?
+# TODO: Make it abstract ? Private ?
 class Row(object):
-
     """This class is used to represent a row/line in a Darwin Core Archive.
 
     This class is intended to be subclassed rather than used directly.
@@ -87,8 +84,7 @@ class Row(object):
 
 
 class CoreRow(Row):
-
-    """ This class is used to represent a row/line from a Darwin Core Archive core file.
+    """This class is used to represent a row/line from a Darwin Core Archive core file.
 
     You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
     or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_row_by_index,
