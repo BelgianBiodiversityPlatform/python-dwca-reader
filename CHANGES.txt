@@ -1,5 +1,5 @@
-current
--------
+v0.9.0 (2016-04-05)
+-------------------
 
 - Support for new types of archives:
 	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.

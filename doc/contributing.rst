@@ -59,7 +59,6 @@ Releasing at PyPI
 
     $ python setup.py sdist upload
 
-* Also update the version in doc/conf.py
 * Create a new tag and push it to GitHub
 
 ::
