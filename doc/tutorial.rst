@@ -137,8 +137,8 @@ Another example with multiple extensions (no new API here)
             if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
                 print ext
 
-4. GBIF Data Portal exports
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GBIF Data Portal exports
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. warning:: This feature will soon be deprecated.
 

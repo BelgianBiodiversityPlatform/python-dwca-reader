@@ -368,7 +368,6 @@ class TestDwCAReader(unittest.TestCase):
 
         TODO: split
         """
-
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             # Assert metadata is an instance of ElementTree.Element
             self.assertIsInstance(dwca.metadata, ET.Element)
@@ -380,11 +379,15 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_core_contains_term(self):
         """Test the core_contains_term method."""
-
         # Example file contains locality but no country
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertTrue(dwca.core_contains_term(qn('locality')))
             self.assertFalse(dwca.core_contains_term(qn('country')))
+
+        # Also test it with a simple (= no metafile) archive
+        with DwCAReader(SIMPLE_CSV) as dwca:
+            self.assertTrue(dwca.core_contains_term('datasetkey'))
+            self.assertFalse(dwca.core_contains_term('trucmachin'))
 
     def test_ignore_header_lines(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:

@@ -301,7 +301,7 @@ class DwCAReader(object):
 
     def core_contains_term(self, term_url):
         """Return True if the Core file of the archive contains the term_url term."""
-        return term_url in self.descriptor.core.terms
+        return term_url in self._corefile.file_descriptor.terms
 
     def __iter__(self):
         self._corefile_pointer = 0
