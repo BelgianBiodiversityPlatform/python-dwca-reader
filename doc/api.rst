@@ -1,5 +1,5 @@
-Detailed API
-============
+API
+===
 
 Reader objects
 --------------

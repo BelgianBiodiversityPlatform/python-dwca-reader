@@ -1,5 +1,5 @@
 current
-=======
+-------
 
 - Support for new types of archives:
 	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.
@@ -14,48 +14,46 @@ current
 - API new: DwCAReader.use_extensions
 
 TODO: check core_contains_term probably doesn't work with archives without metafile.
-TODO: update doc index page.
 
 v0.8.1 (2016-03-10)
-===================
+-------------------
 
 - Support for archives contained in a single (sub)directory. See https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/49
-=======
 
 v0.8.0 (2016-02-11)
-===================
+-------------------
 
 - Experimental support for Python 3.5 (while maintaining compatibility with 2.7)
 
 v0.7.0 (2015-08-20)
-===================
+-------------------
 
 - Python-dwca-reader doesn't rely anymore on BeautifulSoup/lxml, using ElementTree from the standard library instead fot its XML parsing needs. This has a series of consequences:
   * It should be easier to install and deploy (also on platforms such as Jython).
   * All methods and attributes that used to return BeautifulSoup objects will now return xml.etree.ElementTree.Element instances. This includes DwCAReader.metadata. SectionDescriptor.raw_beautifulsoup and ArchiveDescriptor.raw_beautifulsoup have been replaced by SectionDescriptor.raw_element and ArchiveDescriptor.raw_element (Element objects).
 
 v0.6.5 (2015-08-18)
-===================
+-------------------
 
 - New InvalidArchive exception. Currrently, it is only raised when a DwC-A references a metadata file that's not present in the archive.  
 
 v0.6.4 (2015-02-17)
-===================
+-------------------
 
 - Performance: an optional 'extension_to_ignores' parameter (List) can be passed to DwCAReader's constructor. In cases where an archive contains large but unneeded extensions, this can greatly improve memory consumption. A typical use-case for that would be the huge 'verbatim.txt' contained in GBIF downloads.
 
 v0.6.3 (2015-02-16)
-===================
+-------------------
 
 - Performance: we now use core_id based indexes for extensions. There's a memory penalty, but extension file parsing is now only done once. 
 
 v0.6.2 (2015-01-26)
-===================
+-------------------
 
 - Better performance with extensions.
 
 v0.6.1 (2015-01-09)
-===================
+-------------------
 
 - It can now open not zipped (directory) Darwin Core Archives
 - More testing for Descriptor classes.
@@ -64,7 +62,7 @@ v0.6.1 (2015-01-09)
 - Lower memory use with large archives.
 
 v0.6.0 (2014-08-08)
-===================
+-------------------
 
 - Better performance thanks to a better architecture
 - API add: brand new _ArchiveDescriptor and _SectionDescriptor
@@ -74,14 +72,14 @@ v0.6.0 (2014-08-08)
 - API remove: DwCAReader.core_terms (use DwCAReader.descriptor.core.terms instead)
 
 v0.5.1 (2014-08-05)
-===================
+-------------------
 
 - Performance: dramatically improved performance of get_row_by_index/looping for large files by
                building an index of line positions at file opening (so there's a slight overhead
                there)
 
 v0.5.0 (2014-01-21)
-===================
+-------------------
 
 - API new: DwCAReader.descriptor
 - API change: "for core_line in dwca.each_line():" => "for core_row in dwca:"
@@ -98,7 +96,7 @@ v0.5.0 (2014-01-21)
 - Cleaner code and better documentation.
 
 v0.4.0 (2013-09-24)
-===================
+-------------------
 
 - API change: dwca.get_line() -> dwca.get_line_by_id()
 - API new: dwca.get_line_by_index()
@@ -106,42 +104,42 @@ v0.4.0 (2013-09-24)
 - Refactoring: DwCALine subclassed (as DwCACoreLine and DwCAExtensionLine)
 
 v0.3.3 (2013-09-05)
-===================
+-------------------
 
 - DwCALines are now hashable.
 
 v0.3.2 (2013-08-28)
-===================
+-------------------
 
 - API: added the dwca.absolute_temporary_path() method.
 
 v0.3.1 (2013-08-09)
-===================
+-------------------
 
 - Bugfix: lxml added as a requirement.
 
 v0.3.0 (2013-08-08)
-===================
+-------------------
 
 - XML parsing (metadata, EML, ...) now uses BeautifulSoup 4 instead of v3.
 
 v0.2.1 (2013-08-02)
-===================
+-------------------
 
 - Added a property (core_terms) to DwCAReader to get a list the DwC terms in use in the core file.
 
 v0.2.0 (2013-07-31)
-===================
+-------------------
 
 - Specific support for GBIF Data portal (occurrences) export.
 - Small bug fixes.
 
 v0.1.1 (2013-05-28)
-===================
+-------------------
 
 - Fixes packaging issues.
 
 v0.1.0 (2013-05-28)
-===================
+-------------------
 
  - Initial release.

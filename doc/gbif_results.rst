@@ -1,6 +1,8 @@
 Description of the GBIF Data Portal Occurrence download format
 ==============================================================
 
+.. warning:: This feature will soon be deprecated.
+
 .. warning:: As of August 2014, the GBIF portal has been updated and the export format has been improved. By consequence, this page and the :class:`dwca.read.GBIFResultsReader` class are currently out-of-date.
 
 As of late 2013, the new version of the `GBIF Data Portal`_ exports occurrences (search results) in a format that is a superset of the Darwin Core Archive standard.
