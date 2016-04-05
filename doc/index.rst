@@ -7,6 +7,8 @@ What is python-dwca-reader ?
 
 A simple Python package to read and parse `Darwin Core Archive`_ (DwC-A) files, as produced by the `GBIF website`_, the `IPT`_ and many other biodiversity informatics tools.
 
+It intends to be Pythonic and simple to use!
+
 Archives can be enclosed in either a directory or a zip/tgz archive. 
 
 It supports most common features from the Darwin Core Archive standard, including support for `Simple Darwin Core`_ expressed as text (aka Archives consisting of a single CSV data file, possibly with Metadata but without Metafile).
