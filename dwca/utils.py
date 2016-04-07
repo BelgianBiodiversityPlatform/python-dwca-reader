@@ -9,7 +9,7 @@ from dwca.rows import CoreRow, ExtensionRow
 
 
 class _DataFile(object):
-    """Internal use class used to encapsulate a DwcA-enclosed CSV file and its descriptor."""
+    """Used to encapsulate a DwcA-enclosed CSV data file."""
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     # In the future it could make sense to make it public
@@ -67,7 +67,7 @@ class _DataFile(object):
             pos = pos + 1
         return index
 
-    # TODO: For ExtensionRow and finxed field only, generalize ??
+    # TODO: For ExtensionRow and fixed field only, generalize ??
     def get_all_rows_by_coreid(self, core_id):
         # If we don't already have an index of core ids, it's time to build it.
         if not hasattr(self, '_coreid_index'):
