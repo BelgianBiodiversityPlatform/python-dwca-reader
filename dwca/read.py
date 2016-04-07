@@ -28,8 +28,9 @@ class DwCAReader(object):
 
     :param path: path to the Darwin Core Archive (either a zip/tgz file or a directory) to open.
     :type path: str
-    :param extensions_to_ignore: relative path (within the archive) of extension data files to\
-    ignore. This will improve performances and memory consumption with large archives.
+    :param extensions_to_ignore: relative path (within the archive) of extension data files to \
+    ignore. This will improve performances and memory consumption with large archives. Missing \
+    files are silently ignored.
     :type extensions_to_ignore: list
 
     :raises: :class:`dwca.exceptions.InvalidArchive`
