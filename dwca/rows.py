@@ -2,6 +2,8 @@
 
 """This module provides objects that represents data rows coming from DarwinCore Archive."""
 
+from dwca.exceptions import InvalidArchive
+
 
 # TODO: Make it abstract ? Private ?
 class Row(object):
@@ -80,7 +82,12 @@ class Row(object):
                 self.data[f['term']] = f['default']
             else:
                 # else, we have to look in core file
-                self.data[f['term']] = self.raw_fields[int(f['index'])]
+                field_index = int(f['index'])
+                try:
+                    self.data[f['term']] = self.raw_fields[field_index]
+                except IndexError:
+                    msg = 'The descriptor references a non-existent field (index={i})'.format(i=field_index)
+                    raise InvalidArchive(msg)
 
 
 class CoreRow(Row):

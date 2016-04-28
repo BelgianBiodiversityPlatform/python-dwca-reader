@@ -1,8 +1,8 @@
 Current
 -------
 
-- API new: DwCAReader.read_included_file(relative_path)
-
+- API new: DwCAReader.open_included_file(relative_path)
+- InvalidArchive exception is now raised when a file descriptor references a non-existing field. 
 
 v0.9.0 (2016-04-05)
 -------------------

@@ -20,12 +20,35 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       SUBDIR_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
                       SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME,
-                      BASIC_ARCHIVE_TGZ_PATH)
+                      BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR)
 
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    def test_open_included_file(self):
+        """Ensure DwCAReader.open_included_file work as expected."""
+        # Let's use it to read the raw core data file:
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
+            f = dwca.open_included_file('occurrence.txt')
+
+            raw_occ = f.read()
+            self.assertTrue(raw_occ.endswith('betta splendens\n'))
+
+        # TODO: test more cases: opening mode, exceptions raised, ...
+
+    def test_descriptor_references_non_existent_data_field(self):
+        """Ensure InvalidArchive is raised when a file descriptor references non-existent field.
+
+        This ensure cases like http://dev.gbif.org/issues/browse/PF-2470 (descriptor contains
+        <field index="234" term="http://rs.gbif.org/terms/1.0/lastCrawled"/>, but has only 234
+        fields in data file) fail in a visible way (previously, archive just appeard empty).
+        """
+        with DwCAReader(INVALID_DESCRIPTOR) as dwca:
+            with self.assertRaises(InvalidArchive):
+                for row in dwca:
+                    pass
 
     def test_use_extensions(self):
         """Ensure the .use_extensions attribute of DwCAReader works as intended."""

@@ -89,7 +89,7 @@ class DwCAReader(object):
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor (``meta.xml``)
         try:
-            self.descriptor = ArchiveDescriptor(self.read_included_file(METAFILE_NAME),
+            self.descriptor = ArchiveDescriptor(self.open_included_file(METAFILE_NAME).read(),
                                                 files_to_ignore=extensions_to_ignore)
         except IOError as e:
             if e.errno == ENOENT:
@@ -211,10 +211,12 @@ class DwCAReader(object):
         if invalid:
             raise InvalidSimpleArchive()
 
-    def read_included_file(self, relative_path):
-        """Read an additional file in the archive and return its content."""
-        p = self.absolute_temporary_path(relative_path)
-        return open(p).read()
+    def open_included_file(self, relative_path, *args, **kwargs):
+        """Simple wrapper around Python's open build-in function.
+
+        To be used for reading only.
+        """
+        return open(self.absolute_temporary_path(relative_path), *args, **kwargs)
 
     def _parse_metadata_file(self):
         """Load the archive (scientific) Metadata file, parse it with\
@@ -243,7 +245,7 @@ class DwCAReader(object):
 
     def _parse_xml_included_file(self, relative_path):
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
-        return ET.fromstring(self.read_included_file(relative_path))
+        return ET.fromstring(self.open_included_file(relative_path).read())
 
     def _unzip_or_untar(self):
         """Create a temporary dir. and uncompress/unarchive self.archive_path there.
@@ -360,9 +362,9 @@ class GBIFResultsReader(DwCAReader):
     @property
     def citations(self):
         """Return the content of the citations.txt file included in the archive."""
-        return self.read_included_file('citations.txt')
+        return self.open_included_file('citations.txt').read()
 
     @property
     def rights(self):
         """Return the content of the rights.txt file included in the archive."""
-        return self.read_included_file('rights.txt')
+        return self.open_included_file('rights.txt').read()
