@@ -31,7 +31,9 @@ for source_file in args.source_xml:
 
     # Store each qualname found in any tag to our set
     for ch in root.iter():
-        qualnames.add(ch.get('qualName'))
+        qn = ch.get('qualName')
+        if qn:
+            qualnames.add(qn)
 
 # Turn set to list and add the variable name in front so output can directly be
 # redirected in a file (quick'n'dirty)
