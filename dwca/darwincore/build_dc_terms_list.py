@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Utility script to generate a list of DarwinCore terms (to be consumed by qualname())."""
 
-# Small utility script used during development to generate a list of DarwinCore
+# Utility script used during development to generate a list of DarwinCore
 # terms from Darwin Core description XML files. This list of terms is for
 # consumption by the qualname() helper
 
@@ -9,8 +10,7 @@
 #                               source_data/dwc_taxon.xml > terms.py
 
 import argparse
-
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 parser = argparse.ArgumentParser(description="Generate a list of qualnames "
                                              "of Darwin Core terms from XML "
@@ -25,14 +25,14 @@ args = parser.parse_args()
 qualnames = set()
 
 for source_file in args.source_xml:
-    soup = BeautifulSoup(source_file, "xml")
+    root = ET.parse(source_file).getroot()
     # First, extract the RowType itself... (Occcurrence, Taxon, ...)
-    qualnames.add(soup.find('extension')['rowtype'])
+    qualnames.add(root.get('rowType'))
 
     # Store each qualname found in any tag to our set
-    for t in soup.findAll(qualname=True):
-        qualnames.add(t['qualname'])
+    for ch in root.iter():
+        qualnames.add(ch.get('qualName'))
 
 # Turn set to list and add the variable name in front so output can directly be
 # redirected in a file (quick'n'dirty)
-print "TERMS = " + repr(list(qualnames))
+print("TERMS = " + repr(list(qualnames)))
