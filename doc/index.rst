@@ -11,7 +11,7 @@ It intends to be Pythonic and simple to use!
 
 Archives can be enclosed in either a directory or a zip/tgz archive. 
 
-It supports most common features from the Darwin Core Archive standard, including support for `Simple Darwin Core`_ expressed as text (aka Archives consisting of a single CSV data file, possibly with Metadata but without Metafile).
+It supports most common features from the Darwin Core Archive standard, including extensions and `Simple Darwin Core`_ expressed as text (aka Archives consisting of a single CSV data file, possibly with Metadata but without Metafile).
 
 It officially supports Python 2.7, Python 3.5 and has been reported to work on Jython by at least one user.
 
