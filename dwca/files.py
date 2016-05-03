@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""This module provide file-related classes and functions."""
+
 import io
 import os
 
@@ -8,14 +10,21 @@ from array import array
 from dwca.rows import CoreRow, ExtensionRow
 
 
-class _DataFile(object):
-    """Used to encapsulate a DwcA-enclosed CSV data file."""
+class CSVDataFile(object):
+    """Object used to access a DwcA-enclosed CSV data file.
+
+    :param work_directory: absolute path to the target directory (archive content, previously\
+    extracted if necessary).
+    :param file_descriptor: an instance of :class:`dwca.descriptors.DataFileDescriptor`\
+    describing the data file.
+
+    """
+
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
-    # In the future it could make sense to make it public
     def __init__(self, work_directory, file_descriptor):
-        # work_directory: absolute path to the target directory (archive, previously
-        # extracted if necessary).
+        """Initialize the CSVDataFile object."""
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the constructor
         self.file_descriptor = file_descriptor
 
         self._core_fhandler = io.open(os.path.join(work_directory,
@@ -27,9 +36,10 @@ class _DataFile(object):
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = get_all_line_offsets(self._core_fhandler,
-                                                  self.file_descriptor.file_encoding)
+        self._line_offsets = _get_all_line_offsets(self._core_fhandler,
+                                                   self.file_descriptor.file_encoding)
 
+        #: Number of lines to ignore/header lines in the CSV file.
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
     def _position_file_after_header(self):
@@ -44,13 +54,13 @@ class _DataFile(object):
     def __next__(self):
         return self.next()
 
-    def next(self):
+    def next(self):  # NOQA
         for line in self._core_fhandler:
             return line
 
         raise StopIteration
 
-    # Returns a index of the per code_id positions of Rows in the file:
+    # Returns a index of the per core_id positions of Rows in the file:
     # {core_id1: []}
 
     # TODO: Generalize this so we can create indexes on any field ?
@@ -67,9 +77,9 @@ class _DataFile(object):
             pos = pos + 1
         return index
 
-    # TODO: For ExtensionRow and fixed field only, generalize ??
+    # TODO: For ExtensionRow and a specific field only, generalize ?
     def get_all_rows_by_coreid(self, core_id):
-        # If we don't already have an index of core ids, it's time to build it.
+        """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id match `core_id`."""
         if not hasattr(self, '_coreid_index'):
             self._coreid_index = self._build_coreid_index()
 
@@ -79,6 +89,7 @@ class _DataFile(object):
             return [self.get_row_by_position(p) for p in self._coreid_index[core_id]]
 
     def get_row_by_position(self, position):
+        """Return the row at `position` in the file."""
         try:
             l = self._get_line_by_position(position)
             if self.file_descriptor.represents_corefile:
@@ -94,15 +105,16 @@ class _DataFile(object):
         return self._core_fhandler.readline()
 
 
-def get_all_line_offsets(f, encoding):
-    """ Parse the file whose handler is given and return a list of each line beginning positions.
+def _get_all_line_offsets(f, encoding):
+    """Parse the file whose handler is given and return an array (long) containing the start offset\
+    of each line.
 
-        The value returned is suitable for seek() operations.
-        This can take long for large files.
+    The values in the array are suitable for seek() operations.
 
-        It needs to know the encoding to properly count the bytes in a given string.
+    This function can take long for large files.
+
+    It needs to know the file encoding to properly count the bytes in a given string.
     """
-
     f.seek(0, 0)
 
     # We use an array of Longs instead of a basic list to store the index.

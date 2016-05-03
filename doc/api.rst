@@ -22,6 +22,11 @@ Descriptor objects
     :members:
     :show-inheritance:
 
+File objects
+------------
+
+.. automodule:: dwca.files
+    :members:
 
 Helpers
 -------

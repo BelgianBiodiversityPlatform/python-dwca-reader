@@ -91,7 +91,7 @@ class Row(object):
 
 
 class CoreRow(Row):
-    """This class is used to represent a row/line from a Darwin Core Archive core file.
+    """This class is used to represent a row/line from a Darwin Core Archive data core file.
 
     You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
     or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_row_by_index,
@@ -168,8 +168,7 @@ class CoreRow(Row):
 
 
 class ExtensionRow(Row):
-    
-    """ This class is used to represent a row/line from a Darwin Core Archive extension file.
+    """This class is used to represent a row/line from a Darwin Core Archive extension file.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
     attribute of :class:`.CoreRow`.

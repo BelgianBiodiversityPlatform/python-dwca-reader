@@ -1,3 +1,10 @@
+Current
+-------
+
+- API: New public class: dwca.files.CSVDataFile (previously dwca.utils._DataFile)
+
+TODO: test and properly document this class.
+
 v0.9.2 (2016-04-29)
 -------------------
 
@@ -14,10 +21,11 @@ v0.9.0 (2016-04-05)
 -------------------
 
 - Support for new types of archives:
-	- DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.
-	- DwCA where data fields are enclosed by some character (using fieldsEnclosedBy when the Archive provides a Metafile, autodetection otherwise). Fixes issue #53.
-	- Archives without a metadata attribute in the Metafile. See #51.
-  - Tgz archives.
+
+  * DwCA without metafile (see page 2 of http://www.gbif.org/resource/80639), including or not a Metadata document (EML.xml). Fixes #47 and #7.
+  * DwCA where data fields are enclosed by some character (using fieldsEnclosedBy when the Archive provides a Metafile, autodetection otherwise). Fixes issue #53.
+  * Archives without a metadata attribute in the Metafile. See #51.
+  * Tgz archives.
 
 - API change: SectionDescriptor => DataFileDescriptor
 - API change: DataFileDescriptor.encoding => DataFileDescriptor.file_encoding

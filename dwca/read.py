@@ -11,7 +11,7 @@ from errno import ENOENT
 
 import xml.etree.ElementTree as ET
 
-from dwca.utils import _DataFile
+from dwca.files import CSVDataFile
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
 
@@ -103,17 +103,17 @@ class DwCAReader(object):
 
         if self.descriptor:
             #  We have an Archive descriptor that we can use to access data files.
-            self._corefile = _DataFile(self._workin_directory_path, self.descriptor.core)
-            self._extensionfiles = [_DataFile(work_directory=self._workin_directory_path,
-                                              file_descriptor=d)
+            self._corefile = CSVDataFile(self._workin_directory_path, self.descriptor.core)
+            self._extensionfiles = [CSVDataFile(work_directory=self._workin_directory_path,
+                                                file_descriptor=d)
                                     for d in self.descriptor.extensions]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
                 d = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
 
-                self._corefile = _DataFile(work_directory=self._workin_directory_path,
-                                           file_descriptor=d)
+                self._corefile = CSVDataFile(work_directory=self._workin_directory_path,
+                                             file_descriptor=d)
                 self._extensionfiles = []
             except InvalidSimpleArchive:
                 msg = "No metafile was found, but archive includes multiple files/directories."

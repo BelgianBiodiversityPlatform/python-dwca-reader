@@ -13,7 +13,7 @@ Quite simply:
 Example uses
 ------------
 
-Basic use, access to metadata and rows from the Core file
+Basic use, access to metadata and data from the Core file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
