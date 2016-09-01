@@ -11,20 +11,29 @@ from dwca.rows import CoreRow, ExtensionRow
 
 
 class CSVDataFile(object):
-    """Object used to access a DwcA-enclosed CSV data file.
+    """Object used to access a DwCA-enclosed CSV data file.
 
     :param work_directory: absolute path to the target directory (archive content, previously\
     extracted if necessary).
     :param file_descriptor: an instance of :class:`dwca.descriptors.DataFileDescriptor`\
     describing the data file.
 
+    The file content can be accessed:
+
+    * By iterating on this object
+    * With :meth:`get_row_by_position`
+    * With :meth:`get_all_rows_by_coreid` (extensions data file only)
+
+    On initialization, an index of new lines is build. This may take time, but makes random access\
+    faster.
     """
 
     # TODO: Test this class
     # Not done yet cause issues there will probably make DwCAReader tests fails anyway
     def __init__(self, work_directory, file_descriptor):
         """Initialize the CSVDataFile object."""
-        #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the constructor
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the
+        #: constructor.
         self.file_descriptor = file_descriptor
 
         self._core_fhandler = io.open(os.path.join(work_directory,
@@ -39,7 +48,7 @@ class CSVDataFile(object):
         self._line_offsets = _get_all_line_offsets(self._core_fhandler,
                                                    self.file_descriptor.file_encoding)
 
-        #: Number of lines to ignore/header lines in the CSV file.
+        #: Number of lines to ignore (header lines) in the CSV file.
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
     def _position_file_after_header(self):
@@ -78,8 +87,9 @@ class CSVDataFile(object):
         return index
 
     # TODO: For ExtensionRow and a specific field only, generalize ?
+    # TODO: What happens if called on a Core Row?
     def get_all_rows_by_coreid(self, core_id):
-        """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id match `core_id`."""
+        """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id field match `core_id`."""
         if not hasattr(self, '_coreid_index'):
             self._coreid_index = self._build_coreid_index()
 

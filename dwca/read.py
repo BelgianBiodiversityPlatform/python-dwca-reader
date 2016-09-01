@@ -87,7 +87,7 @@ class DwCAReader(object):
             self._directory_to_clean, self._workin_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
-        #: descriptor (``meta.xml``)
+        #: descriptor/metafile (``meta.xml``)
         try:
             self.descriptor = ArchiveDescriptor(self.open_included_file(METAFILE_NAME).read(),
                                                 files_to_ignore=extensions_to_ignore)
