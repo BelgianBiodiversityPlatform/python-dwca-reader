@@ -19,10 +19,12 @@ import xml.etree.ElementTree as ET
 
 
 class DataFileDescriptor(object):
-    """Class used to encapsulate a file section (Core or Extension) from the Archive Descriptor.
+    """Those objects describe a data file fom the archive.
 
-    It can be created from a <section> tag found in the :class:`ArchiveDescriptor` \
-    (see make_from_metafile_section) either by analyzing a data file (see make_from_file).
+    They're generally not instanciated manually, but rather by calling:
+
+        * :meth:`.make_from_metafile_section` (if the archive contains a metafile)
+        * :meth:`make_from_file` (created by analyzing the data file)
     """
 
     def __init__(self, created_from_file, raw_element, represents_corefile, datafile_type,
