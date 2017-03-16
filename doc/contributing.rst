@@ -15,24 +15,24 @@ Test coverage can be obtained after installing `coverage.py`_
 
 ::
 
-    $ nosetests --with-coverage --cover-erase --cover-package=dwca
-
-    Name                       Stmts   Miss  Cover   Missing
-    --------------------------------------------------------
+    nosetests --with-coverage --cover-erase --cover-package=dwca
+    ..........................................................................
+    Name                       Stmts   Miss  Cover
+    ----------------------------------------------
     dwca.py                        0      0   100%
     dwca/darwincore.py             0      0   100%
     dwca/darwincore/terms.py       1      0   100%
     dwca/darwincore/utils.py       4      0   100%
-    dwca/descriptors.py           92      1    99%   226
+    dwca/descriptors.py           90      1    99%
     dwca/exceptions.py             4      0   100%
-    dwca/read.py                 142      1    99%   198
-    dwca/rows.py                  72      4    94%   161, 164, 193, 196
-    dwca/utils.py                 59      0   100%
-    --------------------------------------------------------
-    TOTAL                        374      6    98%
+    dwca/files.py                 60      0   100%
+    dwca/read.py                 141      1    99%
+    dwca/rows.py                  78      4    95%
+    ----------------------------------------------
+    TOTAL                        378      6    98%
     ----------------------------------------------------------------------
-    Ran 71 tests in 1.608s
-    
+    Ran 74 tests in 1.119s
+
     OK
 
 Building the documentation
@@ -42,11 +42,12 @@ Locally:
 
 ::
 
+    $ pip install sphinx sphinx-rtd-theme
     $ cd doc; make clean; make html
 
 Online at http://python-dwca-reader.readthedocs.org/:
 
-The docs will be updated automagically upon commit on GitHub (thanks to Webhooks).
+The online docs will be updated automagically after pushing to GitHub.
 
 
 Releasing at PyPI

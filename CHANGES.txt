@@ -1,5 +1,5 @@
-Current
--------
+v0.10.0 (2017-03-16)
+--------------------
 
 - GBIFResultsReader is now depreacted.
 - API new: DwCAReader now provides source_metadata for GBIF-like archives (previously the main perk of GBIFResultsReader) 
