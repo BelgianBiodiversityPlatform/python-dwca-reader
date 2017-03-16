@@ -30,7 +30,7 @@ You can access this source metadata like this:
 
         # 2. From a CoreRow instance, we can get back to the metadata of its source dataset:
         first_row = results.get_row_by_index(0)
-        print first_row.source_metadata
+        print(first_row.source_metadata)
         # => <Source dataset EML (xml.etree.ElementTree.Element instance)>
 
 Interpreted/verbatim occurrences and multimedia data

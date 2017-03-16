@@ -33,14 +33,14 @@ Basic use, access to metadata and data from the Core file
         # The 'descriptor' attribute gives access to the Archive Descriptor (meta.xml) and allow
         # inspecting the archive:
         # For example, discover what the type the Core file is: (Occurrence, Taxon, ...)
-        print "Core type is: %s" % dwca.descriptor.core.type
+        print("Core type is: %s" % dwca.descriptor.core.type)
         # => Core type is: http://rs.tdwg.org/dwc/terms/Occurrence
 
         # Check if a Darwin Core term in present in the core file
         if 'http://rs.tdwg.org/dwc/terms/locality' in dwca.descriptor.core.terms:
-            print "This archive contains the 'locality' term in its core file."
+            print("This archive contains the 'locality' term in its core file.")
         else:
-            print "Locality term is not present."
+            print("Locality term is not present.")
 
         # Using full qualnames for DarwincCore terms (such as 'http://rs.tdwg.org/dwc/terms/country') is verbose...
         # The qualname() helper function make life easy for common terms.
@@ -62,8 +62,8 @@ Basic use, access to metadata and data from the Core file
             # row is an instance of CoreRow
             # iteration respects their order of appearance in the core file
 
-            # Print can be used for debugging purposes...
-            print row
+            # Print() can be used for debugging purposes...
+            print(row)
 
             # => --
             # => Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence
@@ -75,7 +75,7 @@ Basic use, access to metadata and data from the Core file
 
             # You can get the value of a specific Darwin Core term through
             # the "data" dict:
-            print "Value of 'locality' for this row: %s" % row.data[qn('locality')]
+            print("Value of 'locality' for this row: %s" % row.data[qn('locality')])
             # => Value of 'locality' for this row: Mumbai
 
         # Alternatively, we can get a list of core rows instead of iterating:
@@ -105,7 +105,7 @@ Access to Darwin Core Archives with extensions (star schema)
     with DwCAReader('archive_with_vernacularnames_extension.zip') as dwca:
         # Let's ask the archive what kind of extensions are in use:
         for e in dwca.descriptor.extensions:
-            print e.type
+            print(e.type)
         # => http://rs.gbif.org/terms/1.0/VernacularName
 
         first_core_row = dwca.rows[0]
@@ -113,7 +113,7 @@ Access to Darwin Core Archives with extensions (star schema)
         # Extension rows are accessible from a core row as a list of ExtensionRow instances:
         for extension_line in first_core_row.extensions:
             # Display all rows from extension files reffering to the first Core row
-            print extension_line
+            print(extension_line)
 
 
 Another example with multiple extensions (no new API here)
@@ -127,15 +127,15 @@ Another example with multiple extensions (no new API here)
         rows = dwca.rows
         ostrich = rows[0]
 
-        print "You'll find below all extensions rows reffering to Ostrich"
-        print "There should be 3 vernacular names and 2 taxon description"
+        print("You'll find below all extensions rows reffering to Ostrich")
+        print("There should be 3 vernacular names and 2 taxon description")
         for ext in ostrich.extensions:
-            print ext
+            print(ext)
 
-        print "We can then simply filter by type..."
+        print("We can then simply filter by type...")
         for ext in ostrich.extensions:
             if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
-                print ext
+                print(ext)
 
 GBIF Downloads
 ~~~~~~~~~~~~~~
