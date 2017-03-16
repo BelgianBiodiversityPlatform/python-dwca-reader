@@ -137,46 +137,9 @@ Another example with multiple extensions (no new API here)
             if ext.rowtype == 'http://rs.gbif.org/terms/1.0/VernacularName':
                 print ext
 
-GBIF Data Portal exports
-~~~~~~~~~~~~~~~~~~~~~~~~
+GBIF Downloads
+~~~~~~~~~~~~~~
 
-.. warning:: This feature will soon be deprecated.
-
-The GBIF Data Portal allow users to export searched occurrences as a zip file. The file format is actually a slightly augmented version of `Darwin Core Archive`_ (see :doc:`gbif_results`) that can also be read with this library in two different ways:
-
-- As a standard DwC-A file (see example above). In this case you won't have access to the additional, non-standard features.
-- Via the specific ``GBIFResultsReader``, see example below:
-
-
-.. code:: python
-
-    from dwca.read import GBIFResultsReader
-
-    with GBIFResultsReader('gbif-results.zip') as results:
-        # GBIFResultsReader being a subclass of DwCAReader, all previously described features will work the same.
-        #
-        # But there's more:
-        #
-        # 1) GBIF Portal downloads include citation and IP rights information about the resultset. They can be accessed via specific attributes:
-
-        print results.citations
-        # => "Please cite this data as follows, and pay attention to the rights documented in the rights.txt: ..."
-
-        print results.rights
-        # => "Dataset: [Name and license of source datasets for this resultset]"
-
-        # 2) In addition to the dataset-wide metadata (EML) file, these archives also include the source metadata for all datasets whose rows are part of the resultset.
-
-        # 2.1) At the archive level, they can be accessed as a dict:
-        print results.source_metadata
-        # {'dataset1_UUID': <dataset1 EML (xml.etree.ElementTree.Element instance)>,
-        #  'dataset2_UUID': <dataset2 EML (xml.etree.ElementTree.Element instance)>, ...}
-
-        # 2.2 From a CoreRow instance, we can get back to the metadata of its source dataset:
-        first_row = results.get_row_by_index(0)
-        
-        print first_row.source_metadata
-        # => <Source dataset EML (Element instance)>
-
+The GBIF website allow visitors to export occurrences as a Darwin Core Archive. The resulting file contains a few more things that are not part of the `Darwin Core Archive`_ standard. These additions also works with python-dwca-reader. See :doc:`gbif_results` for explanations on the file format and how to use it.
 
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive

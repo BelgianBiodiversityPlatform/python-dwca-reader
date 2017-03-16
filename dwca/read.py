@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides high-level classes to open and read DarwinCore Archive (DwC-A) files."""
+"""This module provides high-level classes to open and read DarwinCore Archive."""
 
 import os
 import zipfile
@@ -17,6 +17,7 @@ from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
 
 DEFAULT_METADATA_FILENAME = "EML.xml"
 METAFILE_NAME = "meta.xml"
+SOURCE_METADATA_DIRECTORY = 'dataset'
 
 
 class DwCAReader(object):
@@ -98,8 +99,12 @@ class DwCAReader(object):
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or None if the Archive contains no metadata.
         self.metadata = self._parse_metadata_file()
-        #:
-        self.source_metadata = None
+        #: If the archive contains source metadata (typically, GBIF downloads) this dict will
+        #: be something like:
+        #: {'dataset1_UUID': <dataset1 EML (xml.etree.ElementTree.Element instance)>,
+        #: 'dataset2_UUID': <dataset2 EML (xml.etree.ElementTree.Element instance)>, ...}
+        #: see :doc:`gbif_results` for more details.
+        self.source_metadata = self._load_source_metadata()
 
         if self.descriptor:
             #  We have an Archive descriptor that we can use to access data files.
@@ -118,6 +123,17 @@ class DwCAReader(object):
             except InvalidSimpleArchive:
                 msg = "No metafile was found, but archive includes multiple files/directories."
                 raise InvalidSimpleArchive(msg)
+
+    def _load_source_metadata(self):
+        r = {}
+
+        dataset_dir = os.path.join(self._workin_directory_path, SOURCE_METADATA_DIRECTORY)
+        if os.path.isdir(dataset_dir):
+            for f in os.listdir(dataset_dir):
+                if os.path.isfile(os.path.join(dataset_dir, f)):
+                    key = os.path.splitext(f)[0]
+                    r[key] = self._parse_xml_included_file(os.path.join(SOURCE_METADATA_DIRECTORY, f))
+        return r
 
     @property
     def use_extensions(self):
@@ -313,7 +329,7 @@ class DwCAReader(object):
     def __next__(self):
         return self.next()
 
-    def next(self):
+    def next(self):  # NOQA
         r = self._corefile.get_row_by_position(self._corefile_pointer)
         if r:
             # Set up linked data so the CoreRow will know about them
@@ -330,34 +346,10 @@ class GBIFResultsReader(DwCAReader):
     """This class is used to represent the slightly augmented variant of Darwin Core Archive\
     produced by the new GBIF Data Portal when exporting occurrences.
 
-    It provides a few additions to :class:`.DwCAReader` that reflect the additional data provided
-    in these specific archives:
-
-        - The content of `citations.txt` and `rights.txt` is available via specific properties.
-        - (core) Rows accessed trough this class have a `source_metadata` property that gives\
-        access to the metadata of the originating dataset.
+    .. warning:: This class is deprecated. See :doc:`gbif_results` to learn how to achive the same\
+    results with :class:`.DwCAReader`.
 
     """
-
-    def __init__(self, path):
-        super(GBIFResultsReader, self).__init__(path)
-        #: A dict containing source/original metadata of the archive, such as
-        #: {'dataset_uuid': 'dataset_metadata', ...}
-        self.source_metadata = self._dataset_metadata_to_dict('dataset')
-
-    def _dataset_metadata_to_dict(self, directory):
-        dataset_dir = os.path.join(self._workin_directory_path, directory)
-
-        r = {}
-        for f in os.listdir(dataset_dir):
-            if os.path.isfile(os.path.join(dataset_dir, f)):
-                key = os.path.splitext(f)[0]
-                r[key] = self._parse_xml_included_file(os.path.join(directory, f))
-        return r
-
-    # Compared to a standard DwC-A, GBIF results export contains
-    # two additional files to give details about IP rights and citations
-    # We make them accessible trough two simples properties
 
     @property
     def citations(self):

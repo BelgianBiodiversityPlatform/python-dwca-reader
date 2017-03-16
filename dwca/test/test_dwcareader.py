@@ -681,11 +681,57 @@ class TestDwCAReader(unittest.TestCase):
             # (61 - and probably an IndexError - if errrors)
             self.assertEqual(64, len(rows[0].data))
 
+    def test_source_metadata(self):
+        # Sandard archive: no source metadata
+        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
+            self.assertEqual(star_dwca.source_metadata, {})
+
+        # GBIF download: source metadata present
+        with DwCAReader(GBIF_RESULTS_PATH) as results:
+            # We have 23 EML files in dataset/
+            self.assertEqual(23, len(results.source_metadata))
+            # Assert a key is present
+            self.assertTrue('eccf4b09-f0c8-462d-a48c-41a7ce36815a' in
+                            results.source_metadata)
+
+            self.assertFalse('incorrect-UUID' in results.source_metadata)
+
+            # Assert it's the correct EML file (content!)
+            sm = results.source_metadata
+            metadata = sm['eccf4b09-f0c8-462d-a48c-41a7ce36815a']
+
+            self.assertIsInstance(metadata, ET.Element)
+
+            # Assert we can read basic fields from EML:
+            self.assertEqual(metadata.find('dataset').find('creator').find('individualName')
+                             .find('givenName').text,
+                             'Rob')
+
     def test_row_source_metadata(self):
-        # For normal DwC-A, it should always be none (NO source data
+        # For normal DwC-A, it should always be None (NO source data
         # available in archive.)
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
-            self.assertEqual(None, star_dwca.rows[0].source_metadata)
+            self.assertIsNone(star_dwca.rows[0].source_metadata)
+
+        # But it should be supported for GBIF-originating archives
+        # (was previously supported with GBIFResultsReader)
+        with DwCAReader(GBIF_RESULTS_PATH) as results:
+            first_row = results.get_row_by_id('607759330')
+            m = first_row.source_metadata
+
+            self.assertIsInstance(m, ET.Element)
+
+            v = (m.find('dataset').find('creator').find('individualName')
+                  .find('givenName').text)
+
+            self.assertEqual(v, 'Stanley')
+
+            last_row = results.get_row_by_id('782700656')
+            m = last_row.source_metadata
+
+            self.assertIsInstance(m, ET.Element)
+            v = m.find('dataset').find('language').text
+            self.assertEqual(v, 'en')
 
     def test_unknown_archive_format(self):
         """ Ensure InvalidArchive is raised when passed file is not a .zip not .tgz."""

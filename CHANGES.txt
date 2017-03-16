@@ -1,9 +1,10 @@
 Current
 -------
 
-- API: New public class: dwca.files.CSVDataFile (previously dwca.utils._DataFile)
-
-TODO: test and properly document this class.
+- GBIFResultsReader is now depreacted.
+- API new: DwCAReader now provides source_metadata for GBIF-like archives (previously the main perk of GBIFResultsReader) 
+- API change: dwca.source_metadata is an empty dict (previously: None) when the archive doesn't has source metadata
+- API new: dwca.utils._DataFile is now public and renamed to dwca.files.CSVDataFile.
 
 v0.9.2 (2016-04-29)
 -------------------
