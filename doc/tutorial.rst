@@ -174,6 +174,12 @@ As a small example, some applications on the ``core_df``:
     # Number of records for each institutioncode
     core_df["institutionCode"].value_counts()
 
+    # Select the coordinate information of the first twenty records
+    core_df.loc[:20, ["decimalLatitude", "decimalLongitude"]]
+
+    # Count the number of records with date information after 1950 
+    sum(core_df["verbatimYear"] > 1950)
+
     # Convert eventDate to DateTime python object
     core_df['eventDate'] = pd.to_datetime(core_df['eventDate'])
 
