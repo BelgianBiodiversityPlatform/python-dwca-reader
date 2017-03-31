@@ -201,7 +201,46 @@ For more information about `Pandas`_ and `Seaborn`_, see their respective docume
 .. _Pandas: http://pandas.pydata.org/pandas-docs/stable/
 .. _Seaborn: https://seaborn.pydata.org/
 
-Remark that reading in the data to Pandas will load the entire file into memory. For large archives, this won't be feasible. Pandas support the usage of chunks, reading in a processing the data in chunks. As an example, consider the selection of those occurrences for which the ``eventDate`` was a Sunday:
+
+When the DwCA contains multiple files, joining the extensions with the core file could be of interest for further analysis.
+
+.. code:: python
+
+    import pandas as pd
+    from dwca.read import DwCAReader
+
+    with DwCAReader('dwca-2extensions.zip') as dwca:
+
+        # Check the core file of the Archive  (Occurrence, Taxon, ...)
+        print("Core type is: {}".format(dwca.descriptor.core.type))
+
+        # As the core file is an Occurrence, stored in temporary folder
+        core_path = dwca.absolute_temporary_path('taxon.txt')
+
+        # read the core as dataframe (with header)
+        taxon_df = pd.read_csv(core_path, delimiter="\t")
+
+        # Check the available extensions
+        print("Available extensions: {}".format([ext.split("/")[-1] for ext in dwca.descriptor.extensions_type]))
+
+        # Load the description extension
+        descr_path = dwca.absolute_temporary_path('description.txt')
+        descr_df = pd.read_csv(descr_path, delimiter="\t")
+
+        # Load the VernacularName extension
+        vern_path = dwca.absolute_temporary_path('vernacularname.txt')
+        vern_df = pd.read_csv(vern_path, delimiter="\t")
+
+    # Join the information of the description and vernacularname extension to the core taxon information
+    # (cfr. database JOIN)
+    taxon_df = pd.merge(taxon_df, descr_df, on='id', how="left")
+    taxon_df = pd.merge(taxon_df, vern_df, on='id', how="left")
+
+The result is the core file joined with the extension files. More information about the Pandas merge is provided in the `documentation`_.
+
+.. _documentation: http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.merge.html
+
+**Remark** that reading in the data to Pandas will load the entire file into memory. For large archives, this won't be feasible. Pandas support the usage of chunks, reading in a processing the data in chunks. As an example, consider the selection of those occurrences for which the ``eventDate`` was a Sunday:
 
 .. code:: python
 
@@ -228,7 +267,7 @@ Remark that reading in the data to Pandas will load the entire file into memory.
 
     sunday_occ = pd.concat(sunday_occ)
 
-More advanced processing is supported. However, when only interested in counting the number of occurrences for a specific condition, Pandas is not always required. As an example, counting the number of occurrences for each species in the data set is easily supported by the ``Counter`` datatype of Python:
+More advanced processing is supported by Pandas. However, when only interested in counting the number of occurrences for a specific condition, Pandas is not always required. As an example, counting the number of occurrences for each species in the data set is easily supported by the ``Counter`` datatype of Python:
 
 .. code:: python
 
@@ -244,7 +283,7 @@ More advanced processing is supported. However, when only interested in counting
             count_species.update([row.data[qn('scientificName')]])
 
 
-Hence, the added value of Pandas depends on the type of data handling question. Some more extensive applications of Pandas to work with Darwin Core data is provided in this `data cleaning`_ tutorial and `data analysis`_ tutorial.
+Hence, the added value of Pandas depends on the type of analysis. Some more extensive applications of Pandas to work with Darwin Core data is provided in this `data cleaning`_ tutorial and `data analysis`_ tutorial.
 
 .. _data cleaning: https://github.com/jorisvandenbossche/DS-python-data-analysis/blob/master/_solved/case2_biodiversity_cleaning.ipynb
 .. _data analysis: https://github.com/jorisvandenbossche/DS-python-data-analysis/blob/master/_solved/case2_biodiversity_analysis.ipynb
