@@ -270,7 +270,7 @@ class DwCAReader(object):
 
         Raises InvalidArchive if not a zip nor a tgz file.
         """
-        tmp_dir = mkdtemp()[1]  # Creating a temporary directory
+        tmp_dir = mkdtemp()  # Creating a temporary directory
 
         # We first try to unzip (most common archives)
         try:
