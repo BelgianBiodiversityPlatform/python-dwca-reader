@@ -82,7 +82,9 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_subdirectory_archive(self):
         """Ensure we support Archives where all the content is under a single directory."""
-        num_files_before = len(os.listdir('.'))
+        tmp_dir = tempfile.gettempdir()
+
+        num_files_before = len(os.listdir(tmp_dir))
         num_files_during = None
         with DwCAReader(SUBDIR_ARCHIVE_PATH) as dwca:
             # Ensure we have access to metadata
@@ -95,9 +97,9 @@ class TestDwCAReader(unittest.TestCase):
             rows = list(dwca)
             self.assertEqual('Borneo', rows[0].data[qn('locality')])
 
-            num_files_during = len(os.listdir('.'))
+            num_files_during = len(os.listdir(tmp_dir))
 
-        num_files_after = len(os.listdir('.'))
+        num_files_after = len(os.listdir(tmp_dir))
 
         # Let's also check temporary dir is correctly created and removed.
         self.assertEqual(num_files_before + 1, num_files_during)
@@ -361,9 +363,11 @@ class TestDwCAReader(unittest.TestCase):
 
         (complementay to test_cleanup()
         """
-        num_files_before = len(os.listdir('.'))
+        tmp_dir = tempfile.gettempdir()
+
+        num_files_before = len(os.listdir(tmp_dir))
         with DwCAReader(BASIC_ARCHIVE_PATH):
-            num_files_during = len(os.listdir('.'))
+            num_files_during = len(os.listdir(tmp_dir))
 
         self.assertEqual(num_files_before, num_files_during - 1)
 
