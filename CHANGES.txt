@@ -1,5 +1,5 @@
-Current
--------
+v0.10.1 (2017-04-04)
+--------------------
 
 - fixed temporary directory: previoulsy, it was always created under current dir instead of something chosen by Python such as /tmp.
 
