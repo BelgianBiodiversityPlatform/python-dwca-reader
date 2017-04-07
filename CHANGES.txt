@@ -1,3 +1,8 @@
+Current
+-------
+
+- data files are closed before cleanup
+
 v0.10.1 (2017-04-04)
 --------------------
 

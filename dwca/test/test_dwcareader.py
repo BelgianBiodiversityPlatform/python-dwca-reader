@@ -299,6 +299,7 @@ class TestDwCAReader(unittest.TestCase):
             f = open(path_to_occ)
             content = f.read()
             self.assertTrue(content.startswith("id"))
+            f.close()
 
         with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
             # Also check if the archive is a directory
@@ -744,6 +745,8 @@ class TestDwCAReader(unittest.TestCase):
         with self.assertRaises(InvalidArchive):
             with DwCAReader(invalid_origin_file.name):
                 pass
+
+        invalid_origin_file.close()
 
 
 if __name__ == "__main__":
