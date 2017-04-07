@@ -36,25 +36,25 @@ class CSVDataFile(object):
         #: constructor.
         self.file_descriptor = file_descriptor
 
-        self._core_fhandler = io.open(os.path.join(work_directory,
-                                                   self.file_descriptor.file_location),
-                                      mode='r',
-                                      encoding=self.file_descriptor.file_encoding,
-                                      newline=self.file_descriptor.lines_terminated_by,
-                                      errors='replace')
+        self._file_stream = io.open(os.path.join(work_directory,
+                                                 self.file_descriptor.file_location),
+                                    mode='r',
+                                    encoding=self.file_descriptor.file_encoding,
+                                    newline=self.file_descriptor.lines_terminated_by,
+                                    errors='replace')
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = _get_all_line_offsets(self._core_fhandler,
+        self._line_offsets = _get_all_line_offsets(self._file_stream,
                                                    self.file_descriptor.file_encoding)
 
         #: Number of lines to ignore (header lines) in the CSV file.
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
     def _position_file_after_header(self):
-        self._core_fhandler.seek(0, 0)
+        self._file_stream.seek(0, 0)
         if self.lines_to_ignore > 0:
-            self._core_fhandler.readlines(self.lines_to_ignore)
+            self._file_stream.readlines(self.lines_to_ignore)
 
     def __iter__(self):
         self._position_file_after_header()
@@ -64,7 +64,7 @@ class CSVDataFile(object):
         return self.next()
 
     def next(self):  # NOQA
-        for line in self._core_fhandler:
+        for line in self._file_stream:
             return line
 
         raise StopIteration
@@ -111,8 +111,8 @@ class CSVDataFile(object):
 
     # Raises IndexError if position is incorrect
     def _get_line_by_position(self, position):
-        self._core_fhandler.seek(self._line_offsets[position + self.lines_to_ignore], 0)
-        return self._core_fhandler.readline()
+        self._file_stream.seek(self._line_offsets[position + self.lines_to_ignore], 0)
+        return self._file_stream.readline()
 
 
 def _get_all_line_offsets(f, encoding):
