@@ -227,6 +227,8 @@ class DwCAReader(object):
         if invalid:
             raise InvalidSimpleArchive()
 
+    # TODO: also offer a close_included_file() counterpart
+    # TODO: Document: Win won't be able to cleanup if some files are not closed
     def open_included_file(self, relative_path, *args, **kwargs):
         """Simple wrapper around Python's open build-in function.
 
@@ -312,6 +314,10 @@ class DwCAReader(object):
             (see example above).
 
         """
+        #  Windows can't remove a dir with opened files
+        self._corefile.close()
+        [f.close() for f in self._extensionfiles]
+
         if self._directory_to_clean:
             self._cleanup_temporary_dir()
 

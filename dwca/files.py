@@ -114,6 +114,11 @@ class CSVDataFile(object):
         self._file_stream.seek(self._line_offsets[position + self.lines_to_ignore], 0)
         return self._file_stream.readline()
 
+    # TODO: test this method
+    def close(self):
+        """Close the file."""
+        self._file_stream.close()
+
 
 def _get_all_line_offsets(f, encoding):
     """Parse the file whose handler is given and return an array (long) containing the start offset\
