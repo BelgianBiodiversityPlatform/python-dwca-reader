@@ -739,14 +739,14 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(v, 'en')
 
     def test_unknown_archive_format(self):
-        """ Ensure InvalidArchive is raised when passed file is not a .zip not .tgz."""
-        invalid_origin_file = tempfile.NamedTemporaryFile()
+        """ Ensure InvalidArchive is raised when passed file is not a .zip nor .tgz."""
+        invalid_origin_file = tempfile.NamedTemporaryFile(delete=False)
 
         with self.assertRaises(InvalidArchive):
             with DwCAReader(invalid_origin_file.name):
                 pass
 
-        invalid_origin_file.close()
+        os.remove(invalid_origin_file.name)
 
 
 if __name__ == "__main__":
