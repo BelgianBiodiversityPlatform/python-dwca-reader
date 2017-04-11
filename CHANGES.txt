@@ -1,7 +1,7 @@
-Current
--------
+v0.10.2 (2017-04-11)
+--------------------
 
-- data files are closed before cleanup
+- experimental support for Windows
 
 v0.10.1 (2017-04-04)
 --------------------
