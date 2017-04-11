@@ -746,7 +746,7 @@ class TestDwCAReader(unittest.TestCase):
             with DwCAReader(invalid_origin_file.name):
                 pass
 
-        os.remove(invalid_origin_file.name)
+        invalid_origin_file.close()
 
 
 if __name__ == "__main__":
