@@ -69,6 +69,11 @@ class CSVDataFile(object):
 
         raise StopIteration
 
+    def get_coreid_index(self):
+        if not hasattr(self, '_coreid_index'):
+            self._coreid_index = self._build_coreid_index()
+        return self._coreid_index
+
     # Returns a index of the per core_id positions of Rows in the file:
     # {core_id1: []}
 
