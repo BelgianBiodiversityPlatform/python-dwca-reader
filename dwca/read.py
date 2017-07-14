@@ -135,6 +135,26 @@ class DwCAReader(object):
                     r[key] = self._parse_xml_included_file(os.path.join(SOURCE_METADATA_DIRECTORY, f))
         return r
 
+    def orphaned_extension_rows(self):
+        if (len(self._extensionfiles) > 0):
+
+            temp_ids = {}
+            for row in self:
+                temp_ids[row.id] = 1
+            ids = temp_ids.keys()
+
+            indexes = {}
+            for extension in self._extensionfiles:
+                coreid_index = extension.get_coreid_index().copy()
+                for id in ids:
+                    coreid_index.pop(id, None)
+                indexes[extension.file_descriptor.file_location] = coreid_index
+
+            return indexes
+
+        else:
+            return {}
+
     @property
     def use_extensions(self):
         """Return True if the Archive makes use of extensions."""
