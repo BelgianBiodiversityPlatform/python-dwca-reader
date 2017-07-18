@@ -1,3 +1,8 @@
+Current
+-------
+
+New public attribute: CSVDataFile.coreid_index TODO: test/document/ensure name is good
+
 v0.10.2 (2017-04-11)
 --------------------
 

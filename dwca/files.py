@@ -51,6 +51,8 @@ class CSVDataFile(object):
         #: Number of lines to ignore (header lines) in the CSV file.
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
+        self._coreid_index = None
+
     def _position_file_after_header(self):
         self._file_stream.seek(0, 0)
         if self.lines_to_ignore > 0:
@@ -68,6 +70,12 @@ class CSVDataFile(object):
             return line
 
         raise StopIteration
+
+    @property
+    def coreid_index(self):
+        if self._coreid_index is None:
+            self._coreid_index = self._build_coreid_index()
+        return self._coreid_index
 
     # Returns a index of the per core_id positions of Rows in the file:
     # {core_id1: []}
@@ -90,13 +98,10 @@ class CSVDataFile(object):
     # TODO: What happens if called on a Core Row?
     def get_all_rows_by_coreid(self, core_id):
         """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id field match `core_id`."""
-        if not hasattr(self, '_coreid_index'):
-            self._coreid_index = self._build_coreid_index()
-
-        if core_id not in self._coreid_index:
+        if core_id not in self.coreid_index:
             return []
         else:
-            return [self.get_row_by_position(p) for p in self._coreid_index[core_id]]
+            return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]
 
     def get_row_by_position(self, position):
         """Return the row at `position` in the file."""
