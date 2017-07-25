@@ -30,8 +30,7 @@ class CSVDataFile(object):
     faster.
     """
 
-    # TODO: Test this class
-    # Not done yet cause issues there will probably make DwCAReader tests fails anyway
+    # TODO: More tests for this class
     def __init__(self, work_directory, file_descriptor):
         """Initialize the CSVDataFile object."""
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the
@@ -68,8 +67,8 @@ class CSVDataFile(object):
         return self.next()
 
     def next(self):  # NOQA
-        for line in self._file_stream:
-            return line
+        for row in self._file_stream:
+            return row
 
         raise StopIteration
 
