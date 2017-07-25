@@ -1,6 +1,7 @@
 Current
 -------
 
+- API new: DwCAReader.orphaned_extension_rows() (thanks to Pieter Provoost). TODO: document/test/refactor
 - New public attribute: CSVDataFile.coreid_index (previously known as CSVDataFile._coreid_index).
 
 v0.10.2 (2017-04-11)
