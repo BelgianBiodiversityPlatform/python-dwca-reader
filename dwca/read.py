@@ -136,6 +136,16 @@ class DwCAReader(object):
         return r
 
     def orphaned_extension_rows(self):
+        """Return a dict of the orphaned extension rows.
+
+        Orphaned extension rows are extension rows who reference non-existing core rows. This methods returns a dict
+        such as: { 'description.txt': {u'5': [3, 4], u'6': [5]},
+                   'vernacularname.txt': {u'7': [4]}}
+
+        (meaning: in description.txt, rows at position 3 and 4 reference a core row whose ID is '5', but such a core
+        row doesn't exists.
+
+        """
         if (len(self._extensionfiles) > 0):
 
             temp_ids = {}

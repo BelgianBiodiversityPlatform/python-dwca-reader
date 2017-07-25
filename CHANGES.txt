@@ -2,6 +2,9 @@ Current
 -------
 
 - API new: DwCAReader.orphaned_extension_rows() (thanks to Pieter Provoost). TODO: document/test/refactor
+Doesn't it make more sense to return a list/tuple of ExtensionRows? In that case, we should be able to extract position of row in source file
+(new 'position' attribute to row?) and the filename of the extension
+
 - New public attribute: CSVDataFile.coreid_index (previously known as CSVDataFile._coreid_index).
 
 v0.10.2 (2017-04-11)

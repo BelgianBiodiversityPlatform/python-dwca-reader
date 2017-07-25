@@ -20,7 +20,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       SUBDIR_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
                       BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
                       SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME,
-                      BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR)
+                      BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR, DWCA_ORPHANED_ROWS)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -747,6 +747,28 @@ class TestDwCAReader(unittest.TestCase):
                 pass
 
         invalid_origin_file.close()
+
+    def test_orphaned_extension_rows_noext(self):
+        """ orphaned_extension_rows returns {} when there's no extensions."""
+        # Archive without extensions: we expect {}
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            self.assertEqual({}, dwca.orphaned_extension_rows())
+
+    def test_orphaned_extension_rows_no_orphans(self):
+        # Archive with extensions, but no orphaned extension rows
+
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            expected = {'description.txt': {}, 'vernacularname.txt': {}}
+            self.assertEqual(expected, dwca.orphaned_extension_rows())
+
+    def test_orphaned_extension_rows(self):
+        # Archive with extensions and orphaned rows
+        with DwCAReader(DWCA_ORPHANED_ROWS) as dwca:
+            expected = {
+                'description.txt': {u'5': [3, 4], u'6': [5]},
+                'vernacularname.txt': {u'7': [4]}
+            }
+            self.assertEqual(expected, dwca.orphaned_extension_rows())
 
 
 if __name__ == "__main__":
