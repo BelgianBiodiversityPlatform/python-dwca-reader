@@ -70,7 +70,7 @@ class DwCAReader(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None):
@@ -92,8 +92,8 @@ class DwCAReader(object):
         try:
             self.descriptor = ArchiveDescriptor(self.open_included_file(METAFILE_NAME).read(),
                                                 files_to_ignore=extensions_to_ignore)
-        except IOError as e:
-            if e.errno == ENOENT:
+        except IOError as exc:
+            if exc.errno == ENOENT:
                 self.descriptor = None
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
@@ -115,10 +115,10 @@ class DwCAReader(object):
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
-                d = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
+                descriptor = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
 
                 self._corefile = CSVDataFile(work_directory=self._workin_directory_path,
-                                             file_descriptor=d)
+                                             file_descriptor=descriptor)
                 self._extensionfiles = []
             except InvalidSimpleArchive:
                 msg = "No metafile was found, but archive includes multiple files/directories."
@@ -170,8 +170,8 @@ class DwCAReader(object):
         for row in self:
             if row.id == str(row_id):
                 return row
-        else:
-            raise RowNotFound
+
+        raise RowNotFound
 
     def get_row_by_index(self, index):
         """Return a core row according to its position/index in core file.
@@ -189,8 +189,8 @@ class DwCAReader(object):
         for (i, row) in enumerate(self):
             if i == index:
                 return row
-        else:
-            raise RowNotFound
+
+        raise RowNotFound
 
     def absolute_temporary_path(self, relative_path):
         """Return the absolute path of the file located at relative_path within the archive.
@@ -211,7 +211,7 @@ class DwCAReader(object):
         # (one single data file + possibly some metadata), returns the name of the data file.
         #
         # Otherwise, throws an InvalidSimpleArchive exception.
-        path, dirs, files = next(os.walk(self._workin_directory_path))
+        _, _, files = next(os.walk(self._workin_directory_path))
 
         if len(files) == 1:  # We found a single file
             return files[0]
@@ -219,13 +219,8 @@ class DwCAReader(object):
             # Two files found: if one of them is EML.xml, the other is considered as the data file
             if DEFAULT_METADATA_FILENAME in files:
                 return [f for f in files if f is not DEFAULT_METADATA_FILENAME][0]
-            else:
-                invalid = True
-        else:
-            invalid = True
 
-        if invalid:
-            raise InvalidSimpleArchive()
+        raise InvalidSimpleArchive()
 
     # TODO: Document: Win won't be able to cleanup if some files are not closed
     def open_included_file(self, relative_path, *args, **kwargs):
@@ -244,13 +239,13 @@ class DwCAReader(object):
         """
         # If the archive has descriptor, look for the metadata filename there.
         if self.descriptor and self.descriptor.metadata_filename:
-            fn = self.descriptor.metadata_filename
+            filename = self.descriptor.metadata_filename
 
             try:
-                return self._parse_xml_included_file(fn)
-            except IOError as e:
-                if e.errno == ENOENT:  # File not found
-                    msg = "{} is referenced in the archive descriptor but missing.".format(fn)
+                return self._parse_xml_included_file(filename)
+            except IOError as exc:
+                if exc.errno == ENOENT:  # File not found
+                    msg = "{} is referenced in the archive descriptor but missing.".format(filename)
                     raise InvalidArchive(msg)
 
         else:  # Otherwise, the metadata file has to be named 'EML.xml'
@@ -315,7 +310,8 @@ class DwCAReader(object):
         """
         #  Windows can't remove a dir with opened files
         self._corefile.close()
-        [f.close() for f in self._extensionfiles]
+        for extension_file in self._extensionfiles:
+            extension_file.close()
 
         if self._directory_to_clean:
             self._cleanup_temporary_dir()

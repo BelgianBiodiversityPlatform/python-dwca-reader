@@ -9,6 +9,8 @@ from array import array
 
 from dwca.rows import CoreRow, ExtensionRow
 
+# TODO: create text representation for those objects for easier debugging (avoid [<dwca.files.CSVDataFile object at 0x10c28d9d0>, <dwca.files.CSVDataFile object at 0x10c28da50>])
+
 
 class CSVDataFile(object):
     """Object used to access a DwCA-enclosed CSV data file.
@@ -73,25 +75,43 @@ class CSVDataFile(object):
 
     @property
     def coreid_index(self):
+        """An index of the core rows referenced by this data file.
+
+        It is a Python dict such as:
+        ::
+        
+            { 
+            core_id1: [1],    # Row at position 1 references a Core Row whose ID is core_id1 
+            core_id2: [8, 10] # Rows at position 8 and 10 references a Core Row whose ID is core_id2
+            }
+
+        :raises: AttributeError if accessed on a core data file.
+
+        .. warning::
+
+            coreid_index is only available for extension data files.
+
+        .. warning::
+
+            Creating this index can be time and memory consuming for large archives, so it's created on the fly
+            at first access.
+        """
+        if self.file_descriptor.represents_corefile:
+            raise AttributeError('core_id index is only available for extension data files')
+
         if self._coreid_index is None:
             self._coreid_index = self._build_coreid_index()
+
         return self._coreid_index
 
-    # Returns a index of the per core_id positions of Rows in the file:
-    # {core_id1: []}
-
-    # TODO: Generalize this so we can create indexes on any field ?
     def _build_coreid_index(self):
+        """Build and return an index of Core Rows IDs suitable for `CSVDataFile.coreid_index`."""
         index = {}
-        pos = 0
-        for l in self:
-            tmp = ExtensionRow(l, self.file_descriptor)
-            if tmp.core_id not in index:
-                index[tmp.core_id] = [pos]
-            else:
-                index[tmp.core_id].append(pos)
 
-            pos = pos + 1
+        for position, row in enumerate(self):
+            tmp = ExtensionRow(row, self.file_descriptor)
+            index.setdefault(tmp.core_id, []).append(position)
+
         return index
 
     # TODO: For ExtensionRow and a specific field only, generalize ?
@@ -137,7 +157,7 @@ def _get_all_line_offsets(f, encoding):
     """
     f.seek(0, 0)
 
-    # We use an array of Longs instead of a basic list to store the index.
+    # We use an array of Longs instead of a list to store the index.
     # It's much more memory efficient, and a few tests w/ 1-4Gb uncompressed archives
     # didn't shown any significant slowdown.
     #

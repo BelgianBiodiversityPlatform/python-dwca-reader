@@ -1,7 +1,7 @@
 Current
 -------
 
-New public attribute: CSVDataFile.coreid_index TODO: test/document/ensure name is good
+- New public attribute: CSVDataFile.coreid_index (previously known as CSVDataFile._coreid_index).
 
 v0.10.2 (2017-04-11)
 --------------------
@@ -11,7 +11,7 @@ v0.10.2 (2017-04-11)
 v0.10.1 (2017-04-04)
 --------------------
 
-- fixed temporary directory: previoulsy, it was always created under current dir instead of something chosen by Python such as /tmp.
+- fixed temporary directory: previously, it was always created under current dir instead of something chosen by Python such as /tmp.
 
 v0.10.0 (2017-03-16)
 --------------------

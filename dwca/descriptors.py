@@ -115,9 +115,9 @@ class DataFileDescriptor(object):
             dr = csv.reader(datafile, dialect)
             columns = next(dr)
 
-            fields = []
-            for i, c in enumerate(columns):
-                fields.append({'index': i, 'term': c, 'default': None})
+            fields = [
+                {'index': i, 'term': column, 'default': None} for i, column in enumerate(columns)
+            ]
 
         return cls(created_from_file=True,
                    raw_element=None,  # No metafile, so no XML section to store
@@ -130,8 +130,7 @@ class DataFileDescriptor(object):
                    fields=fields,
                    lines_terminated_by=lines_terminated_by,
                    fields_enclosed_by=fields_enclosed_by,
-                   fields_terminated_by=fields_terminated_by
-                   )
+                   fields_terminated_by=fields_terminated_by)
 
     @classmethod
     def make_from_metafile_section(cls, section_tag):
@@ -148,13 +147,13 @@ class DataFileDescriptor(object):
             coreid_index = int(section_tag.find('coreid').get('index'))
 
         fields = []
-        for f in section_tag.findall('field'):
-            default = f.get('default', None)
+        for field_tag in section_tag.findall('field'):
+            default = field_tag.get('default', None)
 
             # Default fields don't have an index attribute
-            index = (int(f.get('index')) if f.get('index') else None)
+            index = (int(field_tag.get('index')) if field_tag.get('index') else None)
 
-            fields.append({'term': f.get('term'), 'index': index, 'default': default})
+            fields.append({'term': field_tag.get('term'), 'index': index, 'default': default})
 
         file_encoding = section_tag.get('encoding')
 
@@ -214,8 +213,8 @@ class DataFileDescriptor(object):
         if self.created_from_file:
             # Single-file archives also have a header line with DwC terms
             return 1
-        else:
-            return int(self.raw_element.get('ignoreHeaderLines', 0))
+
+        return int(self.raw_element.get('ignoreHeaderLines', 0))
 
 
 class ArchiveDescriptor(object):
@@ -263,7 +262,7 @@ def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
     if raw_attribute:
         if sys.version_info[0] == 2:  # Python 2
             return raw_attribute.decode("string_escape")
-        else:
-            return bytes(raw_attribute, encoding).decode("unicode-escape")
-    else:
-            return default_value
+
+        return bytes(raw_attribute, encoding).decode("unicode-escape")
+
+    return default_value
