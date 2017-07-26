@@ -16,6 +16,7 @@ class Row(object):
     def _build_str(self, source_str, id_str):
         txt = ("--\n"
                "Rowtype: {rowtype}\n"
+               "Position: {position}\n"
                "Source: {source_str}\n"
                "{id_row}\n"
                "Reference extension rows: {extension_flag}\n"
@@ -31,16 +32,21 @@ class Row(object):
             source_metadata_flag = 'No'
 
         return txt.format(rowtype=self.rowtype,
+                          position=self.position,
                           source_str=source_str,
                           data=self.data,
                           id_row=id_str,
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, csv_line, descriptor):
+    def __init__(self, csv_line, position, descriptor):
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
         self.descriptor = descriptor
+
+        #: The row position/index (starting at 0) in the source data file. This can be used, for example with
+        #: :meth:`DwCAReader.get_row_by_index` or :meth:`CSVDataFile.get_row_by_position`.
+        self.position = position
 
         #: The csv line type as stated in the archive descriptor.
         #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
@@ -102,8 +108,8 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, section_descriptor):
-        super(CoreRow, self).__init__(line, section_descriptor)
+    def __init__(self, line, position, section_descriptor):
+        super(CoreRow, self).__init__(line, position, section_descriptor)
 
         #: The row id (from the data file).
         if self.descriptor.id_index is not None:
@@ -155,7 +161,7 @@ class CoreRow(Row):
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
         return (self.descriptor, self.id, self.data, self.extensions, self.source_metadata,
-                self.rowtype, self.raw_fields)
+                self.rowtype, self.raw_fields, self.position)
 
     def __eq__(self, other):
         return self.__key() == other.__key()
@@ -178,15 +184,15 @@ class ExtensionRow(Row):
         id_str = "Core row id: " + str(self.core_id)
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
-    def __init__(self, line, descriptor):
-        super(ExtensionRow, self).__init__(line, descriptor)
+    def __init__(self, line, position, descriptor):
+        super(ExtensionRow, self).__init__(line, position, descriptor)
 
         #: The id of the core row this extension is reffering to.
         self.core_id = self.raw_fields[descriptor.coreid_index]
 
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
-        return (self.descriptor, self.core_id, self.data, self.rowtype, self.raw_fields)
+        return (self.descriptor, self.core_id, self.data, self.rowtype, self.raw_fields, self.position)
 
     def __eq__(self, other):
         return self.__key() == other.__key()

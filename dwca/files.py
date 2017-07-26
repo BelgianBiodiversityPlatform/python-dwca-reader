@@ -108,7 +108,7 @@ class CSVDataFile(object):
         index = {}
 
         for position, row in enumerate(self):
-            tmp = ExtensionRow(row, self.file_descriptor)
+            tmp = ExtensionRow(row, position, self.file_descriptor)
             index.setdefault(tmp.core_id, []).append(position)
 
         return index
@@ -127,9 +127,9 @@ class CSVDataFile(object):
         try:
             l = self._get_line_by_position(position)
             if self.file_descriptor.represents_corefile:
-                return CoreRow(l, self.file_descriptor)
+                return CoreRow(l, position, self.file_descriptor)
             else:
-                return ExtensionRow(l, self.file_descriptor)
+                return ExtensionRow(l, position, self.file_descriptor)
         except IndexError:
             return None
 
