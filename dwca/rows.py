@@ -45,7 +45,7 @@ class Row(object):
         self.descriptor = descriptor
 
         #: The row position/index (starting at 0) in the source data file. This can be used, for example with
-        #: :meth:`DwCAReader.get_row_by_index` or :meth:`CSVDataFile.get_row_by_position`.
+        #: :meth:`DwCAReader.get_corerow_by_position` or :meth:`CSVDataFile.get_row_by_position`.
         self.position = position
 
         #: The csv line type as stated in the archive descriptor.
@@ -100,7 +100,7 @@ class CoreRow(Row):
     """This class is used to represent a row/line from a Darwin Core Archive data core file.
 
     You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
-    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_row_by_index,
+    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_corerow_by_position,
     get_row_by_id, ...).
     """
 

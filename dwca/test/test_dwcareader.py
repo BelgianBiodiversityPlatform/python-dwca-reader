@@ -4,6 +4,7 @@ import sys
 import unittest
 import os
 import tempfile
+import warnings
 
 import xml.etree.ElementTree as ET
 
@@ -161,7 +162,7 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             self.assertEqual(len(dwca.rows), 3)
             # Ensure we can access arbitrary data
-            self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
+            self.assertEqual(dwca.get_corerow_by_position(1).data['decimallatitude'], '-31.98333')
             # Archive descriptor should be None
             self.assertIsNone(dwca.descriptor)
             # (scientific) metadata should be None
@@ -172,7 +173,7 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             self.assertEqual(len(dwca.rows), 3)
             # Ensure we can access arbitrary data
-            self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
+            self.assertEqual(dwca.get_corerow_by_position(1).data['decimallatitude'], '-31.98333')
             # Archive descriptor should be None
             self.assertIsNone(dwca.descriptor)
             # (scientific) metadata should be None
@@ -183,7 +184,7 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             self.assertEqual(len(dwca.rows), 3)
             # Ensure we can access arbitrary data
-            self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
+            self.assertEqual(dwca.get_corerow_by_position(1).data['decimallatitude'], '-31.98333')
             # Archive descriptor should be None
             self.assertIsNone(dwca.descriptor)
             # (scientific) metadata should be None
@@ -202,7 +203,7 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             self.assertEqual(len(dwca.rows), 3)
             # Ensure we can access arbitrary data
-            self.assertEqual(dwca.get_row_by_index(1).data['decimallatitude'], '-31.98333')
+            self.assertEqual(dwca.get_corerow_by_position(1).data['decimallatitude'], '-31.98333')
             # Archive descriptor should be None
             self.assertIsNone(dwca.descriptor)
             # (scientific) metadata is found
@@ -455,22 +456,48 @@ class TestDwCAReader(unittest.TestCase):
             # The second time, we can still find 4 rows...
             self.assertEqual(4, len([l for l in dwca]))
 
-    def test_get_row_by_index(self):
-        """Test the get_row_by_index() method work as expected"""
+    def test_deprecated_row_by_position(self):
+        """get_row_by_index() has been renamed get_corerow_by_position(). Make sure it still works, w/ warning."""
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            # Copy-pasted code from the long term test_get_corerow_by_position()
+            with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
+                # Row IDs are ordered like this in core: id 4-1-3-2
+                first_row = dwca.get_row_by_index(0)
+                self.assertEqual(4, int(first_row.id))
+
+                self.assertEqual(1, len(w))  # Warning was issued
+                assert issubclass(w[-1].category, DeprecationWarning)
+                assert "renamed" in str(w[-1].message)
+
+                last_row = dwca.get_row_by_index(3)
+                self.assertEqual(2, int(last_row.id))
+
+                # Exception raised if bigger than archive (last index: 3)
+                with self.assertRaises(RowNotFound):
+                    dwca.get_row_by_index(4)
+
+                with self.assertRaises(RowNotFound):
+                    dwca.get_row_by_index(1000)
+
+    def test_get_corerow_by_position(self):
+        """Test the get_corerow_by_position() method work as expected"""
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Row IDs are ordered like this in core: id 4-1-3-2
-            first_row = dwca.get_row_by_index(0)
+            first_row = dwca.get_corerow_by_position(0)
             self.assertEqual(4, int(first_row.id))
 
-            last_row = dwca.get_row_by_index(3)
+            last_row = dwca.get_corerow_by_position(3)
             self.assertEqual(2, int(last_row.id))
 
             # Exception raised if bigger than archive (last index: 3)
             with self.assertRaises(RowNotFound):
-                dwca.get_row_by_index(4)
+                dwca.get_corerow_by_position(4)
 
             with self.assertRaises(RowNotFound):
-                dwca.get_row_by_index(1000)
+                dwca.get_corerow_by_position(1000)
 
     def test_get_row_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'

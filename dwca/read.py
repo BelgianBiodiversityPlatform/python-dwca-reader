@@ -167,7 +167,7 @@ class DwCAReader(object):
 
     @property
     def use_extensions(self):
-        """Return True if the Archive makes use of extensions."""
+        """Return `True` if the Archive makes use of extensions."""
         return (self.descriptor is not None) and self.descriptor.extensions
 
     @property
@@ -194,7 +194,7 @@ class DwCAReader(object):
             1) Not all Darwin Core Archives specifies row IDs.
             2) Nothing guarantees that the ID will actually be unique within the archive (depends
             of the data publisher). In that case, this method don't guarantee which one will be
-            returned. :meth:`.get_row_by_index` may be more appropriate in this case.
+            returned. :meth:`.get_corerow_by_position` may be more appropriate in this case.
 
         """
         for row in self:
@@ -203,7 +203,7 @@ class DwCAReader(object):
 
         raise RowNotFound
 
-    def get_row_by_index(self, index):
+    def get_corerow_by_position(self, index):
         """Return a core row according to its position/index in core file.
 
         :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
@@ -213,7 +213,7 @@ class DwCAReader(object):
 
             - First row has index 0
             - If index is bigger than the length of the archive, None is returned
-            - The index is often an appropriate way to unambiguously identify a core row in a DwCA.
+            - The position is often an appropriate way to unambiguously identify a core row in a DwCA.
 
         """
         for (i, row) in enumerate(self):
@@ -221,6 +221,18 @@ class DwCAReader(object):
                 return row
 
         raise RowNotFound
+
+    def get_row_by_index(self, index):
+        """Return a core row according to its position/index in core file.
+
+        .. warning::
+
+            Deprecated: this method has been renamed to :meth:`get_corerow_by_position`.
+
+        """
+        import warnings
+        warnings.warn("This method has been renamed to get_corerow_by_position().", DeprecationWarning)
+        return self.get_corerow_by_position(index)
 
     def absolute_temporary_path(self, relative_path):
         """Return the absolute path of the file located at relative_path within the archive.

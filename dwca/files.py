@@ -123,7 +123,10 @@ class CSVDataFile(object):
             return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]
 
     def get_row_by_position(self, position):
-        """Return the row at `position` in the file."""
+        """Return the row at `position` in the file.
+
+        Header lines are ignored.
+        """
         try:
             l = self._get_line_by_position(position)
             if self.file_descriptor.represents_corefile:
