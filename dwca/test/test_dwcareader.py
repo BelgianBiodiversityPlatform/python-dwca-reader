@@ -460,7 +460,7 @@ class TestDwCAReader(unittest.TestCase):
         """get_row_by_index() has been renamed get_corerow_by_position(). Make sure it still works, w/ warning."""
 
         with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+            warnings.simplefilter("always", DeprecationWarning)
 
             # Copy-pasted code from the long term test_get_corerow_by_position()
             with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
