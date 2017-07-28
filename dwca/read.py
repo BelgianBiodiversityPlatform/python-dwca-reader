@@ -182,8 +182,8 @@ class DwCAReader(object):
         """
         return list(self)
 
-    def get_row_by_id(self, row_id):
-        """Return the (core) row whose id is row_id.
+    def get_corerow_by_id(self, row_id):
+        """Return the (core) row whose ID is row_id.
 
         :returns:  :class:`dwca.rows.CoreRow` -- the matching row.
         :raises: :class:`dwca.exceptions.RowNotFound`
@@ -202,6 +202,18 @@ class DwCAReader(object):
                 return row
 
         raise RowNotFound
+
+    def get_row_by_id(self, row_id):
+        """Return the (core) row whose id is row_id.
+
+        .. warning::
+
+            Deprecated: this method has been renamed to :meth:`get_corerow_by_id`.
+
+        """
+        import warnings
+        warnings.warn("This method has been renamed to get_corerow_by_id().", DeprecationWarning)
+        return self.get_corerow_by_id(row_id)
 
     def get_corerow_by_position(self, index):
         """Return a core row according to its position/index in core file.

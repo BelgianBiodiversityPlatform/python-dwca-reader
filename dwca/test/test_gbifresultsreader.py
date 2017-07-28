@@ -64,7 +64,7 @@ Rights as supplied: Not supplied"""
 
     def test_row_source_metadata(self):
         with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
-            first_row = results.get_row_by_id('607759330')
+            first_row = results.get_corerow_by_id('607759330')
             m = first_row.source_metadata
 
             self.assertIsInstance(m, ET.Element)
@@ -74,7 +74,7 @@ Rights as supplied: Not supplied"""
 
             self.assertEqual(v, 'Stanley')
 
-            last_row = results.get_row_by_id('782700656')
+            last_row = results.get_corerow_by_id('782700656')
             m = last_row.source_metadata
 
             self.assertIsInstance(m, ET.Element)
@@ -85,5 +85,5 @@ Rights as supplied: Not supplied"""
         with GBIFResultsReader(MISSINGMETA_PATH) as results:
             # We have source metadata, but not for all datasets/line...
             # We sould have None in this cases
-            first_row = results.get_row_by_id('607759330')
+            first_row = results.get_corerow_by_id('607759330')
             self.assertEqual(None, first_row.source_metadata)

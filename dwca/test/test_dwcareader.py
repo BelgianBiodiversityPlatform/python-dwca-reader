@@ -456,6 +456,23 @@ class TestDwCAReader(unittest.TestCase):
             # The second time, we can still find 4 rows...
             self.assertEqual(4, len([l for l in dwca]))
 
+    def test_deprecated_get_row_by_id(self):
+        """get_row_by_id() has been renamed get_corerow_by_id(). Make sure it still works, w/ warning."""
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", DeprecationWarning)
+
+            with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
+                # Passed as an integer, conversion will be tried...
+                r = dwca.get_row_by_id(3)
+                self.assertEqual('Peliperdix', r.data['http://rs.tdwg.org/dwc/terms/genus'])
+
+                self.assertEqual(1, len(w))  # Warning was issued
+                the_warning = w[0]
+                assert issubclass(the_warning.category, DeprecationWarning)
+                self.assertEqual("This method has been renamed to get_corerow_by_id().", str(the_warning.message))
+
+
     def test_deprecated_row_by_position(self):
         """get_row_by_index() has been renamed get_corerow_by_position(). Make sure it still works, w/ warning."""
 
@@ -469,8 +486,9 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertEqual(4, int(first_row.id))
 
                 self.assertEqual(1, len(w))  # Warning was issued
-                assert issubclass(w[-1].category, DeprecationWarning)
-                assert "renamed" in str(w[-1].message)
+                the_warning = w[0]
+                assert issubclass(the_warning.category, DeprecationWarning)
+                self.assertEqual("This method has been renamed to get_corerow_by_position().", str(the_warning.message))
 
                 last_row = dwca.get_row_by_index(3)
                 self.assertEqual(2, int(last_row.id))
@@ -499,39 +517,39 @@ class TestDwCAReader(unittest.TestCase):
             with self.assertRaises(RowNotFound):
                 dwca.get_corerow_by_position(1000)
 
-    def test_get_row_by_id_string(self):
+    def test_get_corerow_by_id_string(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Number can be passed as a string....
-            r = dwca.get_row_by_id('3')
+            r = dwca.get_corerow_by_id('3')
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
-    def test_get_row_by_id_multiple_calls(self):
+    def test_get_corerow_by_id_multiple_calls(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
-            r = dwca.get_row_by_id('3')
+            r = dwca.get_corerow_by_id('3')
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
             # If iterator is not properly reset, None will be returned
             # the second time
-            r = dwca.get_row_by_id('3')
+            r = dwca.get_corerow_by_id('3')
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
-    def test_get_row_by_id_other(self):
+    def test_get_corerow_by_id_other(self):
         genus_qn = 'http://rs.tdwg.org/dwc/terms/genus'
 
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             # Passed as an integer, conversion will be tried...
-            r = dwca.get_row_by_id(3)
+            r = dwca.get_corerow_by_id(3)
             self.assertEqual('Peliperdix', r.data[genus_qn])
 
     def test_get_inexistent_row(self):
-        """ Ensure get_row_by_id() raises RowNotFound if we ask it an unexistent row. """
+        """ Ensure get_corerow_by_id() raises RowNotFound if we ask it an unexistent row. """
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             with self.assertRaises(RowNotFound):
-                dwca.get_row_by_id(8000)
+                dwca.get_corerow_by_id(8000)
 
     def test_read_core_value(self):
         """Retrieve a simple value from core file"""
@@ -748,7 +766,7 @@ class TestDwCAReader(unittest.TestCase):
         # But it should be supported for GBIF-originating archives
         # (was previously supported with GBIFResultsReader)
         with DwCAReader(GBIF_RESULTS_PATH) as results:
-            first_row = results.get_row_by_id('607759330')
+            first_row = results.get_corerow_by_id('607759330')
             m = first_row.source_metadata
 
             self.assertIsInstance(m, ET.Element)
@@ -758,7 +776,7 @@ class TestDwCAReader(unittest.TestCase):
 
             self.assertEqual(v, 'Stanley')
 
-            last_row = results.get_row_by_id('782700656')
+            last_row = results.get_corerow_by_id('782700656')
             m = last_row.source_metadata
 
             self.assertIsInstance(m, ET.Element)

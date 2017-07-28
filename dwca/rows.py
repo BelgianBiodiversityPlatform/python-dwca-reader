@@ -100,8 +100,8 @@ class CoreRow(Row):
     """This class is used to represent a row/line from a Darwin Core Archive data core file.
 
     You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
-    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_corerow_by_position,
-    get_row_by_id, ...).
+    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_corerow_by_position(),
+    get_corerow_by_id(), ...).
     """
 
     def __str__(self):
