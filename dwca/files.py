@@ -22,9 +22,11 @@ class CSVDataFile(object):
 
     The file content can be accessed:
 
-    * By iterating on this object
-    * With :meth:`get_row_by_position`
-    * With :meth:`get_all_rows_by_coreid` (extensions data file only)
+    * By iterating on this object: a str (Python 3) or unicode (Python 2) is returned, including separators.
+    * With :meth:`get_row_by_position` (A :class:`dwca.rows.CoreRow` or :class:`dwca.rows.ExtensionRow` object is \
+    returned)
+    * For an extension data file, with :meth:`get_all_rows_by_coreid` (A :class:`dwca.rows.CoreRow` or \
+    :class:`dwca.rows.ExtensionRow` object is returned)
 
     On initialization, an index of new lines is build. This may take time, but makes random access\
     faster.
@@ -96,7 +98,7 @@ class CSVDataFile(object):
             at first access.
         """
         if self.file_descriptor.represents_corefile:
-            raise AttributeError('core_id index is only available for extension data files')
+            raise AttributeError('coreid_index is only available for extension data files')
 
         if self._coreid_index is None:
             self._coreid_index = self._build_coreid_index()
@@ -141,9 +143,11 @@ class CSVDataFile(object):
         self._file_stream.seek(self._line_offsets[position + self.lines_to_ignore], 0)
         return self._file_stream.readline()
 
-    # TODO: test this method
     def close(self):
-        """Close the file."""
+        """Close the file.
+
+        The content of the file will not be accessible in any way afterwards.
+        """
         self._file_stream.close()
 
 

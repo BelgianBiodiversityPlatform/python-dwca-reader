@@ -393,8 +393,8 @@ class DwCAReader(object):
 
             self._corefile_pointer = self._corefile_pointer + 1
             return r
-        else:
-            raise StopIteration
+
+        raise StopIteration
 
 
 class GBIFResultsReader(DwCAReader):

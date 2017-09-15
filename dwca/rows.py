@@ -138,8 +138,8 @@ class CoreRow(Row):
             m = None
 
         #: Row-level metadata (if provided by the archive).
-        #: This is a non-standard feature currently only provided when using
-        #: :class:`dwca.read.GBIFResultsReader`.
+        #: This is a non-standard DwCA feature currently that we can sometimes encounter (in downloads from GBIF.org
+        #: for example).
         self.source_metadata = m
 
     def link_extension_files(self, extension_data_files):

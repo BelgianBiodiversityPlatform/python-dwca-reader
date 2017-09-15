@@ -211,7 +211,7 @@ class DataFileDescriptor(object):
     def lines_to_ignore(self):
         """Return the number of header lines/lines to ignore in the data file."""
         if self.created_from_file:
-            # Single-file archives also have a header line with DwC terms
+            # Single-file archives always have a header line with DwC terms
             return 1
 
         return int(self.raw_element.get('ignoreHeaderLines', 0))
