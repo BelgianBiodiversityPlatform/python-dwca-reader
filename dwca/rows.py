@@ -3,6 +3,7 @@
 """This module provides objects that represents data rows coming from DarwinCore Archive."""
 
 import csv
+import sys
 from dwca.exceptions import InvalidArchive
 
 
@@ -98,9 +99,19 @@ class Row(object):
     def get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
         csv_line = csv_line.rstrip(line_ending)
         raw_fields = []
+        if sys.version_info[0] < 3:
+            if isinstance(csv_line, unicode):
+                csv_line = csv_line.encode('utf8')
+            if isinstance(field_ending, unicode):
+                field_ending = field_ending.encode('utf8')
+            if isinstance(field_ending, unicode):
+                field_enclosed_by = fields_enclosed_by.encode('utf8')
         for row in csv.reader([csv_line], delimiter=field_ending):
-            for field in row:
-                raw_fields.append(field.strip(fields_enclosed_by))
+            for f in row:
+                field = f.strip(fields_enclosed_by)
+                if sys.version_info[0] < 3:
+                    field = field.decode('utf8')
+                raw_fields.append(field)
         return raw_fields
 
 
