@@ -95,6 +95,7 @@ class Row(object):
                     msg = 'The descriptor references a non-existent field (index={i})'.format(i=field_index)
                     raise InvalidArchive(msg)
 
+    # TODO: Document this method
     @staticmethod
     def get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
         csv_line = csv_line.rstrip(line_ending)
@@ -105,7 +106,7 @@ class Row(object):
             if isinstance(field_ending, unicode):
                 field_ending = field_ending.encode('utf8')
             if isinstance(field_ending, unicode):
-                field_enclosed_by = fields_enclosed_by.encode('utf8')
+                fields_enclosed_by = fields_enclosed_by.encode('utf8')
         for row in csv.reader([csv_line], delimiter=field_ending):
             for f in row:
                 field = f.strip(fields_enclosed_by)
