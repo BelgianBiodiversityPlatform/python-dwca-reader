@@ -1,6 +1,7 @@
 Current
 -------
 
+- Bugfix: An enclosed field can now contain the field separator (By Ben Cail)
 - API change: DwCAReader.get_row_by_id() is renamed to DwCAReader.get_corerow_by_id()
 - API change: DwCAReader.get_row_by_index() is renamed DwCAReader.get_corerow_by_position()
 - API new: DwCAReader.orphaned_extension_rows() (thanks to Pieter Provoost). TODO: document/test/refactor Doesn't it make more sense to return a list/tuple of ExtensionRows? In that case, we should be able to extract position of row in source file(new 'position' attribute to row?) and the filename of the extension
@@ -20,7 +21,7 @@ v0.10.1 (2017-04-04)
 v0.10.0 (2017-03-16)
 --------------------
 
-- GBIFResultsReader is now depreacted.
+- GBIFResultsReader is now deprecated.
 - API new: DwCAReader now provides source_metadata for GBIF-like archives (previously the main perk of GBIFResultsReader) 
 - API change: dwca.source_metadata is an empty dict (previously: None) when the archive doesn't has source metadata
 - API new: dwca.utils._DataFile is now public and renamed to dwca.files.CSVDataFile.
