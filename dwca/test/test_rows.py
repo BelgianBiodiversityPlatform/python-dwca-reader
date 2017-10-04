@@ -3,8 +3,16 @@
 import unittest
 
 from dwca.read import DwCAReader
+from dwca.rows import Row
 
 from .helpers import BASIC_ARCHIVE_PATH, NOHEADERS1_PATH, MULTIEXTENSIONS_ARCHIVE_PATH
+
+
+class TestRow(unittest.TestCase):
+
+    def test_get_raw_fields(self):
+        raw_fields = Row.get_raw_fields('field 1,"field 2, with comma",field 3', '\n', ',', '"')
+        self.assertEqual(raw_fields[1], "field 2, with comma")
 
 
 class TestCoreRow(unittest.TestCase):

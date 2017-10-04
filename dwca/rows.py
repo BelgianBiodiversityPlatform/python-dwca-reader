@@ -2,6 +2,8 @@
 
 """This module provides objects that represents data rows coming from DarwinCore Archive."""
 
+import csv
+import sys
 from dwca.exceptions import InvalidArchive
 
 
@@ -60,9 +62,7 @@ class Row(object):
 
         # self.raw_fields is a list of the csv_line's content
         #:
-        self.raw_fields = []
-        for f in csv_line.rstrip(line_ending).split(field_ending):
-            self.raw_fields.append(f.strip(fields_enclosed_by))
+        self.raw_fields = Row.get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by)
 
         # TODO: raw_fields is a new property: to test
 
@@ -94,6 +94,25 @@ class Row(object):
                 except IndexError:
                     msg = 'The descriptor references a non-existent field (index={i})'.format(i=field_index)
                     raise InvalidArchive(msg)
+
+    @staticmethod
+    def get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
+        csv_line = csv_line.rstrip(line_ending)
+        raw_fields = []
+        if sys.version_info[0] < 3:
+            if isinstance(csv_line, unicode):
+                csv_line = csv_line.encode('utf8')
+            if isinstance(field_ending, unicode):
+                field_ending = field_ending.encode('utf8')
+            if isinstance(field_ending, unicode):
+                field_enclosed_by = fields_enclosed_by.encode('utf8')
+        for row in csv.reader([csv_line], delimiter=field_ending):
+            for f in row:
+                field = f.strip(fields_enclosed_by)
+                if sys.version_info[0] < 3:
+                    field = field.decode('utf8')
+                raw_fields.append(field)
+        return raw_fields
 
 
 class CoreRow(Row):

@@ -17,11 +17,12 @@ from dwca.descriptors import ArchiveDescriptor
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
                       IDS_ARCHIVE_PATH, DEFAULT_VAL_PATH, UTF8EOL_ARCHIVE_PATH,
-                      DIRECTORY_ARCHIVE_PATH, DEFAULT_META_VALUES, INVALID_LACKS_METADATA,
-                      SUBDIR_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML, SIMPLE_CSV_DOS,
-                      BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH, INVALID_SIMPLE_TWO,
-                      SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH, DEFAULT_METADATA_FILENAME,
-                      BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR, DWCA_ORPHANED_ROWS)
+                      DIRECTORY_ARCHIVE_PATH, DIRECTORY_CSV_QUOTE_ARCHIVE_PATH, DEFAULT_META_VALUES,
+                      INVALID_LACKS_METADATA, SUBDIR_ARCHIVE_PATH, SIMPLE_CSV, SIMPLE_CSV_EML,
+                      SIMPLE_CSV_DOS, BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH,
+                      INVALID_SIMPLE_TWO, SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH,
+                      DEFAULT_METADATA_FILENAME, BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR,
+                      DWCA_ORPHANED_ROWS)
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -221,6 +222,12 @@ class TestDwCAReader(unittest.TestCase):
             # And iterating...
             for row in dwca:
                 self.assertIsInstance(row, CoreRow)
+
+    def test_csv_quote_dir_archive(self):
+        with DwCAReader(DIRECTORY_CSV_QUOTE_ARCHIVE_PATH) as dwca:
+            rows = list(dwca)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0].data[qn('basisOfRecord')], 'Observation, something')
 
     def test_tgz_archives(self):
         """Ensure the reader (basic features) works with a .tgz Archive."""
