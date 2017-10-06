@@ -55,14 +55,12 @@ class Row(object):
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
         self.rowtype = self.descriptor.type
 
-        line_ending = self.descriptor.lines_terminated_by
-        field_ending = self.descriptor.fields_terminated_by
-
-        fields_enclosed_by = self.descriptor.fields_enclosed_by
-
         # self.raw_fields is a list of the csv_line's content
         #:
-        self.raw_fields = Row.get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by)
+        self.raw_fields = csv_line_to_fields(csv_line,
+                                             line_ending=self.descriptor.lines_terminated_by,
+                                             field_ending=self.descriptor.fields_terminated_by,
+                                             fields_enclosed_by=self.descriptor.fields_enclosed_by)
 
         # TODO: raw_fields is a new property: to test
 
@@ -94,26 +92,6 @@ class Row(object):
                 except IndexError:
                     msg = 'The descriptor references a non-existent field (index={i})'.format(i=field_index)
                     raise InvalidArchive(msg)
-
-    # TODO: Document this method
-    @staticmethod
-    def get_raw_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
-        csv_line = csv_line.rstrip(line_ending)
-        raw_fields = []
-        if sys.version_info[0] < 3:
-            if isinstance(csv_line, unicode):
-                csv_line = csv_line.encode('utf8')
-            if isinstance(field_ending, unicode):
-                field_ending = field_ending.encode('utf8')
-            if isinstance(field_ending, unicode):
-                fields_enclosed_by = fields_enclosed_by.encode('utf8')
-        for row in csv.reader([csv_line], delimiter=field_ending):
-            for f in row:
-                field = f.strip(fields_enclosed_by)
-                if sys.version_info[0] < 3:
-                    field = field.decode('utf8')
-                raw_fields.append(field)
-        return raw_fields
 
 
 class CoreRow(Row):
@@ -222,3 +200,26 @@ class ExtensionRow(Row):
 
     def __hash__(self):
         return hash(self.__key())
+
+
+def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
+    """Split a line from a CSV file.
+
+    Return a list of fields. Content is not trimmed.
+    """
+    csv_line = csv_line.rstrip(line_ending)
+    raw_fields = []
+    if sys.version_info[0] < 3:
+        if isinstance(csv_line, unicode):
+            csv_line = csv_line.encode('utf8')
+        if isinstance(field_ending, unicode):
+            field_ending = field_ending.encode('utf8')
+        if isinstance(field_ending, unicode):
+            fields_enclosed_by = fields_enclosed_by.encode('utf8')
+    for row in csv.reader([csv_line], delimiter=field_ending):
+        for f in row:
+            field = f.strip(fields_enclosed_by)
+            if sys.version_info[0] < 3:
+                field = field.decode('utf8')
+            raw_fields.append(field)
+    return raw_fields
