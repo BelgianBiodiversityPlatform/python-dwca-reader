@@ -214,9 +214,16 @@ def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
             csv_line = csv_line.encode('utf8')
         if isinstance(field_ending, unicode):
             field_ending = field_ending.encode('utf8')
-        if isinstance(field_ending, unicode):
+        if isinstance(fields_enclosed_by, unicode):
             fields_enclosed_by = fields_enclosed_by.encode('utf8')
-    for row in csv.reader([csv_line], delimiter=field_ending):
+
+    if fields_enclosed_by == "":
+        opts = {'quoting': csv.QUOTE_NONE}
+    else:
+        opts = {'quoting': csv.QUOTE_ALL,
+                'quotechar': fields_enclosed_by}
+
+    for row in csv.reader([csv_line], delimiter=field_ending, **opts):
         for f in row:
             field = f.strip(fields_enclosed_by)
             if sys.version_info[0] < 3:

@@ -36,7 +36,7 @@ class TestDwCAReader(unittest.TestCase):
             f = dwca.open_included_file('occurrence.txt')
 
             raw_occ = f.read()
-            self.assertTrue(raw_occ.endswith('betta splendens\n'))
+            self.assertTrue(raw_occ.endswith("'betta' splendens\n"))
 
         # TODO: test more cases: opening mode, exceptions raised, ...
 
@@ -224,10 +224,19 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertIsInstance(row, CoreRow)
 
     def test_csv_quote_dir_archive(self):
+        """If the field separator is in a quoted field, don't break on it."""
         with DwCAReader(DIRECTORY_CSV_QUOTE_ARCHIVE_PATH) as dwca:
             rows = list(dwca)
             self.assertEqual(len(rows), 2)
             self.assertEqual(rows[0].data[qn('basisOfRecord')], 'Observation, something')
+
+    def test_dont_enclose_unenclosed(self):
+        """If fields_enclosed_by is an empty string, don't enclose (even if quotes are present)"""
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
+            rows = list(dwca)
+
+            self.assertEqual('"betta" splendens', rows[2].data[qn('scientificName')])
+            self.assertEqual("'betta' splendens", rows[3].data[qn('scientificName')])
 
     def test_tgz_archives(self):
         """Ensure the reader (basic features) works with a .tgz Archive."""
