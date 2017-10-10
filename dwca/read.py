@@ -146,7 +146,7 @@ class DwCAReader(object):
         row doesn't exists.
 
         """
-        if (len(self._extensionfiles) > 0):
+        if len(self._extensionfiles) > 0:
 
             temp_ids = {}
             for row in self:

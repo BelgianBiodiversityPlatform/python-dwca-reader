@@ -1,17 +1,17 @@
-Current
--------
+v0.11.0 (2017-10-10)
+--------------------
 
 - Bugfix: An enclosed field can now contain the field separator (By Ben Cail)
 - API change: DwCAReader.get_row_by_id() is renamed to DwCAReader.get_corerow_by_id()
 - API change: DwCAReader.get_row_by_index() is renamed DwCAReader.get_corerow_by_position()
-- API new: DwCAReader.orphaned_extension_rows() (thanks to Pieter Provoost). TODO: document/test/refactor Doesn't it make more sense to return a list/tuple of ExtensionRows? In that case, we should be able to extract position of row in source file(new 'position' attribute to row?) and the filename of the extension
+- API new: DwCAReader.orphaned_extension_rows() (thanks to Pieter Provoost).
 - API new: CSVDataFile.coreid_index (was previously known as CSVDataFile._coreid_index).
 - API new: Row/CoreRow/ExtensionRow.position
 
 v0.10.2 (2017-04-11)
 --------------------
 
-- experimental support for Windows
+- experimental support for Windows.
 
 v0.10.1 (2017-04-04)
 --------------------
