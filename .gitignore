@@ -3,3 +3,6 @@
 .coverage
 doc/_build
 .idea
+*$py.class
+dist/
+.python-version
