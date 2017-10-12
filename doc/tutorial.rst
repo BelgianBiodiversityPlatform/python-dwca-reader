@@ -148,23 +148,30 @@ The easiest way to load the core file as a DataFrame, is to read in the file fro
 
 .. code:: python
 
-    import pandas as pd
-    from dwca.read import DwCAReader
+   import pandas as pd
+   from dwca.read import DwCAReader
 
-    with DwCAReader('gbif-results.zip') as dwca:
+   with DwCAReader('gbif-results.zip') as dwca:
+      # Check the core file of the Archive  (Occurrence, Taxon, ...)
+      print("Core type is: {}".format(dwca.descriptor.core.type))
 
-        # Check the core file of the Archive  (Occurrence, Taxon, ...)
-        print("Core type is: {}".format(dwca.descriptor.core.type))
+      # As the core file is an Occurrence, stored in temporary folder
+      occurrence_path = dwca.absolute_temporary_path('occurrence.txt')
 
-        # As the core file is an Occurrence, stored in temporary folder
-        path = dwca.absolute_temporary_path('occurrence.txt')
+      # There's a descriptor object that gives details about occurrence.txt
+      # Those details will be needed by pd.read_csv
+      occurrence_descriptor = dwca.descriptor.core
 
-        # read the core as dataframe (No headers available in the csv-file)
-        core_df = pd.read_csv(path, delimiter=dwca.descriptor.core.fields_terminated_by, header=None, parse_dates=True)
+      # read the core data file as a DataFrame
+      core_df = pd.read_csv(occurrence_path,
+                            delimiter=occurrence_descriptor.fields_terminated_by,
+                            skiprows=occurrence_descriptor.lines_to_ignore,
+                            names=occurrence_descriptor.short_headers,
+                            header=None,
 
-        # Get the header names from the DwCAReader headers
-        core_df.columns = dwca.descriptor.core.short_headers
-        # All Pandas functionalities are now available on the core_df DataFrame
+                            parse_dates=True)
+
+      # All Pandas functionalities are now available on the core_df DataFrame
 
 
 As a small example, some applications on the ``core_df``:
