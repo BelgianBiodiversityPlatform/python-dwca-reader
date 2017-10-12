@@ -229,6 +229,28 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         self.assertEqual(core_descriptor.headers, expected_headers_core)
 
+    def test_short_headers(self):
+        metaxml_section = """
+                <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+                ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+                    <files>
+                        <location>occurrence.txt</location>
+                    </files>
+                    <id index="0" />
+                    <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+                    <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+                    <field index="2" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+                    <field index="3" term="http://rs.tdwg.org/dwc/terms/family"/>
+                    <field index="4" term="http://rs.tdwg.org/dwc/terms/locality"/>
+                </core>
+                """
+
+        core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
+
+        expected_short_headers_core = ['id', 'scientificName', 'basisOfRecord', 'family', 'locality']
+
+        self.assertEqual(core_descriptor.short_headers, expected_short_headers_core)
+
     def test_headers_unordered(self):
         metaxml_section = """
         <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""

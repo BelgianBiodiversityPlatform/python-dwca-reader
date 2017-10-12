@@ -1,3 +1,8 @@
+Master
+------
+
+- API new: DataFileDescriptor.short_headers
+
 v0.11.0 (2017-10-10)
 --------------------
 

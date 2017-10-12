@@ -192,7 +192,15 @@ class DataFileDescriptor(object):
 
     @property
     def headers(self):
-        """Return a list of (ordered) column names that can be used to create a header line."""
+        """A list of (ordered) column names that can be used to create a header line for the data file.
+
+        Example::
+
+            ['id', 'http://rs.tdwg.org/dwc/terms/scientificName', 'http://rs.tdwg.org/dwc/terms/basisOfRecord',
+            'http://rs.tdwg.org/dwc/terms/family', 'http://rs.tdwg.org/dwc/terms/locality']
+
+        See also :py:attr:`short_headers` if you prefer less verbose headers.
+        """
         columns = {}
 
         for f in self.fields:
@@ -206,6 +214,18 @@ class DataFileDescriptor(object):
             columns[self.coreid_index] = 'coreid'
 
         return [columns[f] for f in sorted(columns.keys())]
+
+    @property
+    def short_headers(self):
+        """A list of (ordered) column names (short version) that can be used to create a header line for the data file.
+
+           Example::
+
+                ['id', 'scientificName', 'basisOfRecord', 'family', 'locality']
+
+        See also :py:attr:`headers`.
+        """
+        return [term.split("/")[-1] for term in self.headers]
 
     @property
     def lines_to_ignore(self):

@@ -160,10 +160,10 @@ The easiest way to load the core file as a DataFrame, is to read in the file fro
         path = dwca.absolute_temporary_path('occurrence.txt')
 
         # read the core as dataframe (No headers available in the csv-file)
-        core_df = pd.read_csv(path, delimiter="\t", header=None, parse_dates=True)
+        core_df = pd.read_csv(path, delimiter=dwca.descriptor.core.fields_terminated_by, header=None, parse_dates=True)
 
         # Get the header names from the DwCAReader headers
-        core_df.columns = [term.split("/")[-1] for term in dwca.descriptor.core.headers]
+        core_df.columns = dwca.descriptor.core.short_headers
         # All Pandas functionalities are now available on the core_df DataFrame
 
 
@@ -265,7 +265,7 @@ The result is the core file joined with the extension files. More information ab
                                 parse_dates=True, chunksize=chunksize):
 
             # Get the header names from the DwCAReader headers
-            chunk.columns = [term.split("/")[-1] for term in dwca.descriptor.core.headers]
+            chunk.columns = dwca.descriptor.core.short_headers
             chunk['eventDate'] = pd.to_datetime(chunk['eventDate'])
 
             # Subselect only the records recorded on a sunday
