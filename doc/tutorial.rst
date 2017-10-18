@@ -274,20 +274,24 @@ The result is the core file joined with the extension files. More information ab
 
     import pandas as pd
     from dwca.read import DwCAReader
-    from collections import Counter
 
     chunksize = 10 # Chosen chunksize to process the data (pick a larger value for real world cases)
     with DwCAReader('gbif-results.zip') as dwca:
 
         # As the core file is an Occurrence, stored in temporary folder
         path = dwca.absolute_temporary_path('occurrence.txt')
+        descriptor = dwca.get_descriptor_for('occurrence.txt')
 
         sunday_occ = []
-        for chunk in pd.read_csv(path, delimiter="\t", header=None, 
-                                parse_dates=True, chunksize=chunksize):
+        for chunk in pd.read_csv(path,
+                                 delimiter=descriptor.fields_terminated_by,
+                                 skiprows=descriptor.lines_to_ignore,
+                                 names=descriptor.short_headers,
+                                 header=None,
 
-            # Get the header names from the DwCAReader headers
-            chunk.columns = dwca.descriptor.core.short_headers
+                                 parse_dates=True,
+                                 chunksize=chunksize):
+
             chunk['eventDate'] = pd.to_datetime(chunk['eventDate'])
 
             # Subselect only the records recorded on a sunday
@@ -301,14 +305,16 @@ More advanced processing is supported by Pandas. However, when only interested i
 
     from collections import Counter
 
-    with DwCAReader('gbif-results.zip') as dwca:
+    from dwca.read import DwCAReader
+    from dwca.darwincore.utils import qualname as qn
 
-        # As the core file is an Occurrence, stored in temporary folder
-        path = dwca.absolute_temporary_path('occurrence.txt')
-
+    with DwCAReader('/Users/nicolasnoe/Desktop/gbif-results.zip') as dwca:
         count_species = Counter()
+
         for row in dwca:
             count_species.update([row.data[qn('scientificName')]])
+
+        print(count_species)
 
 
 Hence, the added value of Pandas depends on the type of analysis. Some more extensive applications of Pandas to work with Darwin Core data is provided in this `data cleaning`_ tutorial and `data analysis`_ tutorial.
