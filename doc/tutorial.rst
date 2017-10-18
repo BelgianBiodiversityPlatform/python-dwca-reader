@@ -227,27 +227,42 @@ When the DwCA contains multiple files, joining the extensions with the core file
         # Check the core file of the Archive  (Occurrence, Taxon, ...)
         print("Core type is: {}".format(dwca.descriptor.core.type))
 
-        # As the core file is an Occurrence, stored in temporary folder
+        # As the core file is an Taxon, stored in temporary folder
         core_path = dwca.absolute_temporary_path('taxon.txt')
+        taxon_descriptor = dwca.get_descriptor_for('taxon.txt')
 
-        # read the core as dataframe (with header)
-        taxon_df = pd.read_csv(core_path, delimiter="\t")
+        # Read the core as dataframe (with header)
+        taxon_df = pd.read_csv(core_path,
+                               delimiter=taxon_descriptor.fields_terminated_by,
+                               skiprows=taxon_descriptor.lines_to_ignore,
+                               names=taxon_descriptor.short_headers,
+                               header=None)
 
         # Check the available extensions
         print("Available extensions: {}".format([ext.split("/")[-1] for ext in dwca.descriptor.extensions_type]))
 
         # Load the description extension
         descr_path = dwca.absolute_temporary_path('description.txt')
-        descr_df = pd.read_csv(descr_path, delimiter="\t")
+        descr_descriptor = dwca.get_descriptor_for('description.txt')
+        descr_df = pd.read_csv(descr_path,
+                               delimiter=descr_descriptor.fields_terminated_by,
+                               skiprows=descr_descriptor.lines_to_ignore,
+                               names=descr_descriptor.short_headers,
+                               header=None)
 
         # Load the VernacularName extension
         vern_path = dwca.absolute_temporary_path('vernacularname.txt')
-        vern_df = pd.read_csv(vern_path, delimiter="\t")
+        vern_descriptor = dwca.get_descriptor_for('vernacularname.txt')
+        vern_df = pd.read_csv(vern_path,
+                              delimiter=vern_descriptor.fields_terminated_by,
+                              skiprows=vern_descriptor.lines_to_ignore,
+                              names=vern_descriptor.short_headers,
+                              header=None)
 
     # Join the information of the description and vernacularname extension to the core taxon information
     # (cfr. database JOIN)
-    taxon_df = pd.merge(taxon_df, descr_df, on='id', how="left")
-    taxon_df = pd.merge(taxon_df, vern_df, on='id', how="left")
+    taxon_df = pd.merge(taxon_df, descr_df, left_on='id', right_on='coreid', how="left")
+    taxon_df = pd.merge(taxon_df, vern_df, left_on='id', right_on='coreid', how="left")
 
 The result is the core file joined with the extension files. More information about the Pandas merge is provided in the `documentation`_.
 
