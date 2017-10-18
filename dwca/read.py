@@ -139,11 +139,13 @@ class DwCAReader(object):
         """Return a dict of the orphaned extension rows.
 
         Orphaned extension rows are extension rows who reference non-existing core rows. This methods returns a dict
-        such as: { 'description.txt': {u'5': [3, 4], u'6': [5]},
-                   'vernacularname.txt': {u'7': [4]}}
+        such as::
+
+         {'description.txt': {u'5': [3, 4], u'6': [5]},
+          'vernacularname.txt': {u'7': [4]}}
 
         (meaning: in description.txt, rows at position 3 and 4 reference a core row whose ID is '5', but such a core
-        row doesn't exists.
+        row doesn't exists).
 
         """
         if len(self._extensionfiles) > 0:
@@ -259,6 +261,27 @@ class DwCAReader(object):
 
         """
         return os.path.abspath(os.path.join(self._workin_directory_path, relative_path))
+
+    def get_descriptor_for(self, relative_path):
+        """Return a descriptor for the data file located at relative_path.
+
+        :param relative_path: the path (relative to the archive root) to the data file you want info about.
+        :type relative_path: str
+
+        :returns:  :class:`dwca.descriptors.DataFileDescriptor` -- the descriptor or `None` if `relative_path` doesn't \
+        reference a valid data file.
+
+        Examples::
+
+            dwca.get_descriptor_for('occurrence.txt')
+            dwca.get_descriptor_for('verbatim.txt')
+        """
+
+        all_datafiles = [self._corefile] + self._extensionfiles
+
+        for datafile in all_datafiles:
+            if datafile.file_descriptor.file_location == relative_path:
+                return datafile.file_descriptor
 
     def _is_valid_simple_archive(self):
         # If the working dir appear to contains a valid simple darwin core archive

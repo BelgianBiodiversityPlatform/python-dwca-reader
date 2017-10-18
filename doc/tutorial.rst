@@ -160,7 +160,7 @@ The easiest way to load the core file as a DataFrame, is to read in the file fro
 
       # There's a descriptor object that gives details about occurrence.txt
       # Those details will be needed by pd.read_csv
-      occurrence_descriptor = dwca.descriptor.core
+      occurrence_descriptor = dwca.get_descriptor_for('occurrence.txt')
 
       # read the core data file as a DataFrame
       core_df = pd.read_csv(occurrence_path,

@@ -12,7 +12,7 @@ from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
 from dwca.exceptions import RowNotFound, InvalidArchive
-from dwca.descriptors import ArchiveDescriptor
+from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
                       MULTIEXTENSIONS_ARCHIVE_PATH, NOHEADERS1_PATH, NOHEADERS2_PATH,
@@ -28,6 +28,41 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    def test_get_descriptor_for(self):
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            # We can get a DataFileDescriptor for each data file
+            self.assertIsInstance(dwca.get_descriptor_for('taxon.txt'), DataFileDescriptor)
+            self.assertIsInstance(dwca.get_descriptor_for('description.txt'), DataFileDescriptor)
+            self.assertIsInstance(dwca.get_descriptor_for('vernacularname.txt'), DataFileDescriptor)
+
+            # But None for non-data files
+            self.assertIsNone(dwca.get_descriptor_for('eml.xml'))
+            self.assertIsNone(dwca.get_descriptor_for('meta.xml'))
+
+            # Also None for files that don't actually exists
+            self.assertIsNone(dwca.get_descriptor_for('imaginary_file.txt'))
+
+            # Basic content checks of the descriptors
+            taxon_descriptor = dwca.get_descriptor_for('taxon.txt')
+            self.assertEqual(dwca.descriptor.core, taxon_descriptor)
+            self.assertEqual(taxon_descriptor.file_location, 'taxon.txt')
+            self.assertEqual(taxon_descriptor.file_encoding, 'utf-8')
+            self.assertEqual(taxon_descriptor.type, 'http://rs.tdwg.org/dwc/terms/Taxon')
+
+            description_descriptor = dwca.get_descriptor_for('description.txt')
+            self.assertEqual(description_descriptor.file_location, 'description.txt')
+            self.assertEqual(description_descriptor.file_encoding, 'utf-8')
+            self.assertEqual(description_descriptor.type, 'http://rs.gbif.org/terms/1.0/Description')
+
+            vernacular_descriptor = dwca.get_descriptor_for('vernacularname.txt')
+            self.assertEqual(vernacular_descriptor.file_location, 'vernacularname.txt')
+            self.assertEqual(vernacular_descriptor.file_encoding, 'utf-8')
+            self.assertEqual(vernacular_descriptor.type, 'http://rs.gbif.org/terms/1.0/VernacularName')
+
+        # Also check we can get a DataFileDescriptor with a simple Archive (no metafile)
+        with DwCAReader(SIMPLE_CSV) as dwca:
+            self.assertIsInstance(dwca.get_descriptor_for('0008333-160118175350007.csv'), DataFileDescriptor)
 
     def test_open_included_file(self):
         """Ensure DwCAReader.open_included_file work as expected."""
