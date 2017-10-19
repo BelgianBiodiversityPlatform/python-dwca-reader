@@ -60,7 +60,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(vernacular_descriptor.file_encoding, 'utf-8')
             self.assertEqual(vernacular_descriptor.type, 'http://rs.gbif.org/terms/1.0/VernacularName')
 
-        # Also check we can get a DataFileDescriptor with a simple Archive (no metafile)
+        # Also check we can get a DataFileDescriptor for a simple Archive (without metafile)
         with DwCAReader(SIMPLE_CSV) as dwca:
             self.assertIsInstance(dwca.get_descriptor_for('0008333-160118175350007.csv'), DataFileDescriptor)
 
@@ -84,7 +84,7 @@ class TestDwCAReader(unittest.TestCase):
         """
         with DwCAReader(INVALID_DESCRIPTOR) as dwca:
             with self.assertRaises(InvalidArchive):
-                for row in dwca:
+                for _ in dwca:
                     pass
 
     def test_use_extensions(self):
@@ -113,8 +113,10 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(DEFAULT_METADATA_FILENAME) as dwca:
             self.assertIsInstance(dwca.metadata, ET.Element)
 
-            v = (dwca.metadata.find('dataset').find('creator').find('individualName')
-                     .find('givenName').text)
+            v = (dwca.metadata.find('dataset')
+                              .find('creator')
+                              .find('individualName')
+                              .find('givenName').text)
             self.assertEqual(v, 'Nicolas')
 
     def test_subdirectory_archive(self):
@@ -122,7 +124,6 @@ class TestDwCAReader(unittest.TestCase):
         tmp_dir = tempfile.gettempdir()
 
         num_files_before = len(os.listdir(tmp_dir))
-        num_files_during = None
         with DwCAReader(SUBDIR_ARCHIVE_PATH) as dwca:
             # Ensure we have access to metadata
             self.assertIsInstance(dwca.metadata, ET.Element)
@@ -143,7 +144,7 @@ class TestDwCAReader(unittest.TestCase):
         self.assertEqual(num_files_before, num_files_after)
 
     def test_exception_invalid_archives_missing_metadata(self):
-        """Ensure an exception is raised when referencing a missing metadata file."""
+        """An exception is raised when referencing a missing metadata file."""
         # Sometimes, the archive metafile references a metadata file that's not present in the
         # archive. See for example http://dev.gbif.org/issues/browse/PF-2125
         with self.assertRaises(InvalidArchive) as cm:
@@ -233,7 +234,6 @@ class TestDwCAReader(unittest.TestCase):
         EML.xml. This correspond to the second case on page #2 of
         http://www.gbif.org/resource/80639. The metadata file having the "standard name", it should
         properly handled.
-
         """
         with DwCAReader(SIMPLE_CSV_EML) as dwca:
             # Ensure we get the correct number of rows
@@ -266,7 +266,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(rows[0].data[qn('basisOfRecord')], 'Observation, something')
 
     def test_dont_enclose_unenclosed(self):
-        """If fields_enclosed_by is an empty string, don't enclose (even if quotes are present)"""
+        """If fields_enclosed_by is set to an empty string, don't enclose (even if quotes are present)"""
         with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
             rows = list(dwca)
 
@@ -399,9 +399,9 @@ class TestDwCAReader(unittest.TestCase):
         self.assertEqual(num_files_before, num_files_after)
 
     def test_source_data_not_destroyed_directory(self):
-        """In archive=directory, it should not be destroyed after use.
+        """If archive is a directory, it should not be deleted after use.
 
-        (check that the cleanup routine for zipped file is not accidentaly called)
+        (check that the cleanup routine for zipped file is not called by accident)
         """
         r = DwCAReader(DIRECTORY_ARCHIVE_PATH)
         r.close()
@@ -414,7 +414,7 @@ class TestDwCAReader(unittest.TestCase):
     def test_temporary_dir_zipped(self):
         """Test a temporary directory is created during execution.
 
-        (complementay to test_cleanup()
+        (complementary to test_cleanup())
         """
         tmp_dir = tempfile.gettempdir()
 
@@ -491,8 +491,8 @@ class TestDwCAReader(unittest.TestCase):
                 self.assertIsInstance(row, CoreRow)
 
     def test_iterate_order(self):
-        """Test that the order of appaearance in Core file is respected when iterating."""
-        # This is also probably tested inderectly elsewhere, but this is the right place :)
+        """Test that the order of appearance in Core file is respected when iterating."""
+        # This is also probably tested indirectly elsewhere, but this is the right place :)
         with DwCAReader(IDS_ARCHIVE_PATH) as dwca:
             l = list(dwca)
             # Row IDs are ordered like this in core file: id 4-1-3-2
@@ -522,7 +522,6 @@ class TestDwCAReader(unittest.TestCase):
                 the_warning = w[0]
                 assert issubclass(the_warning.category, DeprecationWarning)
                 self.assertEqual("This method has been renamed to get_corerow_by_id().", str(the_warning.message))
-
 
     def test_deprecated_row_by_position(self):
         """get_row_by_index() has been renamed get_corerow_by_position(). Make sure it still works, w/ warning."""
@@ -778,18 +777,18 @@ class TestDwCAReader(unittest.TestCase):
 
         with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
             rows = dwca.rows
-            # If line properly splitted => 64 rows.
-            # (61 - and probably an IndexError - if errrors)
+            # If line properly split => 64 rows.
+            # (61 - and probably an IndexError - if errors)
             self.assertEqual(64, len(rows[0].data))
 
     def test_source_metadata(self):
-        # Sandard archive: no source metadata
+        # Standard archive: no source metadata
         with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
             self.assertEqual(star_dwca.source_metadata, {})
 
         # GBIF download: source metadata present
         with DwCAReader(GBIF_RESULTS_PATH) as results:
-            # We have 23 EML files in dataset/
+            # We have 23 EML files in the dataset directory
             self.assertEqual(23, len(results.source_metadata))
             # Assert a key is present
             self.assertTrue('eccf4b09-f0c8-462d-a48c-41a7ce36815a' in
@@ -804,8 +803,9 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsInstance(metadata, ET.Element)
 
             # Assert we can read basic fields from EML:
-            self.assertEqual(metadata.find('dataset').find('creator').find('individualName')
-                             .find('givenName').text,
+            self.assertEqual(metadata.find('dataset')
+                                     .find('creator').find('individualName')
+                                     .find('givenName').text,
                              'Rob')
 
     def test_row_source_metadata(self):

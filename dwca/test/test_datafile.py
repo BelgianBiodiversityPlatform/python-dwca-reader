@@ -4,7 +4,6 @@ import unittest
 import xml.etree.ElementTree as ET
 import sys
 
-from dwca.rows import CoreRow
 from dwca.read import DwCAReader
 from dwca.files import CSVDataFile
 from dwca.descriptors import DataFileDescriptor
@@ -36,7 +35,7 @@ class TestCSVDataFile(unittest.TestCase):
                 dwca._corefile.coreid_index
 
     def test_file_descriptor_attribute(self):
-        """The instance of DataFileDescriptor which is passed to the constructor is available in .file_descriptor"""
+        """The instance of DataFileDescriptor passed to the constructor is available in .file_descriptor"""
 
         metaxml_section = r"""
         <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
