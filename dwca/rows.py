@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides objects that represents data rows coming from DarwinCore Archive."""
+"""This module provides objects that represents data rows coming from DarwinCore Archives."""
 
 import csv
 import sys
 from dwca.exceptions import InvalidArchive
 
 
-# TODO: Make it abstract ? Private ?
 class Row(object):
     """This class is used to represent a row/line in a Darwin Core Archive.
 
@@ -41,13 +40,13 @@ class Row(object):
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, csv_line, position, descriptor):
+    def __init__(self, csv_line, position, datafile_descriptor):
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
-        self.descriptor = descriptor
+        self.descriptor = datafile_descriptor
 
         #: The row position/index (starting at 0) in the source data file. This can be used, for example with
-        #: :meth:`DwCAReader.get_corerow_by_position` or :meth:`CSVDataFile.get_row_by_position`.
+        #: :meth:`dwca.read.DwCAReader.get_corerow_by_position` or :meth:`dwca.files.CSVDataFile.get_row_by_position`.
         self.position = position
 
         #: The csv line type as stated in the archive descriptor.
@@ -67,16 +66,17 @@ class Row(object):
         # TODO: Consistency chek ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
 
-        #: A dict containing the Row data, such as:
-        #: {'dwc_term_1': 'value',
-        #: 'dwc_term_2': 'value',
-        #: ...}.
+        #: A dict containing the Row data, such as::
         #:
-        #: Example::
+        #:      {'dwc_term_1': 'value',
+        #:       'dwc_term_2': 'value',
+        #:       ...}
         #:
-        #:      print myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
+        #: Usage::
         #:
-        #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is avalaible to make such calls less verbose.
+        #:      myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
+        #:
+        #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
         self.data = {}
 
         for f in self.descriptor.fields:
@@ -95,22 +95,22 @@ class Row(object):
 
 
 class CoreRow(Row):
-    """This class is used to represent a row/line from a Darwin Core Archive data core file.
+    """This class is used to represent a row/line from a Darwin Core Archive core data file.
 
-    You probably won't instantiate it manually but rather obtain it trough :class:`read.DwCAReader`
-    or :class:`read.GBIFResultsReader` (by iterating, using the rows attribute, get_corerow_by_position(),
-    get_corerow_by_id(), ...).
+    You probably won't instantiate it manually but rather obtain it via
+    :meth:`dwca.read.DwCAReader.get_corerow_by_position`, :meth:`dwca.read.DwCAReader.get_corerow_by_id` or simply by
+    looping over a :class:`dwca.read.DwCAReader` object.
     """
 
     def __str__(self):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, line, position, section_descriptor):
-        super(CoreRow, self).__init__(line, position, section_descriptor)
+    def __init__(self, csv_line, position, datafile_descriptor):
+        super(CoreRow, self).__init__(csv_line, position, datafile_descriptor)
 
-        #: The row id (from the data file).
         if self.descriptor.id_index is not None:
+            #: The row id
             self.id = self.raw_fields[self.descriptor.id_index]
         else:
             self.id = None
@@ -143,9 +143,9 @@ class CoreRow(Row):
     def link_extension_files(self, extension_data_files):
         self.extension_data_files = extension_data_files
 
-    #: A list of :class:`.ExtensionRow` instances that relates to this Core row.
     @property
     def extensions(self):
+        """A list of :class:`.ExtensionRow` instances that relates to this Core row."""
         # We use lazy loading
         if not hasattr(self, '_extensions'):
             self._extensions = []
@@ -172,7 +172,7 @@ class CoreRow(Row):
 
 
 class ExtensionRow(Row):
-    """This class is used to represent a row/line from a Darwin Core Archive extension file.
+    """This class is used to represent a row/line from a Darwin Core Archive extension data file.
 
     Most of the time, you won't instantiate it manually but rather obtain it trough the extensions
     attribute of :class:`.CoreRow`.
@@ -182,11 +182,11 @@ class ExtensionRow(Row):
         id_str = "Core row id: " + str(self.core_id)
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
-    def __init__(self, line, position, descriptor):
-        super(ExtensionRow, self).__init__(line, position, descriptor)
+    def __init__(self, csv_line, position, datafile_descriptor):
+        super(ExtensionRow, self).__init__(csv_line, position, datafile_descriptor)
 
-        #: The id of the core row this extension is reffering to.
-        self.core_id = self.raw_fields[descriptor.coreid_index]
+        #: The id of the core row this extension row is referring to.
+        self.core_id = self.raw_fields[datafile_descriptor.coreid_index]
 
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
@@ -209,6 +209,7 @@ def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
     """
     csv_line = csv_line.rstrip(line_ending)
     raw_fields = []
+
     if sys.version_info[0] < 3:
         if isinstance(csv_line, unicode):
             csv_line = csv_line.encode('utf8')
