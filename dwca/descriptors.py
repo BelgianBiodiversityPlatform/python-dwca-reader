@@ -247,19 +247,17 @@ class ArchiveDescriptor(object):
         # Let's drop the XML namespace to avoid prefixes
         metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
 
-        #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive
-        #: Descriptor.
+        #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive Descriptor.
         self.raw_element = ET.fromstring(metaxml_content)
 
-        #: The (relative to archive root) path to the (scientific) metadata of the archive.
+        #: The path (relative to archive root) of the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_element.get('metadata', None)
 
-        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the data core
-        # file of the archive
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
         self.core = DataFileDescriptor.make_from_metafile_section(self.raw_element.find('core'))
 
-        #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the
-        #: archive's extension files
+        #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
+        #: data files.
         self.extensions = []
         for tag in self.raw_element.findall('extension'):
             if tag.find('files').find('location').text not in files_to_ignore:
