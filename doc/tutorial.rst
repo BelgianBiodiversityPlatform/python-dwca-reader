@@ -85,13 +85,15 @@ Basic use, access to metadata and data from the Core file
         # Or retrieve a specific row by its id:
         occurrence_number_three = dwca.get_row_by_id(3)
 
-        # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard dosn't guarantee unicity (nor even that there will be an id).
-        # the index (position) of the row (starting at 0) is generally preferable.
+        # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard doesn't
+        # guarantee unicity (nor even that there will be an id). The index (position) of the row (starting at 0) is
+        # generally preferable.
 
         occurrence_on_second_line = dwca.get_row_by_index(1)
 
         # We can retreive the (absolute) of embedded files
-        # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life cycle.
+        # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life
+        # cycle.
         path = dwca.absolute_temporary_path('occurrence.txt')
 
 
@@ -140,9 +142,9 @@ Another example with multiple extensions (no new API here)
 
 Interaction with Pandas Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The `Pandas Package`_ is a powerful data analysis package, with a specific focus on DataFrames. The conversion from the infidivual core and extension files into Pandas DataFrames provides the user a large set of functionalities, such as easy slicing, filtering, calculating summarizing statistics or plotting.
-
-.. _Pandas Package: http://pandas.pydata.org/
+`Pandas`_ is a powerful data analysis package, with a specific focus on DataFrames. The conversion from the infidivual
+core and extension files into Pandas DataFrames provides the user a large set of functionalities, such as easy slicing,
+filtering, calculating summarizing statistics or plotting.
 
 The easiest way to load the core file as a DataFrame, is to read in the file from the archive. 
 
@@ -215,7 +217,8 @@ For more information about `Pandas`_ and `Seaborn`_, see their respective docume
 .. _Seaborn: https://seaborn.pydata.org/
 
 
-When the DwCA contains multiple files, joining the extensions with the core file could be of interest for further analysis.
+When the DwCA contains multiple files, joining the extensions with the core file could be of interest for further
+analysis.
 
 .. code:: python
 
@@ -264,11 +267,14 @@ When the DwCA contains multiple files, joining the extensions with the core file
     taxon_df = pd.merge(taxon_df, descr_df, left_on='id', right_on='coreid', how="left")
     taxon_df = pd.merge(taxon_df, vern_df, left_on='id', right_on='coreid', how="left")
 
-The result is the core file joined with the extension files. More information about the Pandas merge is provided in the `documentation`_.
+The result is the core file joined with the extension files. More information about the Pandas merge is provided in the
+`documentation`_.
 
 .. _documentation: http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.merge.html
 
-**Remark** that reading in the data to Pandas will load the entire file into memory. For large archives, this won't be feasible. Pandas support the usage of chunks, reading in a processing the data in chunks. As an example, consider the selection of those occurrences for which the ``eventDate`` was a Sunday:
+**Remark** that reading in the data to Pandas will load the entire file into memory. For large archives, this won't be
+feasible. Pandas support the usage of chunks, reading in a processing the data in chunks. As an example, consider the
+selection of those occurrences for which the ``eventDate`` was a Sunday:
 
 .. code:: python
 
@@ -299,7 +305,9 @@ The result is the core file joined with the extension files. More information ab
 
     sunday_occ = pd.concat(sunday_occ)
 
-More advanced processing is supported by Pandas. However, when only interested in counting the number of occurrences for a specific condition, Pandas is not always required. As an example, counting the number of occurrences for each species in the data set is easily supported by the ``Counter`` datatype of Python:
+More advanced processing is supported by Pandas. However, when only interested in counting the number of occurrences for
+a specific condition, Pandas is not always required. As an example, counting the number of occurrences for each species
+in the data set is easily supported by the ``Counter`` datatype of Python:
 
 .. code:: python
 
@@ -317,7 +325,8 @@ More advanced processing is supported by Pandas. However, when only interested i
         print(count_species)
 
 
-Hence, the added value of Pandas depends on the type of analysis. Some more extensive applications of Pandas to work with Darwin Core data is provided in this `data cleaning`_ tutorial and `data analysis`_ tutorial.
+Hence, the added value of Pandas depends on the type of analysis. Some more extensive applications of Pandas to work
+with Darwin Core data is provided in this `data cleaning`_ tutorial and `data analysis`_ tutorial.
 
 .. _data cleaning: https://github.com/jorisvandenbossche/DS-python-data-analysis/blob/master/_solved/case2_biodiversity_cleaning.ipynb
 .. _data analysis: https://github.com/jorisvandenbossche/DS-python-data-analysis/blob/master/_solved/case2_biodiversity_analysis.ipynb
@@ -325,6 +334,8 @@ Hence, the added value of Pandas depends on the type of analysis. Some more exte
 GBIF Downloads
 ~~~~~~~~~~~~~~
 
-The GBIF website allow visitors to export occurrences as a Darwin Core Archive. The resulting file contains a few more things that are not part of the `Darwin Core Archive`_ standard. These additions also works with python-dwca-reader. See :doc:`gbif_results` for explanations on the file format and how to use it.
+The GBIF website allow visitors to export occurrences as a Darwin Core Archive. The resulting file contains a few more
+things that are not part of the `Darwin Core Archive`_ standard. These additions also works with python-dwca-reader.
+See :doc:`gbif_results` for explanations on the file format and how to use it.
 
 .. _Darwin Core Archive: http://en.wikipedia.org/wiki/Darwin_Core_Archive
