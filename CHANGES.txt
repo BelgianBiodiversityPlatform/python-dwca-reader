@@ -1,3 +1,8 @@
+Current:
+--------
+
+- API new: DwCAReader.pd_read() - See Pandas tutorial for usage
+
 v0.11.2 (2017-10-18)
 --------------------
 

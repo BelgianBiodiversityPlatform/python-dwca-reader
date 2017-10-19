@@ -137,8 +137,24 @@ class DwCAReader(object):
                     r[key] = self._parse_xml_included_file(os.path.join(SOURCE_METADATA_DIRECTORY, f))
         return r
 
-    def pd_read_arguments(self, relative_path, **kwargs):
-        pass
+    def pd_read(self, relative_path, **kwargs):
+        """Wraps pandas.read_csv for a data file of the archive
+
+        - kwargs are passed unmodified to pandas.read_csv, except X, Y, Z
+        - also file encoding?
+        - give example
+        document exceptions
+        """
+        from pandas import read_csv
+
+        datafile_descriptor = self.get_descriptor_for(relative_path)
+
+        kwargs['delimiter'] = datafile_descriptor.fields_terminated_by
+        kwargs['skiprows'] = datafile_descriptor.lines_to_ignore
+        kwargs['header'] = None
+        kwargs['names'] = datafile_descriptor.short_headers
+
+        return read_csv(self.absolute_temporary_path(relative_path), **kwargs)
 
     def orphaned_extension_rows(self):
         """Return a dict of the orphaned extension rows.

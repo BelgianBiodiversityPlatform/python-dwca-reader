@@ -142,43 +142,44 @@ Another example with multiple extensions (no new API here)
 
 Interaction with Pandas Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`Pandas`_ is a powerful data analysis package, with a specific focus on DataFrames. The conversion from the infidivual
-core and extension files into Pandas DataFrames provides the user a large set of functionalities, such as easy slicing,
-filtering, calculating summarizing statistics or plotting.
+.. warning::
 
-The easiest way to load the core file as a DataFrame, is to read in the file from the archive. 
+    You'll need to `install Pandas <http://pandas.pydata.org/pandas-docs/stable/install.html>`_ first.
+
+`Pandas`_ is a powerful data analysis package that provides the user a large set of functionalities, such as easy
+slicing, filtering, calculating and summarizing statistics or plotting.
+
+Python-dwca-reader exposes a :meth:`pd_read` method to easily load the content of a data file (core or extension)
+from the archive into a Pandas `DataFrame`_.
 
 .. code:: python
 
-   import pandas as pd
    from dwca.read import DwCAReader
 
    with DwCAReader('gbif-results.zip') as dwca:
-      # Check the core file of the Archive  (Occurrence, Taxon, ...)
-      print("Core type is: {}".format(dwca.descriptor.core.type))
+      print("Core data file is: {}".format(dwca.descriptor.core.file_location)) # => 'occurrence.txt'
 
-      # As the core file is an Occurrence, stored in temporary folder
-      occurrence_path = dwca.absolute_temporary_path('occurrence.txt')
-
-      # There's a descriptor object that gives details about occurrence.txt
-      # Those details will be needed by pd.read_csv
-      occurrence_descriptor = dwca.get_descriptor_for('occurrence.txt')
-
-      # read the core data file as a DataFrame
-      core_df = pd.read_csv(occurrence_path,
-                            delimiter=occurrence_descriptor.fields_terminated_by,
-                            skiprows=occurrence_descriptor.lines_to_ignore,
-                            names=occurrence_descriptor.short_headers,
-                            header=None,
-
-                            parse_dates=True)
+      core_df = dwca.pd_read('occurrence.txt', parse_dates=True)
 
       # All Pandas functionalities are now available on the core_df DataFrame
 
+.. note::
+
+    :meth:`DwCAReader.pd_read` is a simple wrapper around
+    `pandas.read_csv() <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_ and accept the same
+    optional arguments. Only a few of them (`delimiter`, `skiprows`, `encoding`, ...) will be ignored because DwCAReader
+    sets them appropriately for the data file.
 
 As a small example, some applications on the ``core_df``:
 
+.. warning::
+
+    You'll need to `install Seaborn <https://seaborn.pydata.org/installing.html>`_ for this example.
+
 .. code:: python
+
+    import pandas as pd
+    import seaborn as sns
 
     # Number of records for each institutioncode
     core_df["institutionCode"].value_counts()
@@ -187,7 +188,7 @@ As a small example, some applications on the ``core_df``:
     core_df.loc[:20, ["decimalLatitude", "decimalLongitude"]]
 
     # Count the number of records with date information after 1950 
-    sum(core_df["verbatimYear"] > 1950)
+    sum(core_df["year"] > 1950)
 
     # Convert eventDate to DateTime python object
     core_df['eventDate'] = pd.to_datetime(core_df['eventDate'])
@@ -215,7 +216,7 @@ For more information about `Pandas`_ and `Seaborn`_, see their respective docume
 
 .. _Pandas: http://pandas.pydata.org/pandas-docs/stable/
 .. _Seaborn: https://seaborn.pydata.org/
-
+.. _DataFrame: https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html
 
 When the DwCA contains multiple files, joining the extensions with the core file could be of interest for further
 analysis.
@@ -226,41 +227,15 @@ analysis.
     from dwca.read import DwCAReader
 
     with DwCAReader('dwca-2extensions.zip') as dwca:
-
         # Check the core file of the Archive  (Occurrence, Taxon, ...)
         print("Core type is: {}".format(dwca.descriptor.core.type))
-
-        # As the core file is an Taxon, stored in temporary folder
-        core_path = dwca.absolute_temporary_path('taxon.txt')
-        taxon_descriptor = dwca.get_descriptor_for('taxon.txt')
-
-        # Read the core as dataframe (with header)
-        taxon_df = pd.read_csv(core_path,
-                               delimiter=taxon_descriptor.fields_terminated_by,
-                               skiprows=taxon_descriptor.lines_to_ignore,
-                               names=taxon_descriptor.short_headers,
-                               header=None)
 
         # Check the available extensions
         print("Available extensions: {}".format([ext.split("/")[-1] for ext in dwca.descriptor.extensions_type]))
 
-        # Load the description extension
-        descr_path = dwca.absolute_temporary_path('description.txt')
-        descr_descriptor = dwca.get_descriptor_for('description.txt')
-        descr_df = pd.read_csv(descr_path,
-                               delimiter=descr_descriptor.fields_terminated_by,
-                               skiprows=descr_descriptor.lines_to_ignore,
-                               names=descr_descriptor.short_headers,
-                               header=None)
-
-        # Load the VernacularName extension
-        vern_path = dwca.absolute_temporary_path('vernacularname.txt')
-        vern_descriptor = dwca.get_descriptor_for('vernacularname.txt')
-        vern_df = pd.read_csv(vern_path,
-                              delimiter=vern_descriptor.fields_terminated_by,
-                              skiprows=vern_descriptor.lines_to_ignore,
-                              names=vern_descriptor.short_headers,
-                              header=None)
+        taxon_df = dwca.pd_read('taxon.txt')
+        descr_df = dwca.pd_read('description.txt')
+        vern_df = dwca.pd_read('vernacularname.txt')
 
     # Join the information of the description and vernacularname extension to the core taxon information
     # (cfr. database JOIN)
@@ -283,21 +258,8 @@ selection of those occurrences for which the ``eventDate`` was a Sunday:
 
     chunksize = 10 # Chosen chunksize to process the data (pick a larger value for real world cases)
     with DwCAReader('gbif-results.zip') as dwca:
-
-        # As the core file is an Occurrence, stored in temporary folder
-        path = dwca.absolute_temporary_path('occurrence.txt')
-        descriptor = dwca.get_descriptor_for('occurrence.txt')
-
         sunday_occ = []
-        for chunk in pd.read_csv(path,
-                                 delimiter=descriptor.fields_terminated_by,
-                                 skiprows=descriptor.lines_to_ignore,
-                                 names=descriptor.short_headers,
-                                 header=None,
-
-                                 parse_dates=True,
-                                 chunksize=chunksize):
-
+        for chunk in dwca.pd_read('occurrence.txt', chunksize=chunksize):
             chunk['eventDate'] = pd.to_datetime(chunk['eventDate'])
 
             # Subselect only the records recorded on a sunday
