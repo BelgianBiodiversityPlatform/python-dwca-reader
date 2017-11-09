@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 from dwca.files import CSVDataFile
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
+import dwca.vendor
 
 DEFAULT_METADATA_FILENAME = "EML.xml"
 METAFILE_NAME = "meta.xml"
@@ -143,8 +144,12 @@ class DwCAReader(object):
         - kwargs are passed unmodified to pandas.read_csv, except X, Y, Z
         - also file encoding?
         - give example
-        document exceptions
+
+        :raises: `ImportError` if Pandas is not installed.
         """
+        if not dwca.vendor._has_pandas:
+            raise ImportError("Pandas is missing.")
+
         from pandas import read_csv
 
         datafile_descriptor = self.get_descriptor_for(relative_path)

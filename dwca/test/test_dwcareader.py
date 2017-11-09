@@ -8,6 +8,8 @@ import warnings
 
 import xml.etree.ElementTree as ET
 
+from mock import patch
+
 from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
@@ -28,6 +30,17 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+
+    # Test Pandas integration
+    # pd_read: exception if file does'nt exists
+    # pd_read: in normal cases, a dataframe is returned.
+    # test some dataset metrics to check for headers, encoding, ...
+
+    @patch('dwca.vendor._has_pandas', False)
+    def test_pd_read_pandas_unavailable(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            with self.assertRaises(ImportError):
+                dwca.pd_read('occurrence.txt')
 
     def test_get_descriptor_for(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
