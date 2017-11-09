@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 
 from dwca.files import CSVDataFile
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
-from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive
+from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 import dwca.vendor
 
 DEFAULT_METADATA_FILENAME = "EML.xml"
@@ -146,6 +146,8 @@ class DwCAReader(object):
         - give example
 
         :raises: `ImportError` if Pandas is not installed.
+        :raises: :class:`dwca.exceptions.NotADataFileException` if `relative_path` doesn't designate a valid data file
+        in the archive.
         """
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")
@@ -153,6 +155,9 @@ class DwCAReader(object):
         from pandas import read_csv
 
         datafile_descriptor = self.get_descriptor_for(relative_path)
+
+        if datafile_descriptor is None:
+            raise NotADataFile()
 
         kwargs['delimiter'] = datafile_descriptor.fields_terminated_by
         kwargs['skiprows'] = datafile_descriptor.lines_to_ignore

@@ -13,3 +13,7 @@ class InvalidArchive(Exception):
 
 class InvalidSimpleArchive(InvalidArchive):
     """The simple archive appears to be invalid."""
+
+
+class NotADataFile(Exception):
+    """The file doesn't exists or is not a data file."""

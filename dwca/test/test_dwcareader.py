@@ -10,10 +10,12 @@ import xml.etree.ElementTree as ET
 
 from mock import patch
 
+import pandas as pd
+
 from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
-from dwca.exceptions import RowNotFound, InvalidArchive
+from dwca.exceptions import RowNotFound, InvalidArchive, NotADataFile
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 
 from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
@@ -32,15 +34,49 @@ class TestDwCAReader(unittest.TestCase):
     """Unit tests for DwCAReader class."""
 
     # Test Pandas integration
-    # pd_read: exception if file does'nt exists
-    # pd_read: in normal cases, a dataframe is returned.
-    # test some dataset metrics to check for headers, encoding, ...
+    # TODO: test weirder archives (encoding, lime termination, ...)
 
     @patch('dwca.vendor._has_pandas', False)
     def test_pd_read_pandas_unavailable(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             with self.assertRaises(ImportError):
                 dwca.pd_read('occurrence.txt')
+
+    def test_pd_read_simple_case(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            df = dwca.pd_read('occurrence.txt')
+
+            # check types, headers and dimensions
+            self.assertIsInstance(df, pd.DataFrame)
+            cols = df.columns.values.tolist()
+            self.assertEqual(cols, ['id', 'basisOfRecord', 'locality', 'family', 'scientificName'])
+            self.assertEqual(df.shape, (2, 5))  # Row/col counts are correct
+
+            # check content
+            self.assertEqual(df['basisOfRecord'].values.tolist(), ['Observation', 'Observation'])
+            self.assertEqual(df['family'].values.tolist(), ['Tetraodontidae', 'Osphronemidae'])
+            self.assertEqual(df['locality'].values.tolist(), ['Borneo', 'Mumbai'])
+            self.assertEqual(df['scientificName'].values.tolist(), ['tetraodon fluviatilis', 'betta splendens'])
+
+    def test_pd_read_no_data_files(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            with self.assertRaises(NotADataFile):
+                dwca.pd_read('imaginary_file.txt')
+
+            with self.assertRaises(NotADataFile):
+                dwca.pd_read('eml.xml')
+
+    def test_pd_read_extensions(self):
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            desc_df = dwca.pd_read('description.txt')
+            self.assertIsInstance(desc_df, pd.DataFrame)
+            self.assertEqual(desc_df.shape, (3, 4))
+            self.assertEqual(desc_df['language'].values.tolist(), ['EN', 'FR', 'EN'])
+
+            vern_df = dwca.pd_read('vernacularname.txt')
+            self.assertIsInstance(vern_df, pd.DataFrame)
+            self.assertEqual(vern_df.shape, (4, 4))
+            self.assertEqual(vern_df['countryCode'].values.tolist(), ['US', 'ZA', 'FI', 'ZA'])
 
     def test_get_descriptor_for(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
