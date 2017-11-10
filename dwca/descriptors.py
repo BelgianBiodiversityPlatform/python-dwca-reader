@@ -225,7 +225,7 @@ class DataFileDescriptor(object):
 
         See also :py:attr:`headers`.
         """
-        return [term.split("/")[-1] for term in self.headers]
+        return [shorten_term(long_term) for long_term in self.headers]
 
     @property
     def lines_to_ignore(self):
@@ -271,6 +271,9 @@ class ArchiveDescriptor(object):
         #:      "http://rs.gbif.org/terms/1.0/Description"]
         self.extensions_type = [e.type for e in self.extensions]
 
+
+def shorten_term(long_term):
+    return long_term.split("/")[-1]
 
 def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
     # Gets XML attribute and decode it to make it usable. If it doesn't exists, it returns

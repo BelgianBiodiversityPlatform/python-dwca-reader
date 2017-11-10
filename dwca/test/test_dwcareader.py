@@ -29,11 +29,8 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       DWCA_ORPHANED_ROWS)
 
 
-class TestDwCAReader(unittest.TestCase):
-    # TODO: Move row-oriented tests to another test class
-    """Unit tests for DwCAReader class."""
-
-    # Test Pandas integration
+class TestPandasIntegration(unittest.TestCase):
+    """Tests of Pandas integration features."""
     # TODO: test weirder archives (encoding, lime termination, ...)
 
     @patch('dwca.vendor._has_pandas', False)
@@ -78,6 +75,25 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(vern_df.shape, (4, 4))
             self.assertEqual(vern_df['countryCode'].values.tolist(), ['US', 'ZA', 'FI', 'ZA'])
 
+    def test_pd_read_quotedir(self):
+        with DwCAReader(DIRECTORY_CSV_QUOTE_ARCHIVE_PATH) as dwca:
+            df = dwca.pd_read('occurrence.txt')
+            # The field separator is found in a quoted field, don't break
+            self.assertEqual(df.shape, (2, 5))
+            self.assertEqual(df['basisOfRecord'].values.tolist()[0], 'Observation, something')
+
+    def test_pd_read_default_values(self):
+        with DwCAReader(DEFAULT_VAL_PATH) as dwca:
+            df = dwca.pd_read('occurrence.txt')
+
+            self.assertIn('country', df.columns.values.tolist())
+            for country in df['country'].values.tolist():
+                self.assertEqual(country, 'Belgium')
+
+
+class TestDwCAReader(unittest.TestCase):
+    # TODO: Move row-oriented tests to another test class
+    """Unit tests for DwCAReader class."""
     def test_get_descriptor_for(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
             # We can get a DataFileDescriptor for each data file

@@ -1,7 +1,9 @@
+TODO remove test/helpers since they don't bring much
+
 Current:
 --------
 
-- API new: DwCAReader.pd_read() - See Pandas tutorial for usage
+- API new: DwCAReader.pd_read() - See Pandas tutorial for usage.
 - API new: NotADataFile exception.
 
 v0.11.2 (2017-10-18)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 try:
     import pandas
     _has_pandas = True

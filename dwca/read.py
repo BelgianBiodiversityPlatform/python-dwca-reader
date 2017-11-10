@@ -12,7 +12,7 @@ from errno import ENOENT
 import xml.etree.ElementTree as ET
 
 from dwca.files import CSVDataFile
-from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
+from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 import dwca.vendor
 
@@ -139,32 +139,54 @@ class DwCAReader(object):
         return r
 
     def pd_read(self, relative_path, **kwargs):
-        """Wraps pandas.read_csv for a data file of the archive
+        """Return a `Pandas <https://pandas.pydata.org>`_ \
+        `DataFrame <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html>`_ for the data file \
+        located at `relative_path`.
 
-        - kwargs are passed unmodified to pandas.read_csv, except X, Y, Z
-        - also file encoding?
-        - give example
+        This method wraps pandas.read_csv() and accept the same keyword arguments. The following arguments will be
+        ignored (because they are set appropriately for the data file): `delimiter`, `skiprows`, `header` and `names`.
+
+        :param relative_path: path to the data file (relative to the archive root).
+        :type relative_path: str
 
         :raises: `ImportError` if Pandas is not installed.
-        :raises: :class:`dwca.exceptions.NotADataFileException` if `relative_path` doesn't designate a valid data file
+        :raises: :class:`dwca.exceptions.NotADataFile` if `relative_path` doesn't designate a valid data file\
         in the archive.
+
+        .. warning::
+
+            You'll need to `install Pandas <http://pandas.pydata.org/pandas-docs/stable/install.html>`_ before using
+            this method.
+
+        .. note::
+
+            Default values of Darwin Core Archive are supported: A column will be added to the DataFrame if a term has
+            a default value in the Metafile (but no corresponding column in the CSV Data File).
         """
-        if not dwca.vendor._has_pandas:
-            raise ImportError("Pandas is missing.")
-
-        from pandas import read_csv
-
         datafile_descriptor = self.get_descriptor_for(relative_path)
 
         if datafile_descriptor is None:
             raise NotADataFile()
+
+        if not dwca.vendor._has_pandas:
+            raise ImportError("Pandas is missing.")
+
+        from pandas import read_csv
 
         kwargs['delimiter'] = datafile_descriptor.fields_terminated_by
         kwargs['skiprows'] = datafile_descriptor.lines_to_ignore
         kwargs['header'] = None
         kwargs['names'] = datafile_descriptor.short_headers
 
-        return read_csv(self.absolute_temporary_path(relative_path), **kwargs)
+        df = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
+
+        # Add a column for default values, if present in descriptor
+        for field in datafile_descriptor.fields:
+            field_default_value = field['default']
+            if field_default_value is not None:
+                df[shorten_term(field['term'])] = field_default_value
+
+        return df
 
     def orphaned_extension_rows(self):
         """Return a dict of the orphaned extension rows.
