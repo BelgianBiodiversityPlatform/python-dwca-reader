@@ -90,6 +90,26 @@ class TestPandasIntegration(unittest.TestCase):
             for country in df['country'].values.tolist():
                 self.assertEqual(country, 'Belgium')
 
+    def test_pd_read_utf8_eol_ignored(self):
+        """Ensure we don't split lines based on the x85 utf8 EOL char.
+
+        (only the EOL string specified in meta.xml should be used).
+         """
+        with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
+            df = dwca.pd_read('occurrence.txt')
+            # If line properly split => 64 columns.
+            # (61 - and probably an IndexError - if errors)
+            self.assertEqual(64, df.shape[1])
+
+    def test_pd_read_simple_csv(self):
+        with DwCAReader(SIMPLE_CSV) as dwca:
+
+            df = dwca.pd_read('0008333-160118175350007.csv')
+            # Ensure we get the correct number of rows
+            self.assertEqual(3, df.shape[0])
+            # Ensure we can access arbitrary data
+
+            self.assertEqual(df['decimallatitude'].values.tolist()[1], -31.98333)
 
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
@@ -842,7 +862,7 @@ class TestDwCAReader(unittest.TestCase):
 
         with DwCAReader(UTF8EOL_ARCHIVE_PATH) as dwca:
             rows = dwca.rows
-            # If line properly split => 64 rows.
+            # If line properly split => 64 columns.
             # (61 - and probably an IndexError - if errors)
             self.assertEqual(64, len(rows[0].data))
 

@@ -180,7 +180,7 @@ class DwCAReader(object):
 
         df = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
 
-        # Add a column for default values, if present in descriptor
+        # Add a column for default values, if present in the file descriptor
         for field in datafile_descriptor.fields:
             field_default_value = field['default']
             if field_default_value is not None:
@@ -241,7 +241,7 @@ class DwCAReader(object):
         return list(self)
 
     def get_corerow_by_id(self, row_id):
-        """Return the (core) row whose ID is row_id.
+        """Return the (core) row whose ID is `row_id`.
 
         :param row_id: ID of the core row you want
         :type row_id: str
@@ -346,7 +346,6 @@ class DwCAReader(object):
             dwca.get_descriptor_for('occurrence.txt')
             dwca.get_descriptor_for('verbatim.txt')
         """
-
         all_datafiles = [self._corefile] + self._extensionfiles
 
         for datafile in all_datafiles:
