@@ -338,8 +338,8 @@ class DwCAReader(object):
         :param relative_path: the path (relative to the archive root) to the data file you want info about.
         :type relative_path: str
 
-        :returns:  :class:`dwca.descriptors.DataFileDescriptor` -- the descriptor or `None` if `relative_path` doesn't \
-        reference a valid data file.
+        :returns:  :class:`dwca.descriptors.DataFileDescriptor`
+        :raises: :class:`dwca.exceptions.NotADataFile` if `relative_path` doesn't reference a valid data file.
 
         Examples::
 
@@ -351,6 +351,8 @@ class DwCAReader(object):
         for datafile in all_datafiles:
             if datafile.file_descriptor.file_location == relative_path:
                 return datafile.file_descriptor
+
+        raise NotADataFile("{fn} is not a data file".format(fn=relative_path))
 
     def _is_valid_simple_archive(self):
         # If the working dir appear to contains a valid simple darwin core archive

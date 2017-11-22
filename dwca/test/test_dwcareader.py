@@ -121,12 +121,16 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsInstance(dwca.get_descriptor_for('description.txt'), DataFileDescriptor)
             self.assertIsInstance(dwca.get_descriptor_for('vernacularname.txt'), DataFileDescriptor)
 
-            # But None for non-data files
-            self.assertIsNone(dwca.get_descriptor_for('eml.xml'))
-            self.assertIsNone(dwca.get_descriptor_for('meta.xml'))
+            # But NotADataFile exception for non-data files
+            with self.assertRaises(NotADataFile):
+                dwca.get_descriptor_for('eml.xml')
 
-            # Also None for files that don't actually exists
-            self.assertIsNone(dwca.get_descriptor_for('imaginary_file.txt'))
+            with self.assertRaises(NotADataFile):
+                dwca.get_descriptor_for('meta.xml')
+
+            # Also NotADataFile for files that don't actually exists
+            with self.assertRaises(NotADataFile):
+                dwca.get_descriptor_for('imaginary_file.txt')
 
             # Basic content checks of the descriptors
             taxon_descriptor = dwca.get_descriptor_for('taxon.txt')
