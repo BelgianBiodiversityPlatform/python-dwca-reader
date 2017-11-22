@@ -26,7 +26,7 @@ from .helpers import (GBIF_RESULTS_PATH, BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_P
                       SIMPLE_CSV_DOS, BASIC_ENCLOSED_ARCHIVE_PATH, INVALID_SIMPLE_TOOMUCH,
                       INVALID_SIMPLE_TWO, SIMPLE_CSV_NOTENCLOSED, NOMETADATA_PATH,
                       DEFAULT_METADATA_FILENAME, BASIC_ARCHIVE_TGZ_PATH, INVALID_DESCRIPTOR,
-                      DWCA_ORPHANED_ROWS)
+                      DWCA_ORPHANED_ROWS, METADATA_1252_ENCODING)
 
 
 class TestPandasIntegration(unittest.TestCase):
@@ -244,6 +244,22 @@ class TestDwCAReader(unittest.TestCase):
 
         expected_message = "eml.xml is referenced in the archive descriptor but missing."
         self.assertEqual(str(the_exception), expected_message)
+
+    def test_implicit_encoding_metadata(self):
+        """If the metadata file doesn't specifies encoding, use UTF-8."""
+
+        with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
+            v = (dwca.metadata.find('dataset').find('creator').find('individualName')
+                 .find('surName').text)
+            self.assertEqual(v, u'Noé')
+
+    def test_explicit_encoding_metadata(self):
+        """If the metadata file explicitly specifies encoding (<xml ...>), make sure it is used."""
+
+        with DwCAReader(METADATA_1252_ENCODING) as dwca:
+            v = (dwca.metadata.find('dataset').find('creator').find('individualName')
+                 .find('surName').text)
+            self.assertEqual(v, u'Noé')  # Is the accent properly interpreted?
 
     def test_exception_invalid_simple_archives(self):
         """Ensure an exception is raised when simple archives can't be interpreted.

@@ -35,3 +35,4 @@ DEFAULT_METADATA_FILENAME = _sample_data_path('dwca-default-metadata-filename.zi
 BASIC_ARCHIVE_TGZ_PATH = _sample_data_path('dwca-simple-test-archive.tgz')
 INVALID_DESCRIPTOR = _sample_data_path('dwca-malformed-descriptor')
 DWCA_ORPHANED_ROWS = _sample_data_path('dwca-orphaned-rows.zip')
+METADATA_1252_ENCODING = _sample_data_path('dwca-metadata-windows1252-encoding')

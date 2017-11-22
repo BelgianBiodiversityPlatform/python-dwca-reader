@@ -405,7 +405,7 @@ class DwCAReader(object):
 
     def _parse_xml_included_file(self, relative_path):
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
-        return ET.fromstring(self.open_included_file(relative_path).read())
+        return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
 
     def _unzip_or_untar(self):
         """Create a temporary dir. and uncompress/unarchive self.archive_path there.
