@@ -1,0 +1,5 @@
+id	basisOfRecord	locality	family	scientificName
+3	Observation	Borneo	Tetraodontidae	tetraodon fluviatilis
+0	Observation	Mumbai	Osphronemidae	betta splendens
+1	Observation	Mumbai	Osphronemidae	"betta" splendens
+2	Observation	Mumbai	Osphronemidae	'betta' splendens
