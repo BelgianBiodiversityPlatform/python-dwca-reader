@@ -12,6 +12,7 @@ from mock import patch
 
 import pandas as pd
 
+from dwca.files import CSVDataFile
 from dwca.read import DwCAReader, GBIFResultsReader
 from dwca.rows import CoreRow, ExtensionRow
 from dwca.darwincore.utils import qualname as qn
@@ -114,6 +115,30 @@ class TestPandasIntegration(unittest.TestCase):
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+    def test_core_file(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            self.assertIsInstance(dwca.core_file, CSVDataFile)
+
+            # Quick content check just to be sure
+            self.assertEqual(dwca.core_file.lines_to_ignore, 1)
+
+    def test_extension_file_noext(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            self.assertEqual(dwca.extension_files, [])
+
+    def test_extension_files(self):
+        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+            # Check extension_files is iterable and contains the right type
+            for ext in dwca.extension_files:
+                self.assertIsInstance(ext, CSVDataFile)
+
+            # Check the length is correct
+            self.assertEqual(len(dwca.extension_files), 2)
+
+            # Check the order of the metafile is respected + quick content check
+            self.assertEqual(dwca.extension_files[0].file_descriptor.file_location, 'description.txt')
+            self.assertEqual(dwca.extension_files[1].file_descriptor.file_location, 'vernacularname.txt')
+
     def test_get_descriptor_for(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
             # We can get a DataFileDescriptor for each data file

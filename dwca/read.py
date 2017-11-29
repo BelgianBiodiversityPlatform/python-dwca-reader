@@ -109,10 +109,13 @@ class DwCAReader(object):
         #: See :doc:`gbif_results` for more details.
         self.source_metadata = self._load_source_metadata()
 
-        if self.descriptor:
-            #  We have an Archive descriptor that we can use to access data files.
-            self._corefile = CSVDataFile(self._workin_directory_path, self.descriptor.core)
-            self._extensionfiles = [CSVDataFile(work_directory=self._workin_directory_path,
+        if self.descriptor:  #  We have an Archive descriptor that we can use to access data files.
+            #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
+            self.core_file = CSVDataFile(self._workin_directory_path, self.descriptor.core)
+
+            #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
+            #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
+            self.extension_files = [CSVDataFile(work_directory=self._workin_directory_path,
                                                 file_descriptor=d)
                                     for d in self.descriptor.extensions]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
@@ -120,9 +123,9 @@ class DwCAReader(object):
                 datafile_name = self._is_valid_simple_archive()
                 descriptor = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
 
-                self._corefile = CSVDataFile(work_directory=self._workin_directory_path,
+                self.core_file = CSVDataFile(work_directory=self._workin_directory_path,
                                              file_descriptor=descriptor)
-                self._extensionfiles = []
+                self.extension_files = []
             except InvalidSimpleArchive:
                 msg = "No Metafile was found, but archive includes multiple files/directories."
                 raise InvalidSimpleArchive(msg)
@@ -204,7 +207,7 @@ class DwCAReader(object):
             * in `vernacularname.txt`, the row at position 4 references an imaginary core row with ID '7'
 
         """
-        if len(self._extensionfiles) > 0:
+        if len(self.extension_files) > 0:
 
             temp_ids = {}
             for row in self:
@@ -212,7 +215,7 @@ class DwCAReader(object):
             ids = temp_ids.keys()
 
             indexes = {}
-            for extension in self._extensionfiles:
+            for extension in self.extension_files:
                 coreid_index = extension.coreid_index.copy()
                 for id in ids:
                     coreid_index.pop(id, None)
@@ -346,7 +349,7 @@ class DwCAReader(object):
             dwca.get_descriptor_for('occurrence.txt')
             dwca.get_descriptor_for('verbatim.txt')
         """
-        all_datafiles = [self._corefile] + self._extensionfiles
+        all_datafiles = [self.core_file] + self.extension_files
 
         for datafile in all_datafiles:
             if datafile.file_descriptor.file_location == relative_path:
@@ -457,8 +460,8 @@ class DwCAReader(object):
 
         """
         #  Windows can't remove a dir with opened files
-        self._corefile.close()
-        for extension_file in self._extensionfiles:
+        self.core_file.close()
+        for extension_file in self.extension_files:
             extension_file.close()
 
         if self._directory_to_clean:
@@ -469,7 +472,7 @@ class DwCAReader(object):
 
     def core_contains_term(self, term_url):
         """Return `True` if the Core file of the archive contains the `term_url` term."""
-        return term_url in self._corefile.file_descriptor.terms
+        return term_url in self.core_file.file_descriptor.terms
 
     def __iter__(self):
         self._corefile_pointer = 0
@@ -479,10 +482,10 @@ class DwCAReader(object):
         return self.next()
 
     def next(self):  # NOQA
-        r = self._corefile.get_row_by_position(self._corefile_pointer)
+        r = self.core_file.get_row_by_position(self._corefile_pointer)
         if r:
             # Set up linked data so the CoreRow will know about them
-            r.link_extension_files(self._extensionfiles)
+            r.link_extension_files(self.extension_files)
             r.link_source_metadata(self.source_metadata)
 
             self._corefile_pointer = self._corefile_pointer + 1

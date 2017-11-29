@@ -14,7 +14,7 @@ from .helpers import MULTIEXTENSIONS_ARCHIVE_PATH, DIRECTORY_ARCHIVE_PATH
 class TestCSVDataFile(unittest.TestCase):
     def test_coreid_index(self):
         with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
-            extension_files = dwca._extensionfiles
+            extension_files = dwca.extension_files
 
             description_txt = extension_files[0]
             vernacular_txt = extension_files[1]
@@ -32,7 +32,7 @@ class TestCSVDataFile(unittest.TestCase):
             self.assertEqual(description_txt.coreid_index, expected_description)
 
             with self.assertRaises(AttributeError):
-                dwca._corefile.coreid_index
+                dwca.corefile.coreid_index
 
     def test_file_descriptor_attribute(self):
         """The instance of DataFileDescriptor passed to the constructor is available in .file_descriptor"""
