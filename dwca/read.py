@@ -109,7 +109,7 @@ class DwCAReader(object):
         #: See :doc:`gbif_results` for more details.
         self.source_metadata = self._get_source_metadata()
 
-        if self.descriptor:  #  We have an Archive descriptor that we can use to access data files.
+        if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
             self.core_file = CSVDataFile(self._workin_directory_path, self.descriptor.core)
 
@@ -372,11 +372,14 @@ class DwCAReader(object):
 
         raise InvalidSimpleArchive()
 
-    # TODO: Document: Win won't be able to cleanup if some files are not closed
     def open_included_file(self, relative_path, *args, **kwargs):
         """Simple wrapper around Python's build-in `open` function.
 
         To be used only for reading.
+
+        .. warning ::
+            Don't forget to close the files after usage. This is especially important on Windows because temporary
+            (extracted) files won't be cleanable if not closed.
         """
         return open(self.absolute_temporary_path(relative_path), *args, **kwargs)
 
