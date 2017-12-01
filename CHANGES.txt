@@ -1,5 +1,5 @@
-Current
--------
+v0.13.0 (2017-12-01)
+--------------------
 
 - Bugfix: better encoding support for Metadata file - see issue #73.
 - API change: DwCAReader.get_descriptor_for(filename) now raises NotADataFile exception if filename doesn't exists (previously: None was returned).
