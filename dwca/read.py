@@ -16,10 +16,6 @@ from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 import dwca.vendor
 
-DEFAULT_METADATA_FILENAME = "EML.xml"
-METAFILE_NAME = "meta.xml"
-SOURCE_METADATA_DIRECTORY = 'dataset'
-
 
 class DwCAReader(object):
     """This class is used to represent a Darwin Core Archive as a whole.
@@ -68,6 +64,10 @@ class DwCAReader(object):
 
     """
 
+    default_metadata_filename  = "EML.xml"
+    default_metafile_name = "meta.xml"
+    source_metadata_directory = 'dataset'
+
     def __enter__(self):
         return self
 
@@ -91,7 +91,7 @@ class DwCAReader(object):
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
         try:
-            self.descriptor = ArchiveDescriptor(self.open_included_file(METAFILE_NAME).read(),
+            self.descriptor = ArchiveDescriptor(self.open_included_file(self.default_metafile_name).read(),
                                                 files_to_ignore=extensions_to_ignore)
         except IOError as exc:
             if exc.errno == ENOENT:
@@ -107,7 +107,7 @@ class DwCAReader(object):
         #:       'dataset2_UUID': <dataset2 EML> (xml.etree.ElementTree.Element object), ...}
         #:
         #: See :doc:`gbif_results` for more details.
-        self.source_metadata = self._load_source_metadata()
+        self.source_metadata = self._get_source_metadata()
 
         if self.descriptor:  #  We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
@@ -127,19 +127,21 @@ class DwCAReader(object):
                                              file_descriptor=descriptor)
                 self.extension_files = []
             except InvalidSimpleArchive:
-                msg = "No Metafile was found, but archive includes multiple files/directories."
+                msg = "No Metafile was found, but the archive contains multiple files/directories."
                 raise InvalidSimpleArchive(msg)
 
-    def _load_source_metadata(self):
-        r = {}
+    def _get_source_metadata(self):
+        source_metadata = {}
+        source_metadata_dir = os.path.join(self._workin_directory_path, self.source_metadata_directory)
 
-        dataset_dir = os.path.join(self._workin_directory_path, SOURCE_METADATA_DIRECTORY)
-        if os.path.isdir(dataset_dir):
-            for f in os.listdir(dataset_dir):
-                if os.path.isfile(os.path.join(dataset_dir, f)):
-                    key = os.path.splitext(f)[0]
-                    r[key] = self._parse_xml_included_file(os.path.join(SOURCE_METADATA_DIRECTORY, f))
-        return r
+        if os.path.isdir(source_metadata_dir):
+            for f in os.listdir(source_metadata_dir):
+                if os.path.isfile(os.path.join(source_metadata_dir, f)):
+                    dataset_key = os.path.splitext(f)[0]
+                    source_metadata[dataset_key] = self._parse_xml_included_file(
+                        os.path.join(self.source_metadata_directory, f))
+
+        return source_metadata
 
     def pd_read(self, relative_path, **kwargs):
         """Return a `Pandas <https://pandas.pydata.org>`_ \
@@ -207,24 +209,21 @@ class DwCAReader(object):
             * in `vernacularname.txt`, the row at position 4 references an imaginary core row with ID '7'
 
         """
-        if len(self.extension_files) > 0:
+        indexes = {}
 
+        if len(self.extension_files) > 0:
             temp_ids = {}
             for row in self:
                 temp_ids[row.id] = 1
             ids = temp_ids.keys()
 
-            indexes = {}
             for extension in self.extension_files:
                 coreid_index = extension.coreid_index.copy()
                 for id in ids:
                     coreid_index.pop(id, None)
                 indexes[extension.file_descriptor.file_location] = coreid_index
 
-            return indexes
-
-        else:
-            return {}
+        return indexes
 
     @property
     def use_extensions(self):
@@ -368,8 +367,8 @@ class DwCAReader(object):
             return files[0]
         elif len(files) == 2:
             # Two files found: if one of them is EML.xml, the other is considered as the data file
-            if DEFAULT_METADATA_FILENAME in files:
-                return [f for f in files if f is not DEFAULT_METADATA_FILENAME][0]
+            if self.default_metadata_filename in files:
+                return [f for f in files if f is not self.default_metadata_filename][0]
 
         raise InvalidSimpleArchive()
 
@@ -401,7 +400,7 @@ class DwCAReader(object):
 
         else:  # Otherwise, the metadata file has to be named 'EML.xml'
             try:
-                return self._parse_xml_included_file(DEFAULT_METADATA_FILENAME)
+                return self._parse_xml_included_file(self.default_metadata_filename)
             except IOError as e:
                 if e.errno == ENOENT:  # File not found, this is an archive without metadata
                     return None

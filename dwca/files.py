@@ -121,8 +121,8 @@ class CSVDataFile(object):
         """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id field match `core_id`."""
         if core_id not in self.coreid_index:
             return []
-        else:
-            return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]
+
+        return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]
 
     def get_row_by_position(self, position):
         """Return the row at `position` in the file.
