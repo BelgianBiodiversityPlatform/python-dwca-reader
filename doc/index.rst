@@ -18,7 +18,7 @@ It officially supports Python 2.7, 3.5, 3.6 and has been reported to work on Jyt
 Status
 ------
 
-It is currently considered beta quality. It helped many users accross the world, but the API is still slightly moving (for the better!)
+It is currently considered beta quality. It helped many users across the world, but the API is still slightly moving (for the better!)
 
 Concerning performances, it has been reported to work fine with 50Gb archives.
 
@@ -34,11 +34,13 @@ Major limitations
    :hidden:
 
    self
+   install
    tutorial
+   pandas_tutorial
    api
    gbif_results
-   changelog
    contributing
+   changelog
    
 
 Indices and tables
