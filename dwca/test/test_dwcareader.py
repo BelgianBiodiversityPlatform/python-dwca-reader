@@ -112,6 +112,7 @@ class TestPandasIntegration(unittest.TestCase):
 
             self.assertEqual(df['decimallatitude'].values.tolist()[1], -31.98333)
 
+
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
@@ -194,7 +195,7 @@ class TestDwCAReader(unittest.TestCase):
 
         This ensure cases like http://dev.gbif.org/issues/browse/PF-2470 (descriptor contains
         <field index="234" term="http://rs.gbif.org/terms/1.0/lastCrawled"/>, but has only 234
-        fields in data file) fail in a visible way (previously, archive just appeard empty).
+        fields in data file) fail in a visible way (previously, archive just appeared empty).
         """
         with DwCAReader(INVALID_DESCRIPTOR) as dwca:
             with self.assertRaises(InvalidArchive):
@@ -272,7 +273,6 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_implicit_encoding_metadata(self):
         """If the metadata file doesn't specifies encoding, use UTF-8."""
-
         with DwCAReader(DIRECTORY_ARCHIVE_PATH) as dwca:
             v = (dwca.metadata.find('dataset').find('creator').find('individualName')
                  .find('surName').text)
@@ -358,7 +358,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsNone(dwca.metadata)
 
     def test_simplecsv_archive_eml(self):
-        """Test Archive witthout metafile, but containing metadata.
+        """Test Archive without metafile, but containing metadata.
 
         Similar to test_simplecsv_archive, except the archive also contains a Metadata file named
         EML.xml. This correspond to the second case on page #2 of
@@ -374,9 +374,8 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIsNone(dwca.descriptor)
             # (scientific) metadata is found
             self.assertIsInstance(dwca.metadata, ET.Element)
-            # TODO: also access a metadata element to ensure this really works?
-            v = (dwca.metadata.find('dataset').find('language').text)
-            self.assertEqual(v, 'en')
+            # Quick content check
+            self.assertEqual(dwca.metadata.find('dataset').find('language').text, 'en')
 
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""
@@ -574,10 +573,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual('Mumbai', rows[1].data[qn('locality')])
 
     def test_metadata(self):
-        """A few basic tests on the metadata attribute
-
-        TODO: split
-        """
+        """A few basic tests on the metadata attribute."""
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             # Assert metadata is an instance of ElementTree.Element
             self.assertIsInstance(dwca.metadata, ET.Element)
