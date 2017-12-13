@@ -17,21 +17,22 @@ Test coverage can be obtained after installing `coverage.py`_
 
     nosetests --with-coverage --cover-erase --cover-package=dwca
     ..........................................................................
-    Name                       Stmts   Miss  Cover
-    ----------------------------------------------
-    dwca.py                        0      0   100%
-    dwca/darwincore.py             0      0   100%
-    dwca/darwincore/terms.py       1      0   100%
-    dwca/darwincore/utils.py       4      0   100%
-    dwca/descriptors.py           90      1    99%
-    dwca/exceptions.py             4      0   100%
-    dwca/files.py                 60      0   100%
-    dwca/read.py                 141      1    99%
-    dwca/rows.py                  78      4    95%
-    ----------------------------------------------
-    TOTAL                        378      6    98%
+    Name                          Stmts   Miss  Cover
+    -------------------------------------------------
+    dwca/__init__.py                  0      0   100%
+    dwca/darwincore/__init__.py       0      0   100%
+    dwca/darwincore/terms.py          1      0   100%
+    dwca/darwincore/utils.py          4      0   100%
+    dwca/descriptors.py              92      1    99%
+    dwca/exceptions.py                5      0   100%
+    dwca/files.py                    63      1    98%
+    dwca/read.py                    186      1    99%
+    dwca/rows.py                     96     11    89%
+    dwca/vendor.py                    5      2    60%
+    -------------------------------------------------
+    TOTAL                           452     16    96%
     ----------------------------------------------------------------------
-    Ran 74 tests in 1.119s
+    Ran 104 tests in 1.514s
 
     OK
 
