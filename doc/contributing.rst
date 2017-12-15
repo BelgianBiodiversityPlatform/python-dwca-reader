@@ -1,5 +1,5 @@
-Contributing
-============
+Contributing to Python-dwca-reader
+==================================
 
 Contributions are more than welcome! Please also provide tests and documentation for your contributions.
 

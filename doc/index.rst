@@ -40,6 +40,7 @@ Major limitations
    api
    gbif_results
    contributing
+   glossary
    changelog
    
 

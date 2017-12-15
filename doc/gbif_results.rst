@@ -8,7 +8,7 @@ Python-dwca-reader used to provide a specialized ``GBIFResultsReader`` class tha
 Additions to the Darwin Core Archive standard & how to use
 ----------------------------------------------------------
 
-.. warning:: Those additions are not part of the official standard, and the GBIF download format can evolve at any point without notice.
+.. warning:: Those additions are not part of the official standard, and the GBIF download format can evolve at any point without prior announcement.
 
 Source metadata
 ~~~~~~~~~~~~~~~
