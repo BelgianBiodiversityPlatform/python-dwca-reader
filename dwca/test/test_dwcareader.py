@@ -116,6 +116,13 @@ class TestPandasIntegration(unittest.TestCase):
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+    def test_core_file_location(self):
+        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+            self.assertEqual(dwca.core_file_location, 'occurrence.txt')
+
+        with DwCAReader(SIMPLE_CSV) as dwca:
+            self.assertEqual(dwca.core_file_location, '0008333-160118175350007.csv')
+
     def test_core_file(self):
         with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
             self.assertIsInstance(dwca.core_file, CSVDataFile)

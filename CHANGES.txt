@@ -1,3 +1,8 @@
+Current
+-------
+
+- API new: DwCAReader.core_file_location
+
 v0.13.0 (2017-12-01)
 --------------------
 

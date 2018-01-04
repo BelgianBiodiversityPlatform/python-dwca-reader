@@ -143,6 +143,14 @@ class DwCAReader(object):
 
         return source_metadata
 
+    @property
+    def core_file_location(self):
+        """The (relative) path to the core data file.
+
+        Example: `'occurrence.txt'`
+        """
+        return self.core_file.file_descriptor.file_location
+
     def pd_read(self, relative_path, **kwargs):
         """Return a `Pandas <https://pandas.pydata.org>`_ \
         `DataFrame <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html>`_ for the data file \
@@ -451,7 +459,7 @@ class DwCAReader(object):
         else:
             content_dir = extracted_dir
 
-        return (extracted_dir, content_dir)
+        return extracted_dir, content_dir
 
     def close(self):
         """Close the Darwin Core Archive and remove temporary/working files.

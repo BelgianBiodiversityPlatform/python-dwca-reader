@@ -28,6 +28,11 @@ from the archive into a Pandas `DataFrame`_.
     optional arguments. Only a few of them (`delimiter`, `skiprows`, `encoding`, ...) will be ignored because DwCAReader
     sets them appropriately for the data file.
 
+.. note::
+
+    Alternatively, you can do `core_df = dwca.pd_read(dwca.core_file_location, ...)` which is handy if you don't know
+    the name of the core data file.
+
 As a small example, some applications on the ``core_df``:
 
 .. warning::
