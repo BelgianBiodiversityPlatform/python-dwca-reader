@@ -64,7 +64,7 @@ class DwCAReader(object):
 
     """
 
-    default_metadata_filename  = "EML.xml"
+    default_metadata_filename = "EML.xml"
     default_metafile_name = "meta.xml"
     source_metadata_directory = 'dataset'
 
