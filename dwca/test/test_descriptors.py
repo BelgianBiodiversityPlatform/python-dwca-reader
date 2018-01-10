@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
+
 import os
 import unittest
+import xml.etree.ElementTree as ET
 import zipfile
 
-import xml.etree.ElementTree as ET
-
-from dwca.descriptors import DataFileDescriptor, ArchiveDescriptor
 from dwca.darwincore.utils import qualname as qn
+from dwca.descriptors import DataFileDescriptor, ArchiveDescriptor
 from dwca.read import DwCAReader
-
-from .helpers import (BASIC_ARCHIVE_PATH, EXTENSION_ARCHIVE_PATH,
-                      MULTIEXTENSIONS_ARCHIVE_PATH, SIMPLE_CSV)
+from .helpers import sample_data_path
 
 
 class TestDataFileDescriptor(unittest.TestCase):
@@ -21,7 +19,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         This is necessary for archives sans metafile.
         """
-        with zipfile.ZipFile(SIMPLE_CSV, 'r') as archive:
+        with zipfile.ZipFile(sample_data_path('dwca-simple-csv.zip'), 'r') as archive:
             datafile_path = archive.extract('0008333-160118175350007.csv')
 
             d = DataFileDescriptor.make_from_file(datafile_path)
@@ -166,7 +164,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         self.assertEqual(len(core_descriptor.fields), 5)
 
     def test_headers_simplecases(self):
-        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             descriptor = dwca.descriptor
 
             # With core file...
@@ -280,7 +278,7 @@ class TestDataFileDescriptor(unittest.TestCase):
         self.assertEqual(core_descriptor.headers, expected_headers_core)
 
     def test_exposes_raw_element_tag(self):
-        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             self.assertIsInstance(dwca.descriptor.core.raw_element, ET.Element)
 
     def test_content_raw_element_tag(self):
@@ -304,7 +302,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
     def test_tell_if_represents_core(self):
         # 1. Test with core
-        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             core_descriptor = dwca.descriptor.core
             self.assertTrue(core_descriptor.represents_corefile)
             self.assertFalse(core_descriptor.represents_extension)
@@ -369,7 +367,7 @@ class TestDataFileDescriptor(unittest.TestCase):
     def test_exposes_core_type(self):
         """Test that it exposes the Archive Core Type as type"""
 
-        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             coredescriptor = dwca.descriptor.core
             # dwca-simple-test-archive.zip should be of Occurrence type
             self.assertEqual(coredescriptor.type, 'http://rs.tdwg.org/dwc/terms/Occurrence')
@@ -377,7 +375,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             self.assertEqual(coredescriptor.type, qn('Occurrence'))
 
     def test_exposes_core_terms(self):
-        with DwCAReader(EXTENSION_ARCHIVE_PATH) as star_dwca:
+        with DwCAReader(sample_data_path('dwca-star-test-archive.zip')) as star_dwca:
             # The Core file contains the following rows
             # <field index="1" term="http://rs.tdwg.org/dwc/terms/family"/>
             # <field index="2" term="http://rs.tdwg.org/dwc/terms/phylum"/>
@@ -408,7 +406,7 @@ class TestArchiveDescriptor(unittest.TestCase):
     """Unit tests for ArchiveDescriptor class."""
 
     def test_exposes_coredescriptor(self):
-        with DwCAReader(BASIC_ARCHIVE_PATH) as basic_dwca:
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as basic_dwca:
             self.assertIsInstance(basic_dwca.descriptor.core, DataFileDescriptor)
 
     def test_exposes_extensions_2ext(self):
@@ -519,18 +517,18 @@ class TestArchiveDescriptor(unittest.TestCase):
         td = 'http://rs.gbif.org/terms/1.0/Description'
 
         # This archive has no extension, we should get an empty list
-        with DwCAReader(BASIC_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             descriptor = dwca.descriptor
             self.assertEqual([], descriptor.extensions_type)
 
         # This archive only contains the VernacularName extension
-        with DwCAReader(EXTENSION_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-star-test-archive.zip')) as dwca:
             descriptor = dwca.descriptor
             self.assertEqual(descriptor.extensions_type[0], vn)
             self.assertEqual(1, len(descriptor.extensions_type))
 
         # TODO: test with more complex archive
-        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             descriptor = dwca.descriptor
             # 2 extensions are in use : vernacular names and taxon descriptions
             self.assertEqual(2, len(descriptor.extensions_type))
@@ -540,7 +538,7 @@ class TestArchiveDescriptor(unittest.TestCase):
                              frozenset(descriptor.extensions_type))
 
     def test_exposes_metadata_filename(self):
-        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             descriptor = dwca.descriptor
 
             self.assertEqual(descriptor.metadata_filename, "eml.xml")

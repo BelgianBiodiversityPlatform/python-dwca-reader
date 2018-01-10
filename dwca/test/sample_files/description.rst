@@ -1,3 +1,8 @@
+TODO:
+
+    - Update this list (based on what's tested)
+    - While at it, find better names for those files.
+
 Description of sample DwcA
 ==========================
 

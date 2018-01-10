@@ -4,8 +4,7 @@ import unittest
 
 from dwca.read import DwCAReader
 from dwca.rows import csv_line_to_fields
-
-from .helpers import BASIC_ARCHIVE_PATH, NOHEADERS1_PATH, MULTIEXTENSIONS_ARCHIVE_PATH
+from .helpers import sample_data_path
 
 
 class TestUtils(unittest.TestCase):
@@ -19,7 +18,7 @@ class TestUtils(unittest.TestCase):
 class TestCoreRow(unittest.TestCase):
     def test_position(self):
         # Test with archives with and without headers:
-        archives_to_test = (BASIC_ARCHIVE_PATH, NOHEADERS1_PATH)
+        archives_to_test = (sample_data_path('dwca-simple-test-archive.zip'), sample_data_path('dwca-noheaders-1.zip'))
 
         for archive_path in archives_to_test:
             with DwCAReader(archive_path) as dwca:
@@ -30,7 +29,7 @@ class TestCoreRow(unittest.TestCase):
 class TestExtensionRow(unittest.TestCase):
     def test_position(self):
 
-        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             ostrich = dwca.rows[0]
 
             description_first_line = ostrich.extensions[0]

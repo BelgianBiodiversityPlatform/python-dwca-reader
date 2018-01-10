@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import unittest
 import xml.etree.ElementTree as ET
-import sys
 
-from dwca.read import DwCAReader
-from dwca.files import CSVDataFile
 from dwca.descriptors import DataFileDescriptor
-
-from .helpers import MULTIEXTENSIONS_ARCHIVE_PATH, DIRECTORY_ARCHIVE_PATH
+from dwca.files import CSVDataFile
+from dwca.read import DwCAReader
+from .helpers import sample_data_path
 
 
 class TestCSVDataFile(unittest.TestCase):
     def test_coreid_index(self):
-        with DwCAReader(MULTIEXTENSIONS_ARCHIVE_PATH) as dwca:
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             extension_files = dwca.extension_files
 
             description_txt = extension_files[0]
@@ -51,7 +50,7 @@ class TestCSVDataFile(unittest.TestCase):
         """
 
         descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(DIRECTORY_ARCHIVE_PATH, descriptor)
+        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         self.assertEqual(data_file.file_descriptor, descriptor)
 
@@ -72,7 +71,7 @@ class TestCSVDataFile(unittest.TestCase):
         """
 
         descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(DIRECTORY_ARCHIVE_PATH, descriptor)
+        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         self.assertEqual(data_file.lines_to_ignore, 1)
 
@@ -90,7 +89,7 @@ class TestCSVDataFile(unittest.TestCase):
                 """
 
         descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(DIRECTORY_ARCHIVE_PATH, descriptor)
+        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         self.assertEqual(data_file.lines_to_ignore, 3)
 
@@ -107,7 +106,7 @@ class TestCSVDataFile(unittest.TestCase):
         """
 
         descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(DIRECTORY_ARCHIVE_PATH, descriptor)
+        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         data_file.close()
 
@@ -128,7 +127,7 @@ class TestCSVDataFile(unittest.TestCase):
          """
 
         descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(DIRECTORY_ARCHIVE_PATH, descriptor)
+        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         for row in data_file:
             if sys.version_info[0] == 2:

@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-
 import xml.etree.ElementTree as ET
 
-from dwca.read import GBIFResultsReader
 from dwca.darwincore.utils import qualname as qn
-
-from .helpers import GBIF_RESULTS_PATH, MISSINGMETA_PATH
+from dwca.read import GBIFResultsReader
+from .helpers import sample_data_path
 
 
 class TestGBIFResultsReader(unittest.TestCase):
@@ -21,7 +19,7 @@ Rights as supplied: Not supplied"""
 
     def test_dwcareader_features(self):
         """Ensure we didn't break inherited basic DwCAReader features."""
-        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as results_dwca:
             self.assertEqual(158, len(results_dwca.rows))
             self.assertEqual('http://rs.tdwg.org/dwc/terms/Occurrence',
                              results_dwca.descriptor.core.type)
@@ -33,16 +31,16 @@ Rights as supplied: Not supplied"""
     # Specific GBIFResultsReader feature
     def test_citations_access(self):
         """Check the content of citations.txt is accessible."""
-        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as results_dwca:
             self.assertEqual(self.CITATIONS_CONTENT, results_dwca.citations)
 
     def test_rights_access(self):
         """Check the content of rights.txt is accessible."""
-        with GBIFResultsReader(GBIF_RESULTS_PATH) as results_dwca:
+        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as results_dwca:
             self.assertEqual(self.RIGHTS_CONTENT, results_dwca.rights)
 
     def test_source_metadata(self):
-        with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
+        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as results:
             # We have 23 EML files in dataset/
             self.assertEqual(23, len(results.source_metadata))
             # Assert a key is present
@@ -63,7 +61,7 @@ Rights as supplied: Not supplied"""
                              'Rob')
 
     def test_row_source_metadata(self):
-        with GBIFResultsReader(GBIF_RESULTS_PATH) as results:
+        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as results:
             first_row = results.get_corerow_by_id('607759330')
             m = first_row.source_metadata
 
@@ -82,7 +80,7 @@ Rights as supplied: Not supplied"""
             self.assertEqual(v, 'en')
 
     def test_row_source_missing_metadata(self):
-        with GBIFResultsReader(MISSINGMETA_PATH) as results:
+        with GBIFResultsReader(sample_data_path('gbif-results-lacks-s-metadata.zip')) as results:
             # We have source metadata, but not for all datasets/line...
             # We sould have None in this cases
             first_row = results.get_corerow_by_id('607759330')
