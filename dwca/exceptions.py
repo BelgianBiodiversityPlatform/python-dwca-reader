@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provide specific exceptions for the whole package."""
+"""Exceptions for the whole package."""
 
 
 class RowNotFound(Exception):

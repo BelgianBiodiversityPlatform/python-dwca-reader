@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides objects that represents data rows coming from DarwinCore Archives."""
+"""Objects that represents data rows coming from DarwinCore Archives."""
 
 import csv
 import sys
@@ -86,7 +86,7 @@ class Row(object):
             if f['default'] is not None:
                 self.data[f['term']] = f['default']
             else:
-                # else, we have to look in core file
+                # else, we have to look in the data file
                 field_index = int(f['index'])
                 try:
                     self.data[f['term']] = self.raw_fields[field_index]
@@ -128,18 +128,16 @@ class CoreRow(Row):
         # If this method is never called, the source_metadata attribute will not exist
         field_name = 'http://rs.tdwg.org/dwc/terms/datasetID'
 
-        if (archive_source_metadata and (field_name in self.data)):
-            try:
-                m = archive_source_metadata[self.data[field_name]]
-            except KeyError:
-                m = None
-        else:
-            m = None
-
         #: Row-level metadata (if provided by the archive).
         #: This is a non-standard DwCA feature currently that we can sometimes encounter (in downloads from GBIF.org
         #: for example).
-        self.source_metadata = m
+        self.source_metadata = None
+
+        if (archive_source_metadata and (field_name in self.data)):
+            try:
+                self.source_metadata = archive_source_metadata[self.data[field_name]]
+            except KeyError:
+                pass
 
     def link_extension_files(self, extension_data_files):
         self.extension_data_files = extension_data_files

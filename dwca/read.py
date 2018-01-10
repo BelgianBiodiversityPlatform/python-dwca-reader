@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides high-level classes to open and read DarwinCore Archive."""
+"""High-level classes to open and read DarwinCore Archive."""
 
 import os
 import tarfile

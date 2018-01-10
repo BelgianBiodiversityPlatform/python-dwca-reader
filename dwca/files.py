@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""This module provide file-related classes and functions."""
+"""File-related classes and functions."""
 
 import io
 import os
 from array import array
 
 from dwca.rows import CoreRow, ExtensionRow
-
-
-# TODO: create text representation for those objects for easier debugging (avoid [<dwca.files.CSVDataFile object at 0x10c28d9d0>, <dwca.files.CSVDataFile object at 0x10c28da50>])
 
 
 class CSVDataFile(object):
@@ -55,6 +52,9 @@ class CSVDataFile(object):
         self.lines_to_ignore = self.file_descriptor.lines_to_ignore
 
         self._coreid_index = None
+
+    def __str__(self):
+        return self.file_descriptor.file_location
 
     def _position_file_after_header(self):
         self._file_stream.seek(0, 0)

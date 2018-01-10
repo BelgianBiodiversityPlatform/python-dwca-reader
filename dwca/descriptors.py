@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides classes to represents descriptors of a DwC-A.
+"""Classes to represents descriptors of a DwC-A.
 
 - :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the \
 metafile content.

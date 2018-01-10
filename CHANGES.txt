@@ -2,6 +2,7 @@ Current
 -------
 
 - API new: DwCAReader.core_file_location
+- API new: String representation (__str__) for CSVDataFile objects.
 
 v0.13.0 (2017-12-01)
 --------------------

@@ -11,6 +11,18 @@ from .helpers import sample_data_path
 
 
 class TestCSVDataFile(unittest.TestCase):
+    def test_string_representation(self):
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+            extension_files = dwca.extension_files
+
+            self.assertEqual('taxon.txt', str(dwca.core_file))
+            self.assertEqual('description.txt', str(extension_files[0]))
+            self.assertEqual('vernacularname.txt', str(extension_files[1]))
+
+        # Also check with a simple archive
+        with DwCAReader(sample_data_path('dwca-simple-csv.zip')) as dwca:
+            self.assertEqual('0008333-160118175350007.csv', str(dwca.core_file))
+
     def test_coreid_index(self):
         with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             extension_files = dwca.extension_files
