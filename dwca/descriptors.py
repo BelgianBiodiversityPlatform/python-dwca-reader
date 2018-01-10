@@ -11,10 +11,10 @@ introspecting the CSV data file (useful for Archives without metafile).
 """
 
 import csv
-import os
-import sys
-import re
 import io
+import os
+import re
+import sys
 import xml.etree.ElementTree as ET
 
 

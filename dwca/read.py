@@ -3,18 +3,17 @@
 """This module provides high-level classes to open and read DarwinCore Archive."""
 
 import os
-import zipfile
 import tarfile
-from tempfile import mkdtemp
-from shutil import rmtree
-from errno import ENOENT
-
 import xml.etree.ElementTree as ET
+import zipfile
+from errno import ENOENT
+from shutil import rmtree
+from tempfile import mkdtemp
 
-from dwca.files import CSVDataFile
+import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
-import dwca.vendor
+from dwca.files import CSVDataFile
 
 
 class DwCAReader(object):

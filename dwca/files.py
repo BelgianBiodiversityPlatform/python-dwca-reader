@@ -4,10 +4,10 @@
 
 import io
 import os
-
 from array import array
 
 from dwca.rows import CoreRow, ExtensionRow
+
 
 # TODO: create text representation for those objects for easier debugging (avoid [<dwca.files.CSVDataFile object at 0x10c28d9d0>, <dwca.files.CSVDataFile object at 0x10c28da50>])
 

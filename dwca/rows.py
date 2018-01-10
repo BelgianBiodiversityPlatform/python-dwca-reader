@@ -4,6 +4,7 @@
 
 import csv
 import sys
+
 from dwca.exceptions import InvalidArchive
 
 
