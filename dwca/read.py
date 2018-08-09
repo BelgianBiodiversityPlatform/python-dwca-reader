@@ -9,11 +9,14 @@ import zipfile
 from errno import ENOENT
 from shutil import rmtree
 from tempfile import mkdtemp
+from typing import List, Optional
+from xml.etree.ElementTree import Element
 
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 from dwca.files import CSVDataFile
+from dwca.rows import CoreRow
 
 
 class DwCAReader(object):
@@ -74,12 +77,13 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None):
+        # type: (str, List[str]) -> None
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
-        self.archive_path = path
+        self.archive_path = path  # type: str
 
         if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
             self._workin_directory_path = self.archive_path
@@ -89,12 +93,13 @@ class DwCAReader(object):
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
+        self.descriptor = None  # type: Optional[ArchiveDescriptor]
         try:
             self.descriptor = ArchiveDescriptor(self.open_included_file(self.default_metafile_name).read(),
                                                 files_to_ignore=extensions_to_ignore)
         except IOError as exc:
             if exc.errno == ENOENT:
-                self.descriptor = None
+                pass
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or `None` if the archive has no metadata.
@@ -110,7 +115,7 @@ class DwCAReader(object):
 
         if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
-            self.core_file = CSVDataFile(self._workin_directory_path, self.descriptor.core)
+            self.core_file = CSVDataFile(self._workin_directory_path, self.descriptor.core)  # type: CSVDataFile
 
             #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
@@ -144,6 +149,7 @@ class DwCAReader(object):
 
     @property
     def core_file_location(self):
+        # type: () -> str
         """The (relative) path to the core data file.
 
         Example: `'occurrence.txt'`
@@ -234,12 +240,14 @@ class DwCAReader(object):
 
     @property
     def use_extensions(self):
+        # type: () -> bool
         """`True` if the archive makes use of extensions."""
         return (self.descriptor is not None) and self.descriptor.extensions
 
     @property
     # TODO: decide, test and document what we guarantee about ordering
     def rows(self):
+        # type: () -> List[CoreRow]
         """A list of :class:`rows.CoreRow` objects representing the content of the archive.
 
         .. warning::
@@ -250,6 +258,7 @@ class DwCAReader(object):
         return list(self)
 
     def get_corerow_by_id(self, row_id):
+        # type: (str) -> CoreRow
         """Return the (core) row whose ID is `row_id`.
 
         :param row_id: ID of the core row you want
@@ -285,6 +294,7 @@ class DwCAReader(object):
         return self.get_corerow_by_id(row_id)
 
     def get_corerow_by_position(self, position):
+        # type: (int) -> CoreRow
         """Return a core row according to its position/index in core file.
 
         :param position: the position (starting at 0) of the row you want in the core file.
@@ -317,6 +327,7 @@ class DwCAReader(object):
         return self.get_corerow_by_position(index)
 
     def absolute_temporary_path(self, relative_path):
+        # type: (str) -> str
         """Return the absolute path of a file located within the archive.
 
         This method allows raw access to the files contained in the archive. It can be useful to open additional, \
@@ -342,6 +353,7 @@ class DwCAReader(object):
         return os.path.abspath(os.path.join(self._workin_directory_path, relative_path))
 
     def get_descriptor_for(self, relative_path):
+        # type: (str) -> DataFileDescriptor
         """Return a descriptor for the data file located at relative_path.
 
         :param relative_path: the path (relative to the archive root) to the data file you want info about.
@@ -416,6 +428,7 @@ class DwCAReader(object):
                     return None
 
     def _parse_xml_included_file(self, relative_path):
+        # type: (str) -> Element
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
         return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
 
@@ -480,6 +493,7 @@ class DwCAReader(object):
         rmtree(self._directory_to_clean, False)
 
     def core_contains_term(self, term_url):
+        # type: (str) -> bool
         """Return `True` if the Core file of the archive contains the `term_url` term."""
         return term_url in self.core_file.file_descriptor.terms
 

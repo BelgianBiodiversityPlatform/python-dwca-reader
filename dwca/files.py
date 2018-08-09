@@ -6,6 +6,7 @@ import io
 import os
 from array import array
 
+from dwca.descriptors import DataFileDescriptor
 from dwca.rows import CoreRow, ExtensionRow
 
 
@@ -31,10 +32,11 @@ class CSVDataFile(object):
 
     # TODO: More tests for this class
     def __init__(self, work_directory, file_descriptor):
+        # type: (str, DataFileDescriptor) -> None
         """Initialize the CSVDataFile object."""
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the
         #: constructor.
-        self.file_descriptor = file_descriptor
+        self.file_descriptor = file_descriptor  # type: DataFileDescriptor
 
         self._file_stream = io.open(os.path.join(work_directory,
                                                  self.file_descriptor.file_location),

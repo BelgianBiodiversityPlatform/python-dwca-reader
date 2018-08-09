@@ -42,7 +42,7 @@ class DataFileDescriptor(object):
         #:
         self.type = datafile_type
         #: The data file location, relative to the archive root.
-        self.file_location = file_location
+        self.file_location = file_location  # type: str
         #: The encoding of the data file. Example: "utf-8".
         self.file_encoding = file_encoding
         #: If the section represents a core data file, the index/position of the id column in
