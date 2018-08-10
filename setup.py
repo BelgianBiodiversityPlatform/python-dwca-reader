@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='python-dwca-reader',
@@ -12,7 +12,7 @@ setup(
     description='A simple Python package to read Darwin Core Archive (DwC-A) files.',
     long_description=open('README.rst').read(),
     install_requires=[
-        'typing;python_version<"3"',
+        'typing;python_version<"3.5"',
     ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
