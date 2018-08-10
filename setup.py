@@ -12,7 +12,7 @@ setup(
     description='A simple Python package to read Darwin Core Archive (DwC-A) files.',
     long_description=open('README.rst').read(),
     install_requires=[
-        'typing;python_version<="2.7"',
+        'typing;python_version<"3"',
     ],
     classifiers=[
         'Programming Language :: Python :: 2.7',
