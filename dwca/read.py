@@ -387,7 +387,7 @@ class DwCAReader(object):
         elif len(files) == 2:
             # Two files found: if one of them is EML.xml, the other is considered as the data file
             if self.default_metadata_filename in files:
-                return [f for f in files if f is not self.default_metadata_filename][0]
+                return [f for f in files if f != self.default_metadata_filename][0]
 
         raise InvalidSimpleArchive()
 
