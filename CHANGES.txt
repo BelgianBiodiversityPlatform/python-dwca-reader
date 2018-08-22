@@ -3,6 +3,7 @@ Current
 
 - API new: DwCAReader.core_file_location
 - API new: String representation (__str__) for CSVDataFile objects.
+- API change: CSVDataFile.get_line_at_position() raises IndexError in case of line not found (previously: returned None)
 
 v0.13.0 (2017-12-01)
 --------------------

@@ -18,7 +18,7 @@ def sizeof_fmt(num, suffix='B'):
 
 def show_memory_usage():
     bytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    print sizeof_fmt(bytes)
+    print(sizeof_fmt(bytes))
 
 
 # print "Time before: "
@@ -40,7 +40,7 @@ def test():
             #tmp = row.data[qn('locality')]
             i = i +1
             if (i % 100000 == 0):
-                print "in loop mem: "
+                print("in loop mem: ")
                 show_memory_usage()
 
     #     print "Time after loop"
@@ -56,5 +56,5 @@ def test():
 if (__name__ == '__main__'):
     from timeit import Timer
     t = Timer("test()", "from __main__ import test")
-    print t.timeit(number=3)
+    print(t.timeit(number=3))
 

@@ -11,6 +11,11 @@ from .helpers import sample_data_path
 
 
 class TestCSVDataFile(unittest.TestCase):
+    def test_get_line_at_position_raises_indexerror(self):
+        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+            with self.assertRaises(IndexError):
+                dwca.core_file.get_row_by_position(10000)
+
     def test_string_representation(self):
         with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             extension_files = dwca.extension_files

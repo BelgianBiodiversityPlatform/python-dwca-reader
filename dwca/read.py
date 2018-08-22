@@ -9,7 +9,7 @@ import zipfile
 from errno import ENOENT
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import List, Optional
+from typing import List, Optional, Dict
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
@@ -103,7 +103,7 @@ class DwCAReader(object):
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or `None` if the archive has no metadata.
-        self.metadata = self._parse_metadata_file()
+        self.metadata = self._parse_metadata_file()  # type: Element
 
         #: If the archive contains source-level metadata (typically, GBIF downloads), this is a dict such as::
         #:
@@ -111,7 +111,7 @@ class DwCAReader(object):
         #:       'dataset2_UUID': <dataset2 EML> (xml.etree.ElementTree.Element object), ...}
         #:
         #: See :doc:`gbif_results` for more details.
-        self.source_metadata = self._get_source_metadata()
+        self.source_metadata = self._get_source_metadata()  # type: Dict[str, Element]
 
         if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
@@ -121,7 +121,7 @@ class DwCAReader(object):
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
             self.extension_files = [CSVDataFile(work_directory=self._workin_directory_path,
                                                 file_descriptor=d)
-                                    for d in self.descriptor.extensions]
+                                    for d in self.descriptor.extensions]  # type: List[CSVDataFile]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
@@ -135,6 +135,7 @@ class DwCAReader(object):
                 raise InvalidSimpleArchive(msg)
 
     def _get_source_metadata(self):
+        # type: () -> Dict[str, Element]
         source_metadata = {}
         source_metadata_dir = os.path.join(self._workin_directory_path, self.source_metadata_directory)
 
@@ -181,10 +182,10 @@ class DwCAReader(object):
             Default values of Darwin Core Archive are supported: A column will be added to the DataFrame if a term has
             a default value in the Metafile (but no corresponding column in the CSV Data File).
         """
-        datafile_descriptor = self.get_descriptor_for(relative_path)
+        datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
 
-        if datafile_descriptor is None:
-            raise NotADataFile()
+        #if datafile_descriptor is None:
+        #    raise NotADataFile()
 
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")
@@ -505,16 +506,17 @@ class DwCAReader(object):
         return self.next()
 
     def next(self):  # NOQA
-        r = self.core_file.get_row_by_position(self._corefile_pointer)
-        if r:
+        try:
+            row = self.core_file.get_row_by_position(self._corefile_pointer)
+
             # Set up linked data so the CoreRow will know about them
-            r.link_extension_files(self.extension_files)
-            r.link_source_metadata(self.source_metadata)
+            row.link_extension_files(self.extension_files)
+            row.link_source_metadata(self.source_metadata)
 
             self._corefile_pointer = self._corefile_pointer + 1
-            return r
-
-        raise StopIteration
+            return row
+        except IndexError:
+            raise StopIteration
 
 
 class GBIFResultsReader(DwCAReader):

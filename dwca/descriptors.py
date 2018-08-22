@@ -16,6 +16,8 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+from typing import Optional
+from xml.etree.ElementTree import Element
 
 
 class DataFileDescriptor(object):
@@ -27,9 +29,22 @@ class DataFileDescriptor(object):
         * :meth:`make_from_file` (created by analyzing the data file)
     """
 
-    def __init__(self, created_from_file, raw_element, represents_corefile, datafile_type,
-                 file_location, file_encoding, id_index, coreid_index, fields,
-                 lines_terminated_by, fields_enclosed_by, fields_terminated_by):
+    def __init__(self,
+                 created_from_file,     # type: bool
+                 raw_element,           # type: Element
+                 represents_corefile,   # type: bool
+                 datafile_type,         # type: Optional[str]
+                 file_location,
+                 file_encoding,
+                 id_index,
+                 coreid_index,
+                 fields,
+                 lines_terminated_by,
+                 fields_enclosed_by,
+                 fields_terminated_by
+                 ):
+        # type: (...) -> None
+
         #: True if this descriptor was created by analyzing the data file.
         self.created_from_file = created_from_file
         #: The <section> element describing the data file, from the metafile. None if the

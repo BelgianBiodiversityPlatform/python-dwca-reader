@@ -5,6 +5,7 @@
 import io
 import os
 from array import array
+from typing import List, Union, IO, Dict, Optional
 
 from dwca.descriptors import DataFileDescriptor
 from dwca.rows import CoreRow, ExtensionRow
@@ -51,33 +52,39 @@ class CSVDataFile(object):
                                                    self.file_descriptor.file_encoding)
 
         #: Number of lines to ignore (header lines) in the CSV file.
-        self.lines_to_ignore = self.file_descriptor.lines_to_ignore
+        self.lines_to_ignore = self.file_descriptor.lines_to_ignore  # type: int
 
-        self._coreid_index = None
+        self._coreid_index = None  # type: Optional[Dict[str, List[int]]]
 
     def __str__(self):
+        # type: () -> str
         return self.file_descriptor.file_location
 
     def _position_file_after_header(self):
+        # type: () -> None
         self._file_stream.seek(0, 0)
         if self.lines_to_ignore > 0:
             self._file_stream.readlines(self.lines_to_ignore)
 
     def __iter__(self):
+        # type: () -> CSVDataFile
         self._position_file_after_header()
         return self
 
     def __next__(self):
+        # type: () -> str
         return self.next()
 
     def next(self):  # NOQA
-        for row in self._file_stream:
-            return row
+        # type: () -> str
+        for line in self._file_stream:
+            return line
 
         raise StopIteration
 
     @property
     def coreid_index(self):
+        # type: () -> Dict[str, List[int]]
         """An index of the core rows referenced by this data file.
 
         It is a Python dict such as:
@@ -108,8 +115,9 @@ class CSVDataFile(object):
         return self._coreid_index
 
     def _build_coreid_index(self):
+        # type: () -> Dict[str, List[int]]
         """Build and return an index of Core Rows IDs suitable for `CSVDataFile.coreid_index`."""
-        index = {}
+        index = {}  # type: Dict[str, List[int]]
 
         for position, row in enumerate(self):
             tmp = ExtensionRow(row, position, self.file_descriptor)
@@ -120,32 +128,36 @@ class CSVDataFile(object):
     # TODO: For ExtensionRow and a specific field only, generalize ?
     # TODO: What happens if called on a Core Row?
     def get_all_rows_by_coreid(self, core_id):
+        # type: (int) -> List[ExtensionRow]
         """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id field match `core_id`."""
         if core_id not in self.coreid_index:
             return []
 
-        return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]
+        return [self.get_row_by_position(p) for p in self.coreid_index[core_id]]  # type: ignore # FIXME
 
     def get_row_by_position(self, position):
+        # type: (int) -> Union[CoreRow, ExtensionRow]
         """Return the row at `position` in the file.
 
         Header lines are ignored.
+
+        :raises: IndexError if there's no line at `position`.
         """
-        try:
-            l = self._get_line_by_position(position)
-            if self.file_descriptor.represents_corefile:
-                return CoreRow(l, position, self.file_descriptor)
-            else:
-                return ExtensionRow(l, position, self.file_descriptor)
-        except IndexError:
-            return None
+
+        l = self._get_line_by_position(position)
+        if self.file_descriptor.represents_corefile:
+            return CoreRow(l, position, self.file_descriptor)
+        else:
+            return ExtensionRow(l, position, self.file_descriptor)
 
     # Raises IndexError if position is incorrect
     def _get_line_by_position(self, position):
+        # type: (int) -> str
         self._file_stream.seek(self._line_offsets[position + self.lines_to_ignore], 0)
         return self._file_stream.readline()
 
     def close(self):
+        # type: () -> None
         """Close the file.
 
         The content of the file will not be accessible in any way afterwards.
@@ -154,6 +166,7 @@ class CSVDataFile(object):
 
 
 def _get_all_line_offsets(f, encoding):
+    # type: (IO, str) -> array
     """Parse the file whose handler is given and return an array (long) containing the start offset\
     of each line.
 

@@ -4,7 +4,9 @@
 
 import csv
 import sys
+from typing import Dict, Optional
 
+from dwca.descriptors import DataFileDescriptor
 from dwca.exceptions import InvalidArchive
 
 
@@ -42,18 +44,21 @@ class Row(object):
                           source_metadata_flag=source_metadata_flag)
 
     def __init__(self, csv_line, position, datafile_descriptor):
+        # type: (str, int, DataFileDescriptor) -> None
+
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
-        self.descriptor = datafile_descriptor
+        self.descriptor = datafile_descriptor  # type: DataFileDescriptor
 
         #: The row position/index (starting at 0) in the source data file. This can be used, for example with
         #: :meth:`dwca.read.DwCAReader.get_corerow_by_position` or :meth:`dwca.files.CSVDataFile.get_row_by_position`.
-        self.position = position
+        self.position = position  # type: int
 
         #: The csv line type as stated in the archive descriptor.
-        #: Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
+        #: (or None if the archive has no descriptor). Examples:
+        #: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
-        self.rowtype = self.descriptor.type
+        self.rowtype = self.descriptor.type  # type: Optional[str]
 
         # self.raw_fields is a list of the csv_line's content
         #:
@@ -78,7 +83,7 @@ class Row(object):
         #:      myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
         #:
         #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
-        self.data = {}
+        self.data = {}  # type: Dict[str, str]
 
         for f in self.descriptor.fields:
             # if field by default, we can find its value directly in <field>
@@ -104,10 +109,12 @@ class CoreRow(Row):
     """
 
     def __str__(self):
+        # type: () -> str
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
     def __init__(self, csv_line, position, datafile_descriptor):
+        # type: (str, int, DataFileDescriptor) -> None
         super(CoreRow, self).__init__(csv_line, position, datafile_descriptor)
 
         if self.descriptor.id_index is not None:
@@ -144,6 +151,7 @@ class CoreRow(Row):
 
     @property
     def extensions(self):
+        # type () -> List[ExtensionRow]
         """A list of :class:`.ExtensionRow` instances that relates to this Core row."""
         # We use lazy loading
         if not hasattr(self, '_extensions'):
@@ -182,6 +190,7 @@ class ExtensionRow(Row):
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
     def __init__(self, csv_line, position, datafile_descriptor):
+        # type: (str, int, DataFileDescriptor) -> None
         super(ExtensionRow, self).__init__(csv_line, position, datafile_descriptor)
 
         #: The id of the core row this extension row is referring to.
