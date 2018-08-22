@@ -9,7 +9,7 @@ import zipfile
 from errno import ENOENT
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any, IO
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
@@ -86,10 +86,10 @@ class DwCAReader(object):
         self.archive_path = path  # type: str
 
         if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
-            self._workin_directory_path = self.archive_path
-            self._directory_to_clean = None
+            self._working_directory_path = self.archive_path
+            self._directory_to_clean = None  # type: Optional[str]
         else:  # Archive is zipped/tgzipped, we have to extract it first.
-            self._directory_to_clean, self._workin_directory_path = self._extract()
+            self._directory_to_clean, self._working_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
@@ -103,7 +103,7 @@ class DwCAReader(object):
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or `None` if the archive has no metadata.
-        self.metadata = self._parse_metadata_file()  # type: Element
+        self.metadata = self._parse_metadata_file()  # type: Optional[Element]
 
         #: If the archive contains source-level metadata (typically, GBIF downloads), this is a dict such as::
         #:
@@ -115,19 +115,19 @@ class DwCAReader(object):
 
         if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
-            self.core_file = CSVDataFile(self._workin_directory_path, self.descriptor.core)  # type: CSVDataFile
+            self.core_file = CSVDataFile(self._working_directory_path, self.descriptor.core)  # type: CSVDataFile
 
             #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
-            self.extension_files = [CSVDataFile(work_directory=self._workin_directory_path,
+            self.extension_files = [CSVDataFile(work_directory=self._working_directory_path,
                                                 file_descriptor=d)
                                     for d in self.descriptor.extensions]  # type: List[CSVDataFile]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
-                descriptor = DataFileDescriptor.make_from_file(os.path.join(self._workin_directory_path, datafile_name))
+                descriptor = DataFileDescriptor.make_from_file(os.path.join(self._working_directory_path, datafile_name))
 
-                self.core_file = CSVDataFile(work_directory=self._workin_directory_path,
+                self.core_file = CSVDataFile(work_directory=self._working_directory_path,
                                              file_descriptor=descriptor)
                 self.extension_files = []
             except InvalidSimpleArchive:
@@ -137,7 +137,7 @@ class DwCAReader(object):
     def _get_source_metadata(self):
         # type: () -> Dict[str, Element]
         source_metadata = {}
-        source_metadata_dir = os.path.join(self._workin_directory_path, self.source_metadata_directory)
+        source_metadata_dir = os.path.join(self._working_directory_path, self.source_metadata_directory)
 
         if os.path.isdir(source_metadata_dir):
             for f in os.listdir(source_metadata_dir):
@@ -208,6 +208,7 @@ class DwCAReader(object):
         return df
 
     def orphaned_extension_rows(self):
+        # type: () -> Dict[str, Dict[str, List[int]]]
         """Return a dict of the orphaned extension rows.
 
         Orphaned extension rows are extension rows who reference non-existing core rows. This methods returns a dict
@@ -284,6 +285,7 @@ class DwCAReader(object):
         raise RowNotFound
 
     def get_row_by_id(self, row_id):
+        # type: (str) -> CoreRow
         """
         .. warning::
 
@@ -317,6 +319,7 @@ class DwCAReader(object):
         raise RowNotFound
 
     def get_row_by_index(self, index):
+        # type: (int) -> CoreRow
         """
         .. warning::
 
@@ -351,7 +354,7 @@ class DwCAReader(object):
             File existence is not tested.
 
         """
-        return os.path.abspath(os.path.join(self._workin_directory_path, relative_path))
+        return os.path.abspath(os.path.join(self._working_directory_path, relative_path))
 
     def get_descriptor_for(self, relative_path):
         # type: (str) -> DataFileDescriptor
@@ -377,14 +380,15 @@ class DwCAReader(object):
         raise NotADataFile("{fn} is not a data file".format(fn=relative_path))
 
     def _is_valid_simple_archive(self):
+        # type: () -> str
         # If the working dir appear to contains a valid simple darwin core archive
         # (one single data file + possibly some metadata), returns the name of the data file.
         #
         # Otherwise, throws an InvalidSimpleArchive exception.
-        _, _, files = next(os.walk(self._workin_directory_path))
+        _, _, files = next(os.walk(self._working_directory_path))
 
-        if len(files) == 1:  # We found a single file
-            return files[0]
+        if len(files) == 1:
+            return files[0]  # A single file, so that's the one
         elif len(files) == 2:
             # Two files found: if one of them is EML.xml, the other is considered as the data file
             if self.default_metadata_filename in files:
@@ -393,6 +397,7 @@ class DwCAReader(object):
         raise InvalidSimpleArchive()
 
     def open_included_file(self, relative_path, *args, **kwargs):
+        # type: (str, Any, Any) -> IO
         """Simple wrapper around Python's build-in `open` function.
 
         To be used only for reading.
@@ -404,10 +409,11 @@ class DwCAReader(object):
         return open(self.absolute_temporary_path(relative_path), *args, **kwargs)
 
     def _parse_metadata_file(self):
+        # type: () -> Optional[Element]
         """Load the archive (scientific) Metadata file, parse it with\
         ElementTree and return its content (or `None` if the archive has no metadata).
 
-        :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an inexisting
+        :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an non-existent
         metadata file.
         """
         # If the archive has descriptor, look for the metadata filename there.
@@ -424,9 +430,11 @@ class DwCAReader(object):
         else:  # Otherwise, the metadata file has to be named 'EML.xml'
             try:
                 return self._parse_xml_included_file(self.default_metadata_filename)
-            except IOError as e:
-                if e.errno == ENOENT:  # File not found, this is an archive without metadata
+            except IOError as exc:
+                if exc.errno == ENOENT:  # File not found, this is an archive without metadata
                     return None
+
+        assert False  # For MyPy, see: https://github.com/python/mypy/issues/4223#issuecomment-342865133
 
     def _parse_xml_included_file(self, relative_path):
         # type: (str) -> Element
@@ -434,6 +442,7 @@ class DwCAReader(object):
         return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
 
     def _unzip_or_untar(self):
+        # type: () -> str
         """Create a temporary dir. and uncompress/unarchive self.archive_path there.
 
         Returns the path to that temporary directory.
@@ -488,10 +497,7 @@ class DwCAReader(object):
             extension_file.close()
 
         if self._directory_to_clean:
-            self._cleanup_temporary_dir()
-
-    def _cleanup_temporary_dir(self):
-        rmtree(self._directory_to_clean, False)
+            rmtree(self._directory_to_clean, False)
 
     def core_contains_term(self, term_url):
         # type: (str) -> bool
