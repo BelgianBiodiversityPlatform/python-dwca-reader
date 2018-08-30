@@ -125,7 +125,8 @@ class DwCAReader(object):
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
-                descriptor = DataFileDescriptor.make_from_file(os.path.join(self._working_directory_path, datafile_name))
+                descriptor = DataFileDescriptor.make_from_file(
+                    os.path.join(self._working_directory_path, datafile_name))
 
                 self.core_file = CSVDataFile(work_directory=self._working_directory_path,
                                              file_descriptor=descriptor)
@@ -136,7 +137,7 @@ class DwCAReader(object):
 
     def _get_source_metadata(self):
         # type: () -> Dict[str, Element]
-        source_metadata = {}
+        source_metadata = {}  # type: Dict[str, Element]
         source_metadata_dir = os.path.join(self._working_directory_path, self.source_metadata_directory)
 
         if os.path.isdir(source_metadata_dir):
@@ -183,9 +184,6 @@ class DwCAReader(object):
             a default value in the Metafile (but no corresponding column in the CSV Data File).
         """
         datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
-
-        #if datafile_descriptor is None:
-        #    raise NotADataFile()
 
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")
@@ -244,7 +242,7 @@ class DwCAReader(object):
     def use_extensions(self):
         # type: () -> bool
         """`True` if the archive makes use of extensions."""
-        return (self.descriptor is not None) and self.descriptor.extensions
+        return self.descriptor and len(self.descriptor.extensions) > 0
 
     @property
     # TODO: decide, test and document what we guarantee about ordering

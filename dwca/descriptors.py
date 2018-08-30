@@ -16,7 +16,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
-from typing import Optional
+from typing import Optional, List, Dict, Set
 from xml.etree.ElementTree import Element
 
 
@@ -34,14 +34,14 @@ class DataFileDescriptor(object):
                  raw_element,           # type: Element
                  represents_corefile,   # type: bool
                  datafile_type,         # type: Optional[str]
-                 file_location,
-                 file_encoding,
-                 id_index,
-                 coreid_index,
-                 fields,
-                 lines_terminated_by,
-                 fields_enclosed_by,
-                 fields_terminated_by
+                 file_location,         # type: str
+                 file_encoding,         # type: str
+                 id_index,              # type: int
+                 coreid_index,          # type: int
+                 fields,                # type: List[Dict]
+                 lines_terminated_by,   # type: str
+                 fields_enclosed_by,    # type: str
+                 fields_terminated_by   # type: str
                  ):
         # type: (...) -> None
 
@@ -202,11 +202,13 @@ class DataFileDescriptor(object):
 
     @property
     def terms(self):
+        # type: () -> Set[str]
         """Return a Python set containing all the Darwin Core terms appearing in file."""
         return set([f['term'] for f in self.fields])
 
     @property
     def headers(self):
+        # type: () -> List[str]
         """A list of (ordered) column names that can be used to create a header line for the data file.
 
         Example::
@@ -232,6 +234,7 @@ class DataFileDescriptor(object):
 
     @property
     def short_headers(self):
+        # type: () -> List[str]
         """A list of (ordered) column names (short version) that can be used to create a header line for the data file.
 
            Example::
@@ -244,6 +247,7 @@ class DataFileDescriptor(object):
 
     @property
     def lines_to_ignore(self):
+        # type: () -> int
         """Return the number of header lines/lines to ignore in the data file."""
         if self.created_from_file:
             # Single-file archives always have a header line with DwC terms
@@ -256,6 +260,7 @@ class ArchiveDescriptor(object):
     """Class used to encapsulate the whole Metafile (`meta.xml`)."""
 
     def __init__(self, metaxml_content, files_to_ignore=None):
+        # type: (str, List[str]) -> None
         if files_to_ignore is None:
             files_to_ignore = []
 
@@ -263,17 +268,17 @@ class ArchiveDescriptor(object):
         metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive Descriptor.
-        self.raw_element = ET.fromstring(metaxml_content)
+        self.raw_element = ET.fromstring(metaxml_content)  # type: Element
 
         #: The path (relative to archive root) of the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_element.get('metadata', None)
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
-        self.core = DataFileDescriptor.make_from_metafile_section(self.raw_element.find('core'))
+        self.core = DataFileDescriptor.make_from_metafile_section(self.raw_element.find('core'))  # type: DataFileDescriptor
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
-        self.extensions = []
+        self.extensions = []  # type: List[DataFileDescriptor]
         for tag in self.raw_element.findall('extension'):
             if tag.find('files').find('location').text not in files_to_ignore:
                 self.extensions.append(DataFileDescriptor.make_from_metafile_section(tag))
