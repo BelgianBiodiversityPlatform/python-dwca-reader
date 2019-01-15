@@ -242,7 +242,7 @@ class DwCAReader(object):
     def use_extensions(self):
         # type: () -> bool
         """`True` if the archive makes use of extensions."""
-        return self.descriptor and len(self.descriptor.extensions) > 0
+        return (self.descriptor is not None) and (len(self.descriptor.extensions) > 0)
 
     @property
     # TODO: decide, test and document what we guarantee about ordering

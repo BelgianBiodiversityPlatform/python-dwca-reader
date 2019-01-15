@@ -23,6 +23,10 @@ class TestPandasIntegration(unittest.TestCase):
     """Tests of Pandas integration features."""
     # TODO: test weirder archives (encoding, lime termination, ...)
 
+    def test_missing_extension_path(self):
+        with self.assertRaises(InvalidArchive):
+            DwCAReader(sample_data_path('dwca-missing-extension-details'))
+
     @patch('dwca.vendor._has_pandas', False)
     def test_pd_read_pandas_unavailable(self):
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:

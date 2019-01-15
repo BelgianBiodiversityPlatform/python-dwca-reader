@@ -19,6 +19,8 @@ import xml.etree.ElementTree as ET
 from typing import Optional, List, Dict, Set
 from xml.etree.ElementTree import Element
 
+from dwca.exceptions import InvalidArchive
+
 
 class DataFileDescriptor(object):
     """Those objects describe a data file fom the archive.
@@ -279,11 +281,16 @@ class ArchiveDescriptor(object):
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
         self.extensions = []  # type: List[DataFileDescriptor]
-        for tag in self.raw_element.findall('extension'):
-            if tag.find('files').find('location').text not in files_to_ignore:
-                self.extensions.append(DataFileDescriptor.make_from_metafile_section(tag))
+        for extension_tag in self.raw_element.findall('extension'):  #  type: Element
+            location_tag = extension_tag.find('./files/location')
+            if location_tag is not None:
+                extension_filename = location_tag.text
+                if extension_filename not in files_to_ignore:
+                    self.extensions.append(DataFileDescriptor.make_from_metafile_section(extension_tag))
+            else:
+                 raise InvalidArchive("An extension file is referenced in Metafile, but its path is not specified.")
 
-        #: A list of extension types in use in the archive.
+        #: A list of extension (types) in use in the archive.
         #:
         #: Example::
         #:
