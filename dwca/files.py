@@ -89,9 +89,9 @@ class CSVDataFile(object):
 
         It is a Python dict such as:
         ::
-        
-            { 
-            core_id1: [1],    # Row at position 1 references a Core Row whose ID is core_id1 
+
+            {
+            core_id1: [1],    # Row at position 1 references a Core Row whose ID is core_id1
             core_id2: [8, 10] # Rows at position 8 and 10 references a Core Row whose ID is core_id2
             }
 
@@ -144,11 +144,11 @@ class CSVDataFile(object):
         :raises: IndexError if there's no line at `position`.
         """
 
-        l = self._get_line_by_position(position)
+        line = self._get_line_by_position(position)
         if self.file_descriptor.represents_corefile:
-            return CoreRow(l, position, self.file_descriptor)
+            return CoreRow(line, position, self.file_descriptor)
         else:
-            return ExtensionRow(l, position, self.file_descriptor)
+            return ExtensionRow(line, position, self.file_descriptor)
 
     # Raises IndexError if position is incorrect
     def _get_line_by_position(self, position):

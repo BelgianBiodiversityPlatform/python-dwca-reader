@@ -156,8 +156,8 @@ class CoreRow(Row):
         # We use lazy loading
         if not hasattr(self, '_extensions'):
             self._extensions = []
-            for csv in self.extension_data_files:
-                [self._extensions.append(r) for r in csv.get_all_rows_by_coreid(self.id)]
+            for csv_file in self.extension_data_files:
+                [self._extensions.append(r) for r in csv_file.get_all_rows_by_coreid(self.id)]
 
         return self._extensions
 

@@ -252,8 +252,7 @@ class DwCAReader(object):
 
         .. warning::
 
-            All rows will be loaded in memory. In case of a large Darwin Core Archive, you may prefer iterating with
-            a for loop.
+            All rows will be loaded in memory. In case of a large Darwin Core Archive, you may prefer using a for loop.
         """
         return list(self)
 
@@ -379,6 +378,7 @@ class DwCAReader(object):
 
     def _is_valid_simple_archive(self):
         # type: () -> str
+
         # If the working dir appear to contains a valid simple darwin core archive
         # (one single data file + possibly some metadata), returns the name of the data file.
         #
@@ -464,6 +464,7 @@ class DwCAReader(object):
         return tmp_dir
 
     def _extract(self):
+        # type () -> Tuple[str, str]
         """Extract the current (Zip of Tar) archive in a temporary directory and return paths.
 
         Returns (path_to_clean_afterwards, path_to_content)
@@ -482,6 +483,7 @@ class DwCAReader(object):
         return extracted_dir, content_dir
 
     def close(self):
+        # type () -> None
         """Close the Darwin Core Archive and remove temporary/working files.
 
         .. note::
@@ -503,6 +505,7 @@ class DwCAReader(object):
         return term_url in self.core_file.file_descriptor.terms
 
     def __iter__(self):
+        # type: () -> DwCAReader
         self._corefile_pointer = 0
         return self
 
@@ -510,6 +513,7 @@ class DwCAReader(object):
         return self.next()
 
     def next(self):  # NOQA
+        # type () -> CoreRow
         try:
             row = self.core_file.get_row_by_position(self._corefile_pointer)
 

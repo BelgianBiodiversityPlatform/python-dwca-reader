@@ -276,19 +276,20 @@ class ArchiveDescriptor(object):
         self.metadata_filename = self.raw_element.get('metadata', None)
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
-        self.core = DataFileDescriptor.make_from_metafile_section(self.raw_element.find('core'))  # type: DataFileDescriptor
+        raw_core_element = self.raw_element.find('core')
+        self.core = DataFileDescriptor.make_from_metafile_section(raw_core_element)  # type: DataFileDescriptor
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
         self.extensions = []  # type: List[DataFileDescriptor]
-        for extension_tag in self.raw_element.findall('extension'):  #  type: Element
+        for extension_tag in self.raw_element.findall('extension'):  # type: Element
             location_tag = extension_tag.find('./files/location')
             if location_tag is not None:
                 extension_filename = location_tag.text
                 if extension_filename not in files_to_ignore:
                     self.extensions.append(DataFileDescriptor.make_from_metafile_section(extension_tag))
             else:
-                 raise InvalidArchive("An extension file is referenced in Metafile, but its path is not specified.")
+                raise InvalidArchive("An extension file is referenced in Metafile, but its path is not specified.")
 
         #: A list of extension (types) in use in the archive.
         #:
@@ -301,6 +302,7 @@ class ArchiveDescriptor(object):
 
 def shorten_term(long_term):
     return long_term.split("/")[-1]
+
 
 def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
     # Gets XML attribute and decode it to make it usable. If it doesn't exists, it returns
