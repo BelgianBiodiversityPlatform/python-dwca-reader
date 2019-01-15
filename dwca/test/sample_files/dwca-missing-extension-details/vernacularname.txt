@@ -1,0 +1,5 @@
+id	vernacularName	countryCode	language
+1	ostrich	US	english
+1	volstruis	ZA	afrikaans
+1	strutsi	FI	finnish
+2	Asitiese patrys	ZA	afrikaans

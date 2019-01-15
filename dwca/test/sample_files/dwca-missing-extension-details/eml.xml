@@ -1,0 +1,58 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1" 
+    xmlns:md="eml://ecoinformatics.org/methods-2.1.1" 
+    xmlns:proj="eml://ecoinformatics.org/project-2.1.1" 
+    xmlns:d="eml://ecoinformatics.org/dataset-2.1.1" 
+    xmlns:res="eml://ecoinformatics.org/resource-2.1.1" 
+    xmlns:dc="http://purl.org/dc/terms/" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.1/eml.xsd"
+    packageId="http://localhost:8080/ipt-2.0.3/resource.do?id=star-test-archive/v1" system="http://gbif.org" scope="system" xml:lang="eng">
+
+    <dataset>
+      <title xml:lang="eng">star-test-archive</title>
+      <creator>
+    <individualName>
+      <surName>dqsdqs</surName>
+    </individualName>
+    <organizationName>qsdqsdqs</organizationName>
+    <positionName>qsdqsdqsd</positionName>
+      </creator>
+      <metadataProvider>
+    <individualName>
+      <givenName>Nicolas</givenName>
+      <surName>Noé</surName>
+    </individualName>
+    <electronicMailAddress>nicolas@niconoe.eu</electronicMailAddress>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+      <givenName>Nicolas</givenName>
+      <surName>Noé</surName>
+    </individualName>
+    <electronicMailAddress>nicolas@niconoe.eu</electronicMailAddress>
+    <role>user</role>
+      </associatedParty>
+	  <pubDate>
+      	2013-04-09
+      </pubDate>
+      <language>eng</language>
+      <abstract>
+        <para>qsdqsdqsdqsd</para>
+      </abstract>
+      <contact>
+    <individualName>
+      <surName>qsdqsd</surName>
+    </individualName>
+    <organizationName>qsdqsdqsd</organizationName>
+    <positionName>qsdqsd</positionName>
+      </contact>
+    </dataset>
+    <additionalMetadata>
+     <metadata>
+      <gbif>
+        <dateStamp>2013-04-09T01:48:28.408+02:00</dateStamp>
+        <hierarchyLevel>dataset</hierarchyLevel>
+      </gbif>
+     </metadata>
+    </additionalMetadata>
+</eml:eml>
