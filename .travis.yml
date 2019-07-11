@@ -10,8 +10,8 @@ matrix:
       dist: xenial
       sudo: true
     - python: 3.8-dev
-        dist: xenial
-        sudo: true
+      dist: xenial
+      sudo: true
 
 install:
     - python setup.py install
