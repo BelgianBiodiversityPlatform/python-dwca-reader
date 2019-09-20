@@ -6,3 +6,4 @@ doc/_build
 *$py.class
 dist/
 .python-version
+.mypy_cache
