@@ -1,6 +1,7 @@
 Current
 -------
 
+- Better standard support: fields with data column can also have a default value (issue #80)
 
 v0.13.1 (2018-08-30)
 --------------------

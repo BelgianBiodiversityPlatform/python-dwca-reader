@@ -69,7 +69,7 @@ class Row(object):
 
         # TODO: raw_fields is a new property: to test
 
-        # TODO: Consistency chek ?? self.raw_fields length should be :
+        # TODO: Consistency check ?? self.raw_fields length should be :
         # num of self.raw_fields described in core_meta + 2 (id and \n)
 
         #: A dict containing the Row data, such as::
@@ -85,19 +85,20 @@ class Row(object):
         #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
         self.data = {}  # type: Dict[str, str]
 
-        for f in self.descriptor.fields:
-            # if field by default, we can find its value directly in <field>
-            # attribute
-            if f['default'] is not None:
-                self.data[f['term']] = f['default']
-            else:
-                # else, we have to look in the data file
-                field_index = int(f['index'])
-                try:
-                    self.data[f['term']] = self.raw_fields[field_index]
-                except IndexError:
-                    msg = 'The descriptor references a non-existent field (index={i})'.format(i=field_index)
-                    raise InvalidArchive(msg)
+        for field_descriptor in self.descriptor.fields:
+            try:
+                column_index = int(field_descriptor['index'])
+                field_row_value = self.raw_fields[column_index]
+            except TypeError:
+                # int() argument must be a string... We don't have an index for this field
+                field_row_value = None
+            except IndexError:
+                msg = 'The descriptor references a non-existent field (index={i})'.format(i=column_index)
+                raise InvalidArchive(msg)
+
+            field_default_value = field_descriptor['default']
+
+            self.data[field_descriptor['term']] = field_row_value or field_default_value or ''
 
 
 class CoreRow(Row):

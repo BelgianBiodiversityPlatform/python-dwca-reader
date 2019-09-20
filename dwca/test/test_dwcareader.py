@@ -109,6 +109,11 @@ class TestPandasIntegration(unittest.TestCase):
 class TestDwCAReader(unittest.TestCase):
     # TODO: Move row-oriented tests to another test class
     """Unit tests for DwCAReader class."""
+    def test_partial_default(self):
+        with DwCAReader(sample_data_path('dwca-partial-default.zip')) as dwca:
+            self.assertEqual(dwca.rows[0].data[qn('country')], 'France')  # Value comes from data file
+            self.assertEqual(dwca.rows[1].data[qn('country')], 'Belgium')  # Value is field default
+
     def test_core_file_location(self):
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             self.assertEqual(dwca.core_file_location, 'occurrence.txt')
