@@ -9,14 +9,14 @@ import zipfile
 from errno import ENOENT
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import List, Optional, Dict, Any, IO
+from typing import List, Optional, Dict, Any, IO, Tuple, Union
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 from dwca.files import CSVDataFile
-from dwca.rows import CoreRow
+from dwca.rows import CoreRow, ExtensionRow
 
 
 class DwCAReader(object):
@@ -464,7 +464,7 @@ class DwCAReader(object):
         return tmp_dir
 
     def _extract(self):
-        # type () -> Tuple[str, str]
+        # type: () -> Tuple[str, str]
         """Extract the current (Zip of Tar) archive in a temporary directory and return paths.
 
         Returns (path_to_clean_afterwards, path_to_content)
@@ -483,7 +483,7 @@ class DwCAReader(object):
         return extracted_dir, content_dir
 
     def close(self):
-        # type () -> None
+        # type: () -> None
         """Close the Darwin Core Archive and remove temporary/working files.
 
         .. note::
@@ -513,7 +513,7 @@ class DwCAReader(object):
         return self.next()
 
     def next(self):  # NOQA
-        # type () -> CoreRow
+        # type: () -> CoreRow
         try:
             row = self.core_file.get_row_by_position(self._corefile_pointer)
 
