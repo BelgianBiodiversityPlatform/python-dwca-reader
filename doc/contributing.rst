@@ -55,7 +55,7 @@ Releasing at PyPI
 -----------------
 
 * (Ensuring it works -also on Windows-, the test coverage is good and the documentation is updated)
-* Update the packaging (version number in setup.py, CHANGES.txt, doc/conf.py, ...) then run:
+* Update the packaging (version number in dwca/version.py, CHANGES.txt, ...) then run:
     
 ::
 

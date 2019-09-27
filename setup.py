@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
+exec(open('dwca/version.py').read())
+
 setup(
     name='python-dwca-reader',
-    version='0.13.2',
+    version= __version__,
     author=u'Nicolas Noé - Belgian Biodiversity Platform',
     author_email='n.noe@biodiversity.be',
     packages=['dwca', 'dwca.darwincore', 'dwca.test'],
