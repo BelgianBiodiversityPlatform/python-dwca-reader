@@ -11,6 +11,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from typing import List, Optional, Dict, Any, IO, Tuple, Union
 from xml.etree.ElementTree import Element
+from collections import defaultdict
 
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
@@ -193,7 +194,7 @@ class DwCAReader(object):
         kwargs['delimiter'] = datafile_descriptor.fields_terminated_by
         kwargs['skiprows'] = datafile_descriptor.lines_to_ignore
         kwargs['header'] = None
-        kwargs['names'] = datafile_descriptor.short_headers
+        kwargs['names'] = self._maybe_dedup_names(datafile_descriptor.short_headers)
 
         df = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
 
@@ -204,6 +205,29 @@ class DwCAReader(object):
                 df[shorten_term(field['term'])] = field_default_value
 
         return df
+
+    def _maybe_dedup_names(self, names):
+        # see gh-7160 and gh-9424: this helps to provide
+        # immediate alleviation of the duplicate names
+        # issue and appears to be satisfactory to users,
+        # but ultimately, not needing to butcher the names
+        # would be nice!
+        # if self.mangle_dupe_cols:
+        names = list(names)  # so we can index
+        counts = defaultdict(int)
+
+        for i, col in enumerate(names):
+            cur_count = counts[col]
+
+            while cur_count > 0:
+                counts[col] = cur_count + 1
+                col = "{column}.{count}".format(column=col, count=cur_count)
+                cur_count = counts[col]
+
+            names[i] = col
+            counts[col] = cur_count + 1
+
+        return names
 
     def orphaned_extension_rows(self):
         # type: () -> Dict[str, Dict[str, List[int]]]
