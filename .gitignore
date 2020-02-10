@@ -7,3 +7,4 @@ doc/_build
 dist/
 .python-version
 .mypy_cache
+.tmp/
