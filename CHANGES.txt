@@ -1,3 +1,8 @@
+Current
+-------
+
+- Temporary directory is now configurable
+
 v0.13.2 (2019-09-20)
 --------------------
 

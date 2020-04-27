@@ -8,7 +8,7 @@ import warnings
 import xml.etree.ElementTree as ET
 
 import pandas as pd
-from mock import patch
+from unittest.mock import patch
 
 from dwca.darwincore.utils import qualname as qn
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor

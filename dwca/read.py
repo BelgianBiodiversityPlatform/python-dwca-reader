@@ -9,8 +9,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from errno import ENOENT
 from shutil import rmtree
-from tempfile import mkdtemp, tempdir
-from typing import List, Optional, Dict, Any, IO, Tuple, Union
+from tempfile import mkdtemp
+from typing import List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
@@ -32,6 +32,9 @@ class DwCAReader(object):
     :param extensions_to_ignore: path (relative to the archive root) of extension data files to ignore. This will \
     improve speed and memory usage for large archives. Missing files are silently ignored.
     :type extensions_to_ignore: list
+    :param tmp_dir: temporary directory to use to uncompress the archive (if needed). If not provided, Python default \
+     will be used.
+    :type tmp_dir: str
 
     :raises: :class:`dwca.exceptions.InvalidArchive`
     :raises: :class:`dwca.exceptions.InvalidSimpleArchive`
@@ -78,7 +81,7 @@ class DwCAReader(object):
         self.close()
 
     def __init__(self, path, extensions_to_ignore=None, tmp_dir=None):
-        # type: (str, List[str]) -> None
+        # type: (str, List[str], str) -> None
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
