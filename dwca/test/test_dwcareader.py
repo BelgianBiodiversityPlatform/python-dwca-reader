@@ -207,6 +207,11 @@ class TestDwCAReader(unittest.TestCase):
                 for _ in dwca:
                     pass
 
+    def test_custom_tempdir(self):
+        tmp_dir = os.path.abspath(".tmp")
+        with DwCAReader(sample_data_path('dwca-simple-test-archive.zip'), tmp_dir=tmp_dir) as dwca:
+            assert dwca.absolute_temporary_path("occurrence.txt").startswith(tmp_dir)
+
     def test_use_extensions(self):
         """Ensure the .use_extensions attribute of DwCAReader works as intended."""
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:

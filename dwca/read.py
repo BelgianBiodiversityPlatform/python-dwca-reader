@@ -4,11 +4,12 @@
 
 import os
 import tarfile
+import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from errno import ENOENT
 from shutil import rmtree
-from tempfile import mkdtemp
+from tempfile import mkdtemp, tempdir
 from typing import List, Optional, Dict, Any, IO, Tuple, Union
 from xml.etree.ElementTree import Element
 
@@ -76,11 +77,15 @@ class DwCAReader(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
-    def __init__(self, path, extensions_to_ignore=None):
+    def __init__(self, path, extensions_to_ignore=None, tmp_dir=None):
         # type: (str, List[str]) -> None
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
+        if tmp_dir is not None:
+            if not os.path.exists(tmp_dir):
+                os.mkdir(tmp_dir)
+            tempfile.tempdir = tmp_dir
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path  # type: str
