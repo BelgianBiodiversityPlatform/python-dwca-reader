@@ -1,7 +1,8 @@
 Current
 -------
 
-- Temporary directory is now configurable
+- Dropped support for Python 2.7
+- API new: Temporary directory is now configurable
 
 v0.13.2 (2019-09-20)
 --------------------
