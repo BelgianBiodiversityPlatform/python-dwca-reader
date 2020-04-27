@@ -1,5 +1,5 @@
-Current
--------
+v0.14.0 (2020-04-27)
+--------------------
 
 - Dropped support for Python 2.7
 - API new: Temporary directory is now configurable
