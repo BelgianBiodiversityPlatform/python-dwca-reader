@@ -5,6 +5,8 @@ doc/_build
 .idea
 *$py.class
 dist/
+build/
+*.egg-info/
 .python-version
 .mypy_cache
 .tmp/
