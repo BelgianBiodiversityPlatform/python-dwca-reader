@@ -45,17 +45,17 @@ class Row(object):
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
-        self.descriptor: DataFileDescriptor = datafile_descriptor
+        self.descriptor = datafile_descriptor  # type: DataFileDescriptor 
 
         #: The row position/index (starting at 0) in the source data file. This can be used, for example with
         #: :meth:`dwca.read.DwCAReader.get_corerow_by_position` or :meth:`dwca.files.CSVDataFile.get_row_by_position`.
-        self.position: int = position
+        self.position = position  # type: int
 
         #: The csv line type as stated in the archive descriptor.
         #: (or None if the archive has no descriptor). Examples:
         #: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
-        self.rowtype: Optional[str] = self.descriptor.type
+        self.rowtype = self.descriptor.type  # type: Optional[str]
 
         # self.raw_fields is a list of the csv_line's content
         #:
@@ -80,7 +80,7 @@ class Row(object):
         #:      myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
         #:
         #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
-        self.data: Dict[str, str] = {}
+        self.data = {}  # type: Dict[str, str]
 
         for field_descriptor in self.descriptor.fields:
             try:

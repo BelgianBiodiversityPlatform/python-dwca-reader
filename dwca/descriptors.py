@@ -55,7 +55,7 @@ class DataFileDescriptor(object):
         #:
         self.type = datafile_type
         #: The data file location, relative to the archive root.
-        self.file_location: str = file_location
+        self.file_location = file_location  # type: str
         #: The encoding of the data file. Example: "utf-8".
         self.file_encoding = file_encoding
         #: If the section represents a core data file, the index/position of the id column in
@@ -258,18 +258,18 @@ class ArchiveDescriptor(object):
         metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive Descriptor.
-        self.raw_element: Element = ET.fromstring(metaxml_content)
+        self.raw_element = ET.fromstring(metaxml_content)  # type: Element
 
         #: The path (relative to archive root) of the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_element.get('metadata', None)
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
         raw_core_element = self.raw_element.find('core')
-        self.core: DataFileDescriptor = DataFileDescriptor.make_from_metafile_section(raw_core_element)
+        self.core = DataFileDescriptor.make_from_metafile_section(raw_core_element)  # type: DataFileDescriptor
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
-        self.extensions: List[DataFileDescriptor] = []
+        self.extensions = [] # type: List[DataFileDescriptor]
         for extension_tag in self.raw_element.findall('extension'):  # type: Element
             location_tag = extension_tag.find('./files/location')
             if location_tag is not None:

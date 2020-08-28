@@ -88,17 +88,17 @@ class DwCAReader(object):
             tempfile.tempdir = tmp_dir
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
-        self.archive_path: str = path
+        self.archive_path = path  # type: str
 
         if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
             self._working_directory_path = self.archive_path
-            self._directory_to_clean: Optional[str] = None
+            self._directory_to_clean = None  # type: Optional[str]
         else:  # Archive is zipped/tgzipped, we have to extract it first.
             self._directory_to_clean, self._working_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
-        self.descriptor: Optional[ArchiveDescriptor] = None
+        self.descriptor = None  # type: Optional[ArchiveDescriptor]
         try:
             self.descriptor = ArchiveDescriptor(self.open_included_file(self.default_metafile_name).read(),
                                                 files_to_ignore=extensions_to_ignore)
@@ -108,7 +108,7 @@ class DwCAReader(object):
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or `None` if the archive has no metadata.
-        self.metadata: Optional[Element] = self._parse_metadata_file()
+        self.metadata = self._parse_metadata_file()  # type: Optional[Element]
 
         #: If the archive contains source-level metadata (typically, GBIF downloads), this is a dict such as::
         #:
@@ -116,17 +116,17 @@ class DwCAReader(object):
         #:       'dataset2_UUID': <dataset2 EML> (xml.etree.ElementTree.Element object), ...}
         #:
         #: See :doc:`gbif_results` for more details.
-        self.source_metadata: Dict[str, Element] = self._get_source_metadata()
+        self.source_metadata = self._get_source_metadata()  # type: Dict[str, Element]
 
         if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
-            self.core_file: CSVDataFile = CSVDataFile(self._working_directory_path, self.descriptor.core)
+            self.core_file = CSVDataFile(self._working_directory_path, self.descriptor.core)  # type: CSVDataFile
 
             #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
-            self.extension_files: List[CSVDataFile] = [CSVDataFile(work_directory=self._working_directory_path,
-                                                       file_descriptor=d)
-                                                       for d in self.descriptor.extensions]
+            self.extension_files = [CSVDataFile(work_directory=self._working_directory_path,
+                                                file_descriptor=d)
+                                                for d in self.descriptor.extensions]  # type: List[CSVDataFile]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
@@ -141,7 +141,7 @@ class DwCAReader(object):
                 raise InvalidSimpleArchive(msg)
 
     def _get_source_metadata(self) -> Dict[str, Element]:
-        source_metadata: Dict[str, Element] = {}
+        source_metadata = {}  # type: Dict[str, Element]
         source_metadata_dir = os.path.join(self._working_directory_path, self.source_metadata_directory)
 
         if os.path.isdir(source_metadata_dir):
@@ -186,7 +186,7 @@ class DwCAReader(object):
             Default values of Darwin Core Archive are supported: A column will be added to the DataFrame if a term has
             a default value in the Metafile (but no corresponding column in the CSV Data File).
         """
-        datafile_descriptor: DataFileDescriptor = self.get_descriptor_for(relative_path)
+        datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
 
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")

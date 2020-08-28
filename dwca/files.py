@@ -34,7 +34,7 @@ class CSVDataFile(object):
         """Initialize the CSVDataFile object."""
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the
         #: constructor.
-        self.file_descriptor: DataFileDescriptor = file_descriptor
+        self.file_descriptor = file_descriptor  # type: DataFileDescriptor
 
         self._file_stream = io.open(os.path.join(work_directory,
                                                  self.file_descriptor.file_location),
@@ -49,9 +49,9 @@ class CSVDataFile(object):
                                                    self.file_descriptor.file_encoding)
 
         #: Number of lines to ignore (header lines) in the CSV file.
-        self.lines_to_ignore: int = self.file_descriptor.lines_to_ignore
+        self.lines_to_ignore = self.file_descriptor.lines_to_ignore  # type: int 
 
-        self._coreid_index: Optional[Dict[str, List[int]]] = None
+        self._coreid_index = None  # type: Optional[Dict[str, List[int]]]
 
     def __str__(self) -> str:
         return self.file_descriptor.file_location
@@ -107,7 +107,7 @@ class CSVDataFile(object):
 
     def _build_coreid_index(self) -> Dict[str, List[int]]:
         """Build and return an index of Core Rows IDs suitable for `CSVDataFile.coreid_index`."""
-        index: Dict[str, List[int]] = {}
+        index = {}  # type: Dict[str, List[int]]
 
         for position, row in enumerate(self):
             tmp = ExtensionRow(row, position, self.file_descriptor)
