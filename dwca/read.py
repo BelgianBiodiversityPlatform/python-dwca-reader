@@ -280,17 +280,6 @@ class DwCAReader(object):
 
         raise RowNotFound
 
-    def get_row_by_id(self, row_id: str) -> CoreRow:
-        """
-        .. warning::
-
-            Deprecated: this method has been renamed to :meth:`get_corerow_by_id`.
-
-        """
-        import warnings
-        warnings.warn("This method has been renamed to get_corerow_by_id().", DeprecationWarning)
-        return self.get_corerow_by_id(row_id)
-
     def get_corerow_by_position(self, position: int) -> CoreRow:
         """Return a core row according to its position/index in core file.
 
@@ -311,17 +300,6 @@ class DwCAReader(object):
                 return row
 
         raise RowNotFound
-
-    def get_row_by_index(self, index: int) -> CoreRow:
-        """
-        .. warning::
-
-            Deprecated: this method has been renamed to :meth:`get_corerow_by_position`.
-
-        """
-        import warnings
-        warnings.warn("This method has been renamed to get_corerow_by_position().", DeprecationWarning)
-        return self.get_corerow_by_position(index)
 
     def absolute_temporary_path(self, relative_path: str) -> str:
         """Return the absolute path of a file located within the archive.
@@ -509,23 +487,3 @@ class DwCAReader(object):
             return row
         except IndexError:
             raise StopIteration
-
-
-class GBIFResultsReader(DwCAReader):
-    """This class is used to represent the slightly augmented variant of Darwin Core Archive produced by the GBIF Data
-    Portal when exporting occurrences.
-
-    .. warning:: This class is deprecated. See :doc:`gbif_results` to learn how to achieve the same results with \
-    :class:`.DwCAReader`.
-
-    """
-
-    @property
-    def citations(self):
-        """The content of the `citations.txt` file included in the archive."""
-        return self.open_included_file('citations.txt').read()
-
-    @property
-    def rights(self):
-        """The content of the `rights.txt` file included in the archive."""
-        return self.open_included_file('rights.txt').read()

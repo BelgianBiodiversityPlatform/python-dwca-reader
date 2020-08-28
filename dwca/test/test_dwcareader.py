@@ -11,7 +11,7 @@ from dwca.darwincore.utils import qualname as qn
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor
 from dwca.exceptions import RowNotFound, InvalidArchive, NotADataFile
 from dwca.files import CSVDataFile
-from dwca.read import DwCAReader, GBIFResultsReader
+from dwca.read import DwCAReader
 from dwca.rows import CoreRow, ExtensionRow
 from .helpers import sample_data_path
 
@@ -460,14 +460,6 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("Reference extension rows: No", extension_l_repr)
             self.assertIn("Reference source metadata: No", extension_l_repr)
 
-        with GBIFResultsReader(sample_data_path('gbif-results.zip')) as gbif_dwca:
-            l = gbif_dwca.rows[0]
-            l_repr = str(l)
-
-            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
-            self.assertIn("Source: Core file", l_repr)
-            self.assertIn("Reference source metadata: Yes", l_repr)
-
     def test_absolute_temporary_path(self):
         """Test the absolute_temporary_path() method."""
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
@@ -633,49 +625,6 @@ class TestDwCAReader(unittest.TestCase):
             self.assertEqual(4, len([l for l in dwca]))
             # The second time, we can still find 4 rows...
             self.assertEqual(4, len([l for l in dwca]))
-
-    def test_deprecated_get_row_by_id(self):
-        """get_row_by_id() has been renamed get_corerow_by_id(). Make sure it still works, w/ warning."""
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", DeprecationWarning)
-
-            with DwCAReader(sample_data_path('dwca-ids.zip')) as dwca:
-                # Passed as an integer, conversion will be tried...
-                r = dwca.get_row_by_id(3)
-                self.assertEqual('Peliperdix', r.data['http://rs.tdwg.org/dwc/terms/genus'])
-
-                self.assertEqual(1, len(w))  # Warning was issued
-                the_warning = w[0]
-                assert issubclass(the_warning.category, DeprecationWarning)
-                self.assertEqual("This method has been renamed to get_corerow_by_id().", str(the_warning.message))
-
-    def test_deprecated_row_by_position(self):
-        """get_row_by_index() has been renamed get_corerow_by_position(). Make sure it still works, w/ warning."""
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", DeprecationWarning)
-
-            # Copy-pasted code from the long term test_get_corerow_by_position()
-            with DwCAReader(sample_data_path('dwca-ids.zip')) as dwca:
-                # Row IDs are ordered like this in core: id 4-1-3-2
-                first_row = dwca.get_row_by_index(0)
-                self.assertEqual(4, int(first_row.id))
-
-                self.assertEqual(1, len(w))  # Warning was issued
-                the_warning = w[0]
-                assert issubclass(the_warning.category, DeprecationWarning)
-                self.assertEqual("This method has been renamed to get_corerow_by_position().", str(the_warning.message))
-
-                last_row = dwca.get_row_by_index(3)
-                self.assertEqual(2, int(last_row.id))
-
-                # Exception raised if bigger than archive (last index: 3)
-                with self.assertRaises(RowNotFound):
-                    dwca.get_row_by_index(4)
-
-                with self.assertRaises(RowNotFound):
-                    dwca.get_row_by_index(1000)
 
     def test_get_corerow_by_position(self):
         """Test the get_corerow_by_position() method work as expected"""
