@@ -29,20 +29,19 @@ class DataFileDescriptor(object):
     """
 
     def __init__(self,
-                 created_from_file,     # type: bool
-                 raw_element,           # type: Element
-                 represents_corefile,   # type: bool
-                 datafile_type,         # type: Optional[str]
-                 file_location,         # type: str
-                 file_encoding,         # type: str
-                 id_index,              # type: int
-                 coreid_index,          # type: int
-                 fields,                # type: List[Dict]
-                 lines_terminated_by,   # type: str
-                 fields_enclosed_by,    # type: str
-                 fields_terminated_by   # type: str
-                 ):
-        # type: (...) -> None
+                 created_from_file: bool,
+                 raw_element: Element,
+                 represents_corefile: bool,
+                 datafile_type: Optional[str],
+                 file_location: str,
+                 file_encoding: str,
+                 id_index: int,
+                 coreid_index: int,
+                 fields: List[Dict],
+                 lines_terminated_by: str,
+                 fields_enclosed_by: str,
+                 fields_terminated_by: str
+                 ) -> None:
 
         #: True if this descriptor was created by analyzing the data file.
         self.created_from_file = created_from_file
@@ -56,7 +55,7 @@ class DataFileDescriptor(object):
         #:
         self.type = datafile_type
         #: The data file location, relative to the archive root.
-        self.file_location = file_location  # type: str
+        self.file_location: str = file_location
         #: The encoding of the data file. Example: "utf-8".
         self.file_encoding = file_encoding
         #: If the section represents a core data file, the index/position of the id column in
@@ -197,14 +196,12 @@ class DataFileDescriptor(object):
                    fields_terminated_by=fields_terminated_by)
 
     @property
-    def terms(self):
-        # type: () -> Set[str]
+    def terms(self) -> Set[str]:
         """Return a Python set containing all the Darwin Core terms appearing in file."""
         return set([f['term'] for f in self.fields])
 
     @property
-    def headers(self):
-        # type: () -> List[str]
+    def headers(self) -> List[str]:
         """A list of (ordered) column names that can be used to create a header line for the data file.
 
         Example::
@@ -229,8 +226,7 @@ class DataFileDescriptor(object):
         return [columns[f] for f in sorted(columns.keys())]
 
     @property
-    def short_headers(self):
-        # type: () -> List[str]
+    def short_headers(self) -> List[str]:
         """A list of (ordered) column names (short version) that can be used to create a header line for the data file.
 
            Example::
@@ -242,8 +238,7 @@ class DataFileDescriptor(object):
         return [shorten_term(long_term) for long_term in self.headers]
 
     @property
-    def lines_to_ignore(self):
-        # type: () -> int
+    def lines_to_ignore(self) -> int:
         """Return the number of header lines/lines to ignore in the data file."""
         if self.created_from_file:
             # Single-file archives always have a header line with DwC terms
@@ -255,8 +250,7 @@ class DataFileDescriptor(object):
 class ArchiveDescriptor(object):
     """Class used to encapsulate the whole Metafile (`meta.xml`)."""
 
-    def __init__(self, metaxml_content, files_to_ignore=None):
-        # type: (str, List[str]) -> None
+    def __init__(self, metaxml_content: str, files_to_ignore: List[str] = None) -> None:
         if files_to_ignore is None:
             files_to_ignore = []
 
@@ -264,18 +258,18 @@ class ArchiveDescriptor(object):
         metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive Descriptor.
-        self.raw_element = ET.fromstring(metaxml_content)  # type: Element
+        self.raw_element: Element = ET.fromstring(metaxml_content)
 
         #: The path (relative to archive root) of the (scientific) metadata of the archive.
         self.metadata_filename = self.raw_element.get('metadata', None)
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
         raw_core_element = self.raw_element.find('core')
-        self.core = DataFileDescriptor.make_from_metafile_section(raw_core_element)  # type: DataFileDescriptor
+        self.core: DataFileDescriptor = DataFileDescriptor.make_from_metafile_section(raw_core_element)
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
-        self.extensions = []  # type: List[DataFileDescriptor]
+        self.extensions: List[DataFileDescriptor] = []
         for extension_tag in self.raw_element.findall('extension'):  # type: Element
             location_tag = extension_tag.find('./files/location')
             if location_tag is not None:

@@ -41,22 +41,21 @@ class Row(object):
                           extension_flag=extension_flag,
                           source_metadata_flag=source_metadata_flag)
 
-    def __init__(self, csv_line, position, datafile_descriptor):
-        # type: (str, int, DataFileDescriptor) -> None
+    def __init__(self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor) -> None:
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
         #: data file.
-        self.descriptor = datafile_descriptor  # type: DataFileDescriptor
+        self.descriptor: DataFileDescriptor = datafile_descriptor
 
         #: The row position/index (starting at 0) in the source data file. This can be used, for example with
         #: :meth:`dwca.read.DwCAReader.get_corerow_by_position` or :meth:`dwca.files.CSVDataFile.get_row_by_position`.
-        self.position = position  # type: int
+        self.position: int = position
 
         #: The csv line type as stated in the archive descriptor.
         #: (or None if the archive has no descriptor). Examples:
         #: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
-        self.rowtype = self.descriptor.type  # type: Optional[str]
+        self.rowtype: Optional[str] = self.descriptor.type
 
         # self.raw_fields is a list of the csv_line's content
         #:
@@ -81,7 +80,7 @@ class Row(object):
         #:      myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
         #:
         #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
-        self.data = {}  # type: Dict[str, str]
+        self.data: Dict[str, str] = {}
 
         for field_descriptor in self.descriptor.fields:
             try:
@@ -107,13 +106,11 @@ class CoreRow(Row):
     looping over a :class:`dwca.read.DwCAReader` object.
     """
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(self, csv_line, position, datafile_descriptor):
-        # type: (str, int, DataFileDescriptor) -> None
+    def __init__(self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor) -> None:
         super(CoreRow, self).__init__(csv_line, position, datafile_descriptor)
 
         if self.descriptor.id_index is not None:
@@ -188,8 +185,7 @@ class ExtensionRow(Row):
         id_str = "Core row id: " + str(self.core_id)
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
-    def __init__(self, csv_line, position, datafile_descriptor):
-        # type: (str, int, DataFileDescriptor) -> None
+    def __init__(self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor) -> None:
         super(ExtensionRow, self).__init__(csv_line, position, datafile_descriptor)
 
         #: The id of the core row this extension row is referring to.

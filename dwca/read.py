@@ -78,8 +78,7 @@ class DwCAReader(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
-    def __init__(self, path, extensions_to_ignore=None, tmp_dir=None):
-        # type: (str, List[str], str) -> None
+    def __init__(self, path: str, extensions_to_ignore: List[str] = None, tmp_dir: str = None) -> None:
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
@@ -89,17 +88,17 @@ class DwCAReader(object):
             tempfile.tempdir = tmp_dir
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
-        self.archive_path = path  # type: str
+        self.archive_path: str = path
 
         if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
             self._working_directory_path = self.archive_path
-            self._directory_to_clean = None  # type: Optional[str]
+            self._directory_to_clean: Optional[str] = None
         else:  # Archive is zipped/tgzipped, we have to extract it first.
             self._directory_to_clean, self._working_directory_path = self._extract()
 
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
-        self.descriptor = None  # type: Optional[ArchiveDescriptor]
+        self.descriptor: Optional[ArchiveDescriptor] = None
         try:
             self.descriptor = ArchiveDescriptor(self.open_included_file(self.default_metafile_name).read(),
                                                 files_to_ignore=extensions_to_ignore)
@@ -109,7 +108,7 @@ class DwCAReader(object):
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
         #: of the archive, or `None` if the archive has no metadata.
-        self.metadata = self._parse_metadata_file()  # type: Optional[Element]
+        self.metadata: Optional[Element] = self._parse_metadata_file()
 
         #: If the archive contains source-level metadata (typically, GBIF downloads), this is a dict such as::
         #:
@@ -117,17 +116,17 @@ class DwCAReader(object):
         #:       'dataset2_UUID': <dataset2 EML> (xml.etree.ElementTree.Element object), ...}
         #:
         #: See :doc:`gbif_results` for more details.
-        self.source_metadata = self._get_source_metadata()  # type: Dict[str, Element]
+        self.source_metadata: Dict[str, Element] = self._get_source_metadata()
 
         if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
-            self.core_file = CSVDataFile(self._working_directory_path, self.descriptor.core)  # type: CSVDataFile
+            self.core_file: CSVDataFile = CSVDataFile(self._working_directory_path, self.descriptor.core)
 
             #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
-            self.extension_files = [CSVDataFile(work_directory=self._working_directory_path,
-                                                file_descriptor=d)
-                                    for d in self.descriptor.extensions]  # type: List[CSVDataFile]
+            self.extension_files: List[CSVDataFile] = [CSVDataFile(work_directory=self._working_directory_path,
+                                                       file_descriptor=d)
+                                                       for d in self.descriptor.extensions]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
@@ -141,9 +140,8 @@ class DwCAReader(object):
                 msg = "No Metafile was found, but the archive contains multiple files/directories."
                 raise InvalidSimpleArchive(msg)
 
-    def _get_source_metadata(self):
-        # type: () -> Dict[str, Element]
-        source_metadata = {}  # type: Dict[str, Element]
+    def _get_source_metadata(self) -> Dict[str, Element]:
+        source_metadata: Dict[str, Element] = {}
         source_metadata_dir = os.path.join(self._working_directory_path, self.source_metadata_directory)
 
         if os.path.isdir(source_metadata_dir):
@@ -156,8 +154,7 @@ class DwCAReader(object):
         return source_metadata
 
     @property
-    def core_file_location(self):
-        # type: () -> str
+    def core_file_location(self) -> str:
         """The (relative) path to the core data file.
 
         Example: `'occurrence.txt'`
@@ -189,7 +186,7 @@ class DwCAReader(object):
             Default values of Darwin Core Archive are supported: A column will be added to the DataFrame if a term has
             a default value in the Metafile (but no corresponding column in the CSV Data File).
         """
-        datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
+        datafile_descriptor: DataFileDescriptor = self.get_descriptor_for(relative_path)
 
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")
@@ -211,8 +208,7 @@ class DwCAReader(object):
 
         return df
 
-    def orphaned_extension_rows(self):
-        # type: () -> Dict[str, Dict[str, List[int]]]
+    def orphaned_extension_rows(self) -> Dict[str, Dict[str, List[int]]]:
         """Return a dict of the orphaned extension rows.
 
         Orphaned extension rows are extension rows who reference non-existing core rows. This methods returns a dict
@@ -245,15 +241,13 @@ class DwCAReader(object):
         return indexes
 
     @property
-    def use_extensions(self):
-        # type: () -> bool
+    def use_extensions(self) -> bool:
         """`True` if the archive makes use of extensions."""
         return (self.descriptor is not None) and (len(self.descriptor.extensions) > 0)
 
     @property
     # TODO: decide, test and document what we guarantee about ordering
-    def rows(self):
-        # type: () -> List[CoreRow]
+    def rows(self) -> List[CoreRow]:
         """A list of :class:`rows.CoreRow` objects representing the content of the archive.
 
         .. warning::
@@ -262,8 +256,7 @@ class DwCAReader(object):
         """
         return list(self)
 
-    def get_corerow_by_id(self, row_id):
-        # type: (str) -> CoreRow
+    def get_corerow_by_id(self, row_id: str) -> CoreRow:
         """Return the (core) row whose ID is `row_id`.
 
         :param row_id: ID of the core row you want
@@ -287,8 +280,7 @@ class DwCAReader(object):
 
         raise RowNotFound
 
-    def get_row_by_id(self, row_id):
-        # type: (str) -> CoreRow
+    def get_row_by_id(self, row_id: str) -> CoreRow:
         """
         .. warning::
 
@@ -299,8 +291,7 @@ class DwCAReader(object):
         warnings.warn("This method has been renamed to get_corerow_by_id().", DeprecationWarning)
         return self.get_corerow_by_id(row_id)
 
-    def get_corerow_by_position(self, position):
-        # type: (int) -> CoreRow
+    def get_corerow_by_position(self, position: int) -> CoreRow:
         """Return a core row according to its position/index in core file.
 
         :param position: the position (starting at 0) of the row you want in the core file.
@@ -321,8 +312,7 @@ class DwCAReader(object):
 
         raise RowNotFound
 
-    def get_row_by_index(self, index):
-        # type: (int) -> CoreRow
+    def get_row_by_index(self, index: int) -> CoreRow:
         """
         .. warning::
 
@@ -333,8 +323,7 @@ class DwCAReader(object):
         warnings.warn("This method has been renamed to get_corerow_by_position().", DeprecationWarning)
         return self.get_corerow_by_position(index)
 
-    def absolute_temporary_path(self, relative_path):
-        # type: (str) -> str
+    def absolute_temporary_path(self, relative_path: str) -> str:
         """Return the absolute path of a file located within the archive.
 
         This method allows raw access to the files contained in the archive. It can be useful to open additional, \
@@ -359,8 +348,7 @@ class DwCAReader(object):
         """
         return os.path.abspath(os.path.join(self._working_directory_path, relative_path))
 
-    def get_descriptor_for(self, relative_path):
-        # type: (str) -> DataFileDescriptor
+    def get_descriptor_for(self, relative_path: str) -> DataFileDescriptor:
         """Return a descriptor for the data file located at relative_path.
 
         :param relative_path: the path (relative to the archive root) to the data file you want info about.
@@ -382,8 +370,7 @@ class DwCAReader(object):
 
         raise NotADataFile("{fn} is not a data file".format(fn=relative_path))
 
-    def _is_valid_simple_archive(self):
-        # type: () -> str
+    def _is_valid_simple_archive(self) -> str:
 
         # If the working dir appear to contains a valid simple darwin core archive
         # (one single data file + possibly some metadata), returns the name of the data file.
@@ -400,8 +387,7 @@ class DwCAReader(object):
 
         raise InvalidSimpleArchive()
 
-    def open_included_file(self, relative_path, *args, **kwargs):
-        # type: (str, Any, Any) -> IO
+    def open_included_file(self, relative_path:str, *args: Any, **kwargs: Any) -> IO:
         """Simple wrapper around Python's build-in `open` function.
 
         To be used only for reading.
@@ -412,8 +398,7 @@ class DwCAReader(object):
         """
         return open(self.absolute_temporary_path(relative_path), *args, **kwargs)
 
-    def _parse_metadata_file(self):
-        # type: () -> Optional[Element]
+    def _parse_metadata_file(self) -> Optional[Element]:
         """Load the archive (scientific) Metadata file, parse it with\
         ElementTree and return its content (or `None` if the archive has no metadata).
 
@@ -440,13 +425,11 @@ class DwCAReader(object):
 
         assert False  # For MyPy, see: https://github.com/python/mypy/issues/4223#issuecomment-342865133
 
-    def _parse_xml_included_file(self, relative_path):
-        # type: (str) -> Element
+    def _parse_xml_included_file(self, relative_path: str) -> Element:
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
         return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
 
-    def _unzip_or_untar(self):
-        # type: () -> str
+    def _unzip_or_untar(self) -> str:
         """Create a temporary dir. and uncompress/unarchive self.archive_path there.
 
         Returns the path to that temporary directory.
@@ -469,8 +452,7 @@ class DwCAReader(object):
 
         return tmp_dir
 
-    def _extract(self):
-        # type: () -> Tuple[str, str]
+    def _extract(self) -> Tuple[str, str]:
         """Extract the current (Zip of Tar) archive in a temporary directory and return paths.
 
         Returns (path_to_clean_afterwards, path_to_content)
@@ -488,8 +470,7 @@ class DwCAReader(object):
 
         return extracted_dir, content_dir
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         """Close the Darwin Core Archive and remove temporary/working files.
 
         .. note::
@@ -505,21 +486,18 @@ class DwCAReader(object):
         if self._directory_to_clean:
             rmtree(self._directory_to_clean, False)
 
-    def core_contains_term(self, term_url):
-        # type: (str) -> bool
+    def core_contains_term(self, term_url: str) -> bool:
         """Return `True` if the Core file of the archive contains the `term_url` term."""
         return term_url in self.core_file.file_descriptor.terms
 
-    def __iter__(self):
-        # type: () -> DwCAReader
+    def __iter__(self) -> 'DwCAReader':
         self._corefile_pointer = 0
         return self
 
     def __next__(self):
         return self.next()
 
-    def next(self):  # NOQA
-        # type: () -> CoreRow
+    def next(self) -> CoreRow:  # NOQA
         try:
             row = self.core_file.get_row_by_position(self._corefile_pointer)
 
