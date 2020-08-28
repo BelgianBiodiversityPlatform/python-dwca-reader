@@ -1,1 +1,1 @@
-mypy  --ignore-missing-imports --py2 .
+mypy  --ignore-missing-imports .

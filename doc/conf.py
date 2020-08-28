@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Python-dwca-reader documentation build configuration file, created by
 # sphinx-quickstart on Wed Sep 25 10:22:18 2013.
 #

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """High-level classes to open and read DarwinCore Archive."""
 
 import os
@@ -17,7 +15,7 @@ import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 from dwca.files import CSVDataFile
-from dwca.rows import CoreRow, ExtensionRow
+from dwca.rows import CoreRow
 
 
 class DwCAReader(object):

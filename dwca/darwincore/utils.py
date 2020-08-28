@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """This module contains small helpers to make life easier.
 
 """

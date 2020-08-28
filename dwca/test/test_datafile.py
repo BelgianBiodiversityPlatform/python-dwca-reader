@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-import sys
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -147,10 +144,7 @@ class TestCSVDataFile(unittest.TestCase):
         data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
 
         for row in data_file:
-            if sys.version_info[0] == 2:
-                self.assertIsInstance(row, unicode)
-            elif sys.version_info[0] == 3:
-                self.assertIsInstance(row, str)
+            self.assertIsInstance(row, str)
 
 
 

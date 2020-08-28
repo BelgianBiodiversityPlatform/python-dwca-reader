@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Classes to represents descriptors of a DwC-A.
 
 - :class:`ArchiveDescriptor` represents the full archive descriptor, initialized from the \
@@ -14,7 +12,6 @@ import csv
 import io
 import os
 import re
-import sys
 import xml.etree.ElementTree as ET
 from typing import Optional, List, Dict, Set
 from xml.etree.ElementTree import Element
@@ -125,9 +122,6 @@ class DataFileDescriptor(object):
             fields_enclosed_by = dialect.quotechar
 
             datafile.seek(0)
-
-            dialect.delimiter = str(dialect.delimiter)  # Python 2 fix
-            dialect.quotechar = str(dialect.quotechar)  # Python 2 fix
 
             dr = csv.reader(datafile, dialect)
             columns = next(dr)
@@ -310,9 +304,6 @@ def _decode_xml_attribute(raw_element, attribute_name, default_value, encoding):
 
     raw_attribute = raw_element.get(attribute_name)
     if raw_attribute:
-        if sys.version_info[0] == 2:  # Python 2
-            return raw_attribute.decode("string_escape")
-
         return bytes(raw_attribute, encoding).decode("unicode-escape")
 
     return default_value

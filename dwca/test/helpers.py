@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Helpers for the test suite."""
 
 import os

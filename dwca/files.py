@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """File-related classes and functions."""
 
 import io
@@ -21,7 +19,7 @@ class CSVDataFile(object):
 
     The file content can be accessed:
 
-    * By iterating on this object: a str (Python 3) or unicode (Python 2) is returned, including separators.
+    * By iterating on this object: a str is returned, including separators.
     * With :meth:`get_row_by_position` (A :class:`dwca.rows.CoreRow` or :class:`dwca.rows.ExtensionRow` object is \
     returned)
     * For an extension data file, with :meth:`get_all_rows_by_coreid` (A :class:`dwca.rows.CoreRow` or \

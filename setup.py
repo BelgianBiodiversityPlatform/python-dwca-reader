@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from setuptools import setup
 
 exec(open('dwca/version.py').read())
@@ -13,9 +12,6 @@ setup(
     license='BSD licence, see LICENCE.txt',
     description='A simple Python package to read Darwin Core Archive (DwC-A) files.',
     long_description=open('README.rst').read(),
-    install_requires=[
-        'typing;python_version<"3.5"',
-    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',

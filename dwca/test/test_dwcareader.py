@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
 import os
-import sys
 import tempfile
 import unittest
 import warnings
@@ -444,13 +441,7 @@ class TestDwCAReader(unittest.TestCase):
             self.assertIn("Row id:", l_repr)
             self.assertIn("Reference extension rows: No", l_repr)
             self.assertIn("Reference source metadata: No", l_repr)
-
-            if sys.version_info[0] == 2:  # Python 2
-                self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': u'tetraodon fluviatilis'",
-                              l_repr)
-            else:
-                self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'",
-                              l_repr)
+            self.assertIn("http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'", l_repr)
 
         with DwCAReader(sample_data_path('dwca-star-test-archive.zip')) as star_dwca:
             l = star_dwca.rows[0]

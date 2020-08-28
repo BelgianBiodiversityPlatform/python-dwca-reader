@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utility script to generate a list of DarwinCore terms (to be consumed by qualname())."""
 
 # Utility script used during development to generate a list of DarwinCore
