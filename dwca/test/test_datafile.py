@@ -1,5 +1,6 @@
 import unittest
 import xml.etree.ElementTree as ET
+from array import array
 
 from dwca.descriptors import DataFileDescriptor
 from dwca.files import CSVDataFile
@@ -32,16 +33,10 @@ class TestCSVDataFile(unittest.TestCase):
             description_txt = extension_files[0]
             vernacular_txt = extension_files[1]
 
-            expected_vernacular = {
-                '1': [0, 1, 2],
-                '2': [3]
-            }
+            expected_vernacular = {"1": array('L', [0, 1, 2]), "2": array('L', [3])}
             self.assertEqual(vernacular_txt.coreid_index, expected_vernacular)
 
-            expected_description = {
-                '1': [0, 1],
-                '4': [2]
-            }
+            expected_description = {"1": array('L', [0, 1]), "4": array('L', [2])}
             self.assertEqual(description_txt.coreid_index, expected_description)
 
             with self.assertRaises(AttributeError):

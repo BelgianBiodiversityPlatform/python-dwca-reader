@@ -79,7 +79,7 @@ class CSVDataFile(object):
         raise StopIteration
 
     @property
-    def coreid_index(self) -> Dict[str, List[int]]:
+    def coreid_index(self)  -> Dict[str, array]:
         """An index of the core rows referenced by this data file.
 
         It is a Python dict such as:
@@ -91,6 +91,10 @@ class CSVDataFile(object):
             }
 
         :raises: AttributeError if accessed on a core data file.
+
+        .. warning::
+
+            for permformance reasons, dictionary values are arrays('L') instead of regular python lists
 
         .. warning::
 
@@ -113,11 +117,11 @@ class CSVDataFile(object):
 
     def _build_coreid_index(self) -> Dict[str, List[int]]:
         """Build and return an index of Core Rows IDs suitable for `CSVDataFile.coreid_index`."""
-        index = {}  # type: Dict[str, List[int]]
+        index = {}  # type: Dict[str, array[int]]
 
         for position, row in enumerate(self):
             tmp = ExtensionRow(row, position, self.file_descriptor)
-            index.setdefault(tmp.core_id, []).append(position)
+            index.setdefault(tmp.core_id, array('L')).append(position)
 
         return index
 
