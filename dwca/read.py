@@ -233,7 +233,7 @@ class DwCAReader(object):
             ids = temp_ids.keys()
 
             for extension in self.extension_files:
-                coreid_index = extension.coreid_index.copy()
+                coreid_index = dict((k, v.tolist()) for k, v in extension.coreid_index.items())
                 for id in ids:
                     coreid_index.pop(id, None)
                 indexes[extension.file_descriptor.file_location] = coreid_index
