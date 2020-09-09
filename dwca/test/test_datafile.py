@@ -9,24 +9,24 @@ from .helpers import sample_data_path
 
 class TestCSVDataFile(unittest.TestCase):
     def test_get_line_at_position_raises_indexerror(self):
-        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             with self.assertRaises(IndexError):
                 dwca.core_file.get_row_by_position(10000)
 
     def test_string_representation(self):
-        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             extension_files = dwca.extension_files
 
-            self.assertEqual('taxon.txt', str(dwca.core_file))
-            self.assertEqual('description.txt', str(extension_files[0]))
-            self.assertEqual('vernacularname.txt', str(extension_files[1]))
+            self.assertEqual("taxon.txt", str(dwca.core_file))
+            self.assertEqual("description.txt", str(extension_files[0]))
+            self.assertEqual("vernacularname.txt", str(extension_files[1]))
 
         # Also check with a simple archive
-        with DwCAReader(sample_data_path('dwca-simple-csv.zip')) as dwca:
-            self.assertEqual('0008333-160118175350007.csv', str(dwca.core_file))
+        with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
+            self.assertEqual("0008333-160118175350007.csv", str(dwca.core_file))
 
     def test_coreid_index(self):
-        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             extension_files = dwca.extension_files
 
             description_txt = extension_files[0]
@@ -63,8 +63,10 @@ class TestCSVDataFile(unittest.TestCase):
         </core>
         """
 
-        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(metaxml_section)
+        )
+        data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         self.assertEqual(data_file.file_descriptor, descriptor)
 
@@ -84,8 +86,10 @@ class TestCSVDataFile(unittest.TestCase):
         </core>
         """
 
-        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(metaxml_section)
+        )
+        data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         self.assertEqual(data_file.lines_to_ignore, 1)
 
@@ -102,8 +106,10 @@ class TestCSVDataFile(unittest.TestCase):
                 </core>
                 """
 
-        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(metaxml_section)
+        )
+        data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         self.assertEqual(data_file.lines_to_ignore, 3)
 
@@ -119,8 +125,10 @@ class TestCSVDataFile(unittest.TestCase):
         </core>
         """
 
-        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(metaxml_section)
+        )
+        data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         data_file.close()
 
@@ -140,11 +148,10 @@ class TestCSVDataFile(unittest.TestCase):
             </core>
          """
 
-        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
-        data_file = CSVDataFile(sample_data_path('dwca-simple-dir'), descriptor)
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(metaxml_section)
+        )
+        data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         for row in data_file:
             self.assertIsInstance(row, str)
-
-
-

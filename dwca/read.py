@@ -126,7 +126,7 @@ class DwCAReader(object):
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
             self.extension_files = [CSVDataFile(work_directory=self._working_directory_path,
                                                 file_descriptor=d)
-                                                for d in self.descriptor.extensions]  # type: List[CSVDataFile]
+                                    for d in self.descriptor.extensions]  # type: List[CSVDataFile]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
@@ -365,7 +365,7 @@ class DwCAReader(object):
 
         raise InvalidSimpleArchive()
 
-    def open_included_file(self, relative_path:str, *args: Any, **kwargs: Any) -> IO:
+    def open_included_file(self, relative_path: str, *args: Any, **kwargs: Any) -> IO:
         """Simple wrapper around Python's build-in `open` function.
 
         To be used only for reading.

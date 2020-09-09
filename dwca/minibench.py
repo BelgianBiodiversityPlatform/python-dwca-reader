@@ -37,8 +37,8 @@ def test():
 
         i = 0
         for row in dwca:
-            #tmp = row.data[qn('locality')]
-            i = i +1
+            # tmp = row.data[qn('locality')]
+            i = i + 1
             if (i % 100000 == 0):
                 print("in loop mem: ")
                 show_memory_usage()
@@ -57,4 +57,3 @@ if (__name__ == '__main__'):
     from timeit import Timer
     t = Timer("test()", "from __main__ import test")
     print(t.timeit(number=3))
-

@@ -269,7 +269,7 @@ class ArchiveDescriptor(object):
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
-        self.extensions = [] # type: List[DataFileDescriptor]
+        self.extensions = []  # type: List[DataFileDescriptor]
         for extension_tag in self.raw_element.findall('extension'):  # type: Element
             location_tag = extension_tag.find('./files/location')
             if location_tag is not None:

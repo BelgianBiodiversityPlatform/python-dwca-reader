@@ -30,26 +30,30 @@ class CSVDataFile(object):
     """
 
     # TODO: More tests for this class
-    def __init__(self, work_directory: str, file_descriptor: DataFileDescriptor) -> None:
+    def __init__(
+        self, work_directory: str, file_descriptor: DataFileDescriptor
+    ) -> None:
         """Initialize the CSVDataFile object."""
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor`, as given to the
         #: constructor.
         self.file_descriptor = file_descriptor  # type: DataFileDescriptor
 
-        self._file_stream = io.open(os.path.join(work_directory,
-                                                 self.file_descriptor.file_location),
-                                    mode='r',
-                                    encoding=self.file_descriptor.file_encoding,
-                                    newline=self.file_descriptor.lines_terminated_by,
-                                    errors='replace')
+        self._file_stream = io.open(
+            os.path.join(work_directory, self.file_descriptor.file_location),
+            mode="r",
+            encoding=self.file_descriptor.file_encoding,
+            newline=self.file_descriptor.lines_terminated_by,
+            errors="replace",
+        )
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
         # that will make random access faster later on...
-        self._line_offsets = _get_all_line_offsets(self._file_stream,
-                                                   self.file_descriptor.file_encoding)
+        self._line_offsets = _get_all_line_offsets(
+            self._file_stream, self.file_descriptor.file_encoding
+        )
 
         #: Number of lines to ignore (header lines) in the CSV file.
-        self.lines_to_ignore = self.file_descriptor.lines_to_ignore  # type: int 
+        self.lines_to_ignore = self.file_descriptor.lines_to_ignore  # type: int
 
         self._coreid_index = None  # type: Optional[Dict[str, List[int]]]
 
@@ -61,7 +65,7 @@ class CSVDataFile(object):
         if self.lines_to_ignore > 0:
             self._file_stream.readlines(self.lines_to_ignore)
 
-    def __iter__(self) -> 'CSVDataFile':
+    def __iter__(self) -> "CSVDataFile":
         self._position_file_after_header()
         return self
 
@@ -98,7 +102,9 @@ class CSVDataFile(object):
             at first access.
         """
         if self.file_descriptor.represents_corefile:
-            raise AttributeError('coreid_index is only available for extension data files')
+            raise AttributeError(
+                "coreid_index is only available for extension data files"
+            )
 
         if self._coreid_index is None:
             self._coreid_index = self._build_coreid_index()
@@ -168,7 +174,7 @@ def _get_all_line_offsets(f: IO, encoding: str) -> array:
     # didn't shown any significant slowdown.
     #
     # See mini-benchmark in minibench.py
-    line_offsets = array('L')
+    line_offsets = array("L")
     offset = 0
     for line in f:
         line_offsets.append(offset)
