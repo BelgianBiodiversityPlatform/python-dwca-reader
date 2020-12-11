@@ -59,7 +59,7 @@ Releasing at PyPI
     
 ::
 
-    $ python setup.py sdist bdis_wheel
+    $ python setup.py sdist bdist_wheel
     $ twine upload dist/*
 
 * Create a new tag and push it to GitHub

@@ -1,9 +1,10 @@
-Current
--------
+v0.15.0 (2020-09-09)
+--------------------
 
+- Lower memory use for archives with extensions
 - GBIFResultsReader (deprecated since v0.10.0) is now removed
 - DwCAReader.get_row_by_id() (long deprecated) is now removed, use DwCAReader.get_corerow_by_id() instead
-- DwCAREader.get_row_by_index() (long deprecated) is now removed, use DwCAReader.get_corerow_by_position() instead
+- DwCAReader.get_row_by_index() (long deprecated) is now removed, use DwCAReader.get_corerow_by_position() instead
 
 v0.14.0 (2020-04-27)
 --------------------
