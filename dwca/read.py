@@ -6,7 +6,6 @@ import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from errno import ENOENT
-from shutil import rmtree
 from tempfile import mkdtemp
 from typing import List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
@@ -15,6 +14,7 @@ import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
 from dwca.files import CSVDataFile
+from dwca.helpers import remove_tree
 from dwca.rows import CoreRow
 
 
@@ -462,7 +462,7 @@ class DwCAReader(object):
             extension_file.close()
 
         if self._directory_to_clean:
-            rmtree(self._directory_to_clean, False)
+            remove_tree(self._directory_to_clean)
 
     def core_contains_term(self, term_url: str) -> bool:
         """Return `True` if the Core file of the archive contains the `term_url` term."""
