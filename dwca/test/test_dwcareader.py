@@ -309,7 +309,6 @@ class TestDwCAReader(unittest.TestCase):
 
             num_files_during = len(os.listdir(tmp_dir))
 
-        time.sleep(1)
         num_files_after = len(os.listdir(tmp_dir))
 
         # Let's also check temporary dir is correctly created and removed.
