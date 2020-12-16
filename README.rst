@@ -1,8 +1,8 @@
 .. image:: https://badge.fury.io/py/python-dwca-reader.svg
     :target: https://badge.fury.io/py/python-dwca-reader
 
-.. image:: https://travis-ci.org/BelgianBiodiversityPlatform/python-dwca-reader.svg?branch=master
-    :target: https://travis-ci.org/BelgianBiodiversityPlatform/python-dwca-reader
+.. figure:: https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/workflows/run-unit-tests/badge.svg
+   :alt: run-unit-tests
 
 .. image:: https://readthedocs.org/projects/python-dwca-reader/badge/?version=latest
 	:target: http://python-dwca-reader.readthedocs.org/en/latest/?badge=latest
