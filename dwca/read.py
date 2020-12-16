@@ -99,8 +99,10 @@ class DwCAReader(object):
         #: An :class:`descriptors.ArchiveDescriptor` instance giving access to the archive
         #: descriptor/metafile (``meta.xml``)
         self.descriptor = None  # type: Optional[ArchiveDescriptor]
+        self._metafile_handle = None
         try:
-            self.descriptor = ArchiveDescriptor(self.open_included_file(self.default_metafile_name).read(),
+            self._metafile_handle = self.open_included_file(self.default_metafile_name)
+            self.descriptor = ArchiveDescriptor(self._metafile_handle.read(),
                                                 files_to_ignore=extensions_to_ignore)
         except IOError as exc:
             if exc.errno == ENOENT:
@@ -460,7 +462,9 @@ class DwCAReader(object):
         self.core_file.close()
         for extension_file in self.extension_files:
             extension_file.close()
-
+        if self._metafile_handle:
+            self._metafile_handle.close()
+        
         if self._directory_to_clean:
             remove_tree(self._directory_to_clean)
 
