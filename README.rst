@@ -1,7 +1,7 @@
 .. image:: https://badge.fury.io/py/python-dwca-reader.svg
     :target: https://badge.fury.io/py/python-dwca-reader
 
-.. figure:: https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/workflows/run-unit-tests/badge.svg
+.. image:: https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/workflows/run-unit-tests/badge.svg
    :alt: run-unit-tests
 
 .. image:: https://readthedocs.org/projects/python-dwca-reader/badge/?version=latest
