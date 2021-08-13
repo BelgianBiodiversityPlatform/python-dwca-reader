@@ -4,7 +4,7 @@ exec(open('dwca/version.py').read())
 
 setup(
     name='python-dwca-reader',
-    version= __version__,
+    version= __version__,  # type: ignore
     author=u'Nicolas Noé - Belgian Biodiversity Platform',
     author_email='n.noe@biodiversity.be',
     packages=['dwca', 'dwca.darwincore', 'dwca.test'],
