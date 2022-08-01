@@ -22,15 +22,15 @@ class TestDataFileDescriptor(unittest.TestCase):
 
             d = DataFileDescriptor.make_from_file(datafile_path)
             # Check basic metadata with the file
-            self.assertIsNone(d.raw_element)
-            self.assertTrue(d.represents_corefile)
-            self.assertFalse(d.represents_extension)
-            self.assertIsNone(d.type)
-            self.assertEqual(d.file_location, '0008333-160118175350007.csv')
-            self.assertEqual(d.file_encoding, 'utf-8')
-            self.assertEqual(d.lines_terminated_by, "\n")
-            self.assertEqual(d.fields_terminated_by, "\t")
-            self.assertEqual(d.fields_enclosed_by, '"')
+            assert d.raw_element is None
+            assert d.represents_corefile
+            assert not d.represents_extension
+            assert d.type is None
+            assert d.file_location == '0008333-160118175350007.csv'
+            assert d.file_encoding == 'utf-8'
+            assert d.lines_terminated_by == "\n"
+            assert d.fields_terminated_by == "\t"
+            assert d.fields_enclosed_by == '"'
 
             # Some checks on fields...
 
@@ -39,17 +39,17 @@ class TestDataFileDescriptor(unittest.TestCase):
                                {'default': None, 'index': 3, 'term': 'kingdom'})
 
             for ef in expected_fields:
-                self.assertTrue(ef in d.fields)
+                assert ef in d.fields
 
             # In total, there are 42 fields in this data file
-            self.assertEqual(len(d.fields), 42)
+            assert len(d.fields) == 42
 
             # No fields should have a default value (there's no metafile to set it!)
             for f in d.fields:
-                self.assertIsNone(f['default'])
+                assert f['default'] is None
 
             # Ensure .terms is also set:
-            self.assertEqual(len(d.terms), 42)
+            assert len(d.terms) == 42
 
             # Cleanup extracted file
             os.remove(datafile_path)
@@ -69,7 +69,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
-        self.assertEqual(core_descriptor.lines_to_ignore, 0)
+        assert core_descriptor.lines_to_ignore == 0
 
         # With explicit 1
         metaxml_section = """
@@ -85,7 +85,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
-        self.assertEqual(core_descriptor.lines_to_ignore, 1)
+        assert core_descriptor.lines_to_ignore == 1
 
         # Implicit 0 (when nothing stated)
         metaxml_section = """
@@ -101,7 +101,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
-        self.assertEqual(core_descriptor.lines_to_ignore, 0)
+        assert core_descriptor.lines_to_ignore == 0
 
     def test_file_details(self):
         metaxml_section = """
@@ -121,8 +121,8 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
-        self.assertEqual(core_descriptor.file_location, "occurrence.txt")
-        self.assertEqual(core_descriptor.file_encoding, "utf-8")
+        assert core_descriptor.file_location == "occurrence.txt"
+        assert core_descriptor.file_encoding == "utf-8"
         # TODO: Also test .lines_terminated_by and .fields_terminated_by
         # (this seems a bit tricky, and it's already tested indirectly - many things would fail
         # without them)
@@ -157,9 +157,9 @@ class TestDataFileDescriptor(unittest.TestCase):
         )
 
         for ef in expected_fields:
-            self.assertTrue(ef in core_descriptor.fields)
+            assert ef in core_descriptor.fields
 
-        self.assertEqual(len(core_descriptor.fields), 5)
+        assert len(core_descriptor.fields) == 5
 
     def test_headers_simplecases(self):
         with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
@@ -174,7 +174,7 @@ class TestDataFileDescriptor(unittest.TestCase):
                                      'http://rs.tdwg.org/dwc/terms/genus',
                                      'http://rs.tdwg.org/dwc/terms/family']
 
-            self.assertEqual(descriptor.core.headers, expected_headers_core)
+            assert descriptor.core.headers == expected_headers_core
 
             # And with a first extension...
             expected_headers_description_ext = ['coreid',
@@ -185,7 +185,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             desc_ext_descriptor = next(d for d in dwca.descriptor.extensions
                                        if d.type == 'http://rs.gbif.org/terms/1.0/Description')
 
-            self.assertEqual(desc_ext_descriptor.headers, expected_headers_description_ext)
+            assert desc_ext_descriptor.headers == expected_headers_description_ext
 
             # And another one
             expected_headers_vernacular_ext = ['coreid',
@@ -196,7 +196,7 @@ class TestDataFileDescriptor(unittest.TestCase):
             vern_ext_descriptor = next(d for d in dwca.descriptor.extensions
                                        if d.type == 'http://rs.gbif.org/terms/1.0/VernacularName')
 
-            self.assertEqual(vern_ext_descriptor.headers, expected_headers_vernacular_ext)
+            assert vern_ext_descriptor.headers == expected_headers_vernacular_ext
 
     def test_headers_defaultvalue(self):
         """ Ensure headers work properly when confronted to default values (w/o column in file)"""
@@ -223,7 +223,7 @@ class TestDataFileDescriptor(unittest.TestCase):
                                  'http://rs.tdwg.org/dwc/terms/family',
                                  'http://rs.tdwg.org/dwc/terms/locality']
 
-        self.assertEqual(core_descriptor.headers, expected_headers_core)
+        assert core_descriptor.headers == expected_headers_core
 
     def test_short_headers(self):
         metaxml_section = """
@@ -245,7 +245,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         expected_short_headers_core = ['id', 'scientificName', 'basisOfRecord', 'family', 'locality']
 
-        self.assertEqual(core_descriptor.short_headers, expected_short_headers_core)
+        assert core_descriptor.short_headers == expected_short_headers_core
 
     def test_headers_unordered(self):
         metaxml_section = """
@@ -273,11 +273,11 @@ class TestDataFileDescriptor(unittest.TestCase):
                                  'http://rs.tdwg.org/dwc/terms/genus',
                                  'http://rs.tdwg.org/dwc/terms/family']
 
-        self.assertEqual(core_descriptor.headers, expected_headers_core)
+        assert core_descriptor.headers == expected_headers_core
 
     def test_exposes_raw_element_tag(self):
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
-            self.assertIsInstance(dwca.descriptor.core.raw_element, ET.Element)
+            assert isinstance(dwca.descriptor.core.raw_element, ET.Element)
 
     def test_content_raw_element_tag(self):
         """ Test the content of raw_element seems decent. """
@@ -294,16 +294,16 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
 
-        self.assertEqual(ext_descriptor.raw_element.tag, 'extension')
-        self.assertEqual(ext_descriptor.raw_element.get('encoding'), 'utf-8')
-        self.assertEqual(len(ext_descriptor.raw_element.findall('field')), 3)
+        assert ext_descriptor.raw_element.tag == 'extension'
+        assert ext_descriptor.raw_element.get('encoding') == 'utf-8'
+        assert len(ext_descriptor.raw_element.findall('field')) == 3
 
     def test_tell_if_represents_core(self):
         # 1. Test with core
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             core_descriptor = dwca.descriptor.core
-            self.assertTrue(core_descriptor.represents_corefile)
-            self.assertFalse(core_descriptor.represents_extension)
+            assert core_descriptor.represents_corefile
+            assert not core_descriptor.represents_extension
 
         ext_section = """
         <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n"
@@ -318,8 +318,8 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         # 2. And with extension
         ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
-        self.assertFalse(ext_descriptor.represents_corefile)
-        self.assertTrue(ext_descriptor.represents_extension)
+        assert not ext_descriptor.represents_corefile
+        assert ext_descriptor.represents_extension
 
     def test_exposes_coreid_index_of_extensions(self):
         ext_section = """
@@ -334,10 +334,10 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         ext_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(ext_section))
 
-        self.assertEqual(ext_descriptor.coreid_index, 0)
+        assert ext_descriptor.coreid_index == 0
 
         # ... but it doesn't have .id_index (only for core!)
-        self.assertIsNone(ext_descriptor.id_index)
+        assert ext_descriptor.id_index is None
 
     def test_exposes_id_index_of_core(self):
         metaxml_section = """
@@ -357,10 +357,10 @@ class TestDataFileDescriptor(unittest.TestCase):
 
         core_descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(metaxml_section))
 
-        self.assertEqual(core_descriptor.id_index, 0)
+        assert core_descriptor.id_index == 0
 
         # ... but it doesn't have .coreid_index (only for extensions!)
-        self.assertIsNone(core_descriptor.coreid_index)
+        assert core_descriptor.coreid_index is None
 
     def test_exposes_core_type(self):
         """Test that it exposes the Archive Core Type as type"""
@@ -368,9 +368,9 @@ class TestDataFileDescriptor(unittest.TestCase):
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             coredescriptor = dwca.descriptor.core
             # dwca-simple-test-archive.zip should be of Occurrence type
-            self.assertEqual(coredescriptor.type, 'http://rs.tdwg.org/dwc/terms/Occurrence')
+            assert coredescriptor.type == 'http://rs.tdwg.org/dwc/terms/Occurrence'
             # Check that shortcuts also work
-            self.assertEqual(coredescriptor.type, qn('Occurrence'))
+            assert coredescriptor.type == qn('Occurrence')
 
     def test_exposes_core_terms(self):
         with DwCAReader(sample_data_path('dwca-star-test-archive.zip')) as star_dwca:
@@ -387,7 +387,7 @@ class TestDataFileDescriptor(unittest.TestCase):
 
             # Assert correct size
             descriptor = star_dwca.descriptor
-            self.assertEqual(6, len(descriptor.core.terms))
+            assert 6 == len(descriptor.core.terms)
 
             # Assert correct content (should be a set, so unordered)
             fields = set(['http://rs.tdwg.org/dwc/terms/kingdom',
@@ -397,7 +397,7 @@ class TestDataFileDescriptor(unittest.TestCase):
                           'http://rs.tdwg.org/dwc/terms/family',
                           'http://rs.tdwg.org/dwc/terms/phylum'])
 
-            self.assertEqual(fields, descriptor.core.terms)
+            assert fields == descriptor.core.terms
 
 
 class TestArchiveDescriptor(unittest.TestCase):
@@ -405,7 +405,7 @@ class TestArchiveDescriptor(unittest.TestCase):
 
     def test_exposes_coredescriptor(self):
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor.core, DataFileDescriptor)
+            assert isinstance(basic_dwca.descriptor.core, DataFileDescriptor)
 
     def test_exposes_extensions_2ext(self):
         all_metaxml = """
@@ -446,9 +446,9 @@ class TestArchiveDescriptor(unittest.TestCase):
         d = ArchiveDescriptor(all_metaxml)
         expected_extensions_files = ('description.txt', 'vernacularname.txt')
         for ext in d.extensions:
-            self.assertTrue(ext.file_location in expected_extensions_files)
+            assert ext.file_location in expected_extensions_files
 
-        self.assertEqual(len(d.extensions), 2)
+        assert len(d.extensions) == 2
 
     # Test the files_to_ignore optional argument work as expected
     def test_exposes_extensions_2ext_ignore(self):
@@ -489,8 +489,8 @@ class TestArchiveDescriptor(unittest.TestCase):
 
         d = ArchiveDescriptor(all_metaxml, files_to_ignore="description.txt")
 
-        self.assertEqual(len(d.extensions), 1)
-        self.assertEqual(d.extensions[0].file_location, 'vernacularname.txt')
+        assert len(d.extensions) == 1
+        assert d.extensions[0].file_location == 'vernacularname.txt'
 
     def test_exposes_extensions_none(self):
         all_metaxml = """
@@ -508,7 +508,7 @@ class TestArchiveDescriptor(unittest.TestCase):
         </archive>
         """
         d = ArchiveDescriptor(all_metaxml)
-        self.assertEqual(len(d.extensions), 0)
+        assert len(d.extensions) == 0
 
     def test_exposes_extensions_type(self):
         vn = 'http://rs.gbif.org/terms/1.0/VernacularName'
@@ -517,26 +517,26 @@ class TestArchiveDescriptor(unittest.TestCase):
         # This archive has no extension, we should get an empty list
         with DwCAReader(sample_data_path('dwca-simple-test-archive.zip')) as dwca:
             descriptor = dwca.descriptor
-            self.assertEqual([], descriptor.extensions_type)
+            assert [] == descriptor.extensions_type
 
         # This archive only contains the VernacularName extension
         with DwCAReader(sample_data_path('dwca-star-test-archive.zip')) as dwca:
             descriptor = dwca.descriptor
-            self.assertEqual(descriptor.extensions_type[0], vn)
-            self.assertEqual(1, len(descriptor.extensions_type))
+            assert descriptor.extensions_type[0] == vn
+            assert 1 == len(descriptor.extensions_type)
 
         # TODO: test with more complex archive
         with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             descriptor = dwca.descriptor
             # 2 extensions are in use : vernacular names and taxon descriptions
-            self.assertEqual(2, len(descriptor.extensions_type))
+            assert 2 == len(descriptor.extensions_type)
             # USe of frozenset to lose ordering
             supposed_extensions = frozenset([vn, td])
-            self.assertEqual(supposed_extensions,
-                             frozenset(descriptor.extensions_type))
+            assert supposed_extensions == \
+                             frozenset(descriptor.extensions_type)
 
     def test_exposes_metadata_filename(self):
         with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
             descriptor = dwca.descriptor
 
-            self.assertEqual(descriptor.metadata_filename, "eml.xml")
+            assert descriptor.metadata_filename == "eml.xml"

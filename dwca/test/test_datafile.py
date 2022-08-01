@@ -6,25 +6,26 @@ from dwca.descriptors import DataFileDescriptor
 from dwca.files import CSVDataFile
 from dwca.read import DwCAReader
 from .helpers import sample_data_path
+import pytest
 
 
 class TestCSVDataFile(unittest.TestCase):
     def test_get_line_at_position_raises_indexerror(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
-            with self.assertRaises(IndexError):
+            with pytest.raises(IndexError):
                 dwca.core_file.get_row_by_position(10000)
 
     def test_string_representation(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             extension_files = dwca.extension_files
 
-            self.assertEqual("taxon.txt", str(dwca.core_file))
-            self.assertEqual("description.txt", str(extension_files[0]))
-            self.assertEqual("vernacularname.txt", str(extension_files[1]))
+            assert "taxon.txt" == str(dwca.core_file)
+            assert "description.txt" == str(extension_files[0])
+            assert "vernacularname.txt" == str(extension_files[1])
 
         # Also check with a simple archive
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-            self.assertEqual("0008333-160118175350007.csv", str(dwca.core_file))
+            assert "0008333-160118175350007.csv" == str(dwca.core_file)
 
     def test_coreid_index(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
@@ -34,12 +35,12 @@ class TestCSVDataFile(unittest.TestCase):
             vernacular_txt = extension_files[1]
 
             expected_vernacular = {"1": array('L', [0, 1, 2]), "2": array('L', [3])}
-            self.assertEqual(vernacular_txt.coreid_index, expected_vernacular)
+            assert vernacular_txt.coreid_index == expected_vernacular
 
             expected_description = {"1": array('L', [0, 1]), "4": array('L', [2])}
-            self.assertEqual(description_txt.coreid_index, expected_description)
+            assert description_txt.coreid_index == expected_description
 
-            with self.assertRaises(AttributeError):
+            with pytest.raises(AttributeError):
                 dwca.corefile.coreid_index
 
     def test_file_descriptor_attribute(self):
@@ -63,7 +64,7 @@ class TestCSVDataFile(unittest.TestCase):
         )
         data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
-        self.assertEqual(data_file.file_descriptor, descriptor)
+        assert data_file.file_descriptor == descriptor
 
     def test_lines_to_ignore_attribute(self):
         """.lines_to_ignore works as documented"""
@@ -86,7 +87,7 @@ class TestCSVDataFile(unittest.TestCase):
         )
         data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
-        self.assertEqual(data_file.lines_to_ignore, 1)
+        assert data_file.lines_to_ignore == 1
 
         metaxml_section = r"""
                 <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="3" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
@@ -106,7 +107,7 @@ class TestCSVDataFile(unittest.TestCase):
         )
         data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
-        self.assertEqual(data_file.lines_to_ignore, 3)
+        assert data_file.lines_to_ignore == 3
 
     def test_close(self):
         metaxml_section = r"""
@@ -127,7 +128,7 @@ class TestCSVDataFile(unittest.TestCase):
 
         data_file.close()
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             # It's not possible anymore to access the data because file has been closed.
             data_file.get_row_by_position(1)
 
@@ -149,4 +150,4 @@ class TestCSVDataFile(unittest.TestCase):
         data_file = CSVDataFile(sample_data_path("dwca-simple-dir"), descriptor)
 
         for row in data_file:
-            self.assertIsInstance(row, str)
+            assert isinstance(row, str)

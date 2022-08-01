@@ -1,6 +1,5 @@
 import os
 import tempfile
-import time
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -14,6 +13,7 @@ from dwca.files import CSVDataFile
 from dwca.read import DwCAReader
 from dwca.rows import CoreRow, ExtensionRow
 from .helpers import sample_data_path
+import pytest
 
 
 class TestPandasIntegration(unittest.TestCase):
@@ -22,13 +22,13 @@ class TestPandasIntegration(unittest.TestCase):
     # TODO: test weirder archives (encoding, lime termination, ...)
 
     def test_missing_extension_path(self):
-        with self.assertRaises(InvalidArchive):
+        with pytest.raises(InvalidArchive):
             DwCAReader(sample_data_path("dwca-missing-extension-details"))
 
     @patch("dwca.vendor._has_pandas", False)
     def test_pd_read_pandas_unavailable(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            with self.assertRaises(ImportError):
+            with pytest.raises(ImportError):
                 dwca.pd_read("occurrence.txt")
 
     def test_pd_read_simple_case(self):
@@ -36,64 +36,52 @@ class TestPandasIntegration(unittest.TestCase):
             df = dwca.pd_read("occurrence.txt")
 
             # check types, headers and dimensions
-            self.assertIsInstance(df, pd.DataFrame)
+            assert isinstance(df, pd.DataFrame)
             cols = df.columns.values.tolist()
-            self.assertEqual(
-                cols, ["id", "basisOfRecord", "locality", "family", "scientificName"]
-            )
-            self.assertEqual(df.shape, (2, 5))  # Row/col counts are correct
+            assert cols == ["id", "basisOfRecord", "locality", "family", "scientificName"]
+            assert df.shape == (2, 5)  # Row/col counts are correct
 
             # check content
-            self.assertEqual(
-                df["basisOfRecord"].values.tolist(), ["Observation", "Observation"]
-            )
-            self.assertEqual(
-                df["family"].values.tolist(), ["Tetraodontidae", "Osphronemidae"]
-            )
-            self.assertEqual(df["locality"].values.tolist(), ["Borneo", "Mumbai"])
-            self.assertEqual(
-                df["scientificName"].values.tolist(),
-                ["tetraodon fluviatilis", "betta splendens"],
-            )
+            assert df["basisOfRecord"].values.tolist() == ["Observation", "Observation"]
+            assert df["family"].values.tolist() == ["Tetraodontidae", "Osphronemidae"]
+            assert df["locality"].values.tolist() == ["Borneo", "Mumbai"]
+            assert df["scientificName"].values.tolist() == \
+                ["tetraodon fluviatilis", "betta splendens"]
 
     def test_pd_read_no_data_files(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            with self.assertRaises(NotADataFile):
+            with pytest.raises(NotADataFile):
                 dwca.pd_read("imaginary_file.txt")
 
-            with self.assertRaises(NotADataFile):
+            with pytest.raises(NotADataFile):
                 dwca.pd_read("eml.xml")
 
     def test_pd_read_extensions(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             desc_df = dwca.pd_read("description.txt")
-            self.assertIsInstance(desc_df, pd.DataFrame)
-            self.assertEqual(desc_df.shape, (3, 4))
-            self.assertEqual(desc_df["language"].values.tolist(), ["EN", "FR", "EN"])
+            assert isinstance(desc_df, pd.DataFrame)
+            assert desc_df.shape == (3, 4)
+            assert desc_df["language"].values.tolist() == ["EN", "FR", "EN"]
 
             vern_df = dwca.pd_read("vernacularname.txt")
-            self.assertIsInstance(vern_df, pd.DataFrame)
-            self.assertEqual(vern_df.shape, (4, 4))
-            self.assertEqual(
-                vern_df["countryCode"].values.tolist(), ["US", "ZA", "FI", "ZA"]
-            )
+            assert isinstance(vern_df, pd.DataFrame)
+            assert vern_df.shape == (4, 4)
+            assert vern_df["countryCode"].values.tolist() == ["US", "ZA", "FI", "ZA"]
 
     def test_pd_read_quotedir(self):
         with DwCAReader(sample_data_path("dwca-csv-quote-dir")) as dwca:
             df = dwca.pd_read("occurrence.txt")
             # The field separator is found in a quoted field, don't break
-            self.assertEqual(df.shape, (2, 5))
-            self.assertEqual(
-                df["basisOfRecord"].values.tolist()[0], "Observation, something"
-            )
+            assert df.shape == (2, 5)
+            assert df["basisOfRecord"].values.tolist()[0] == "Observation, something"
 
     def test_pd_read_default_values(self):
         with DwCAReader(sample_data_path("dwca-test-default.zip")) as dwca:
             df = dwca.pd_read("occurrence.txt")
 
-            self.assertIn("country", df.columns.values.tolist())
+            assert "country" in df.columns.values.tolist()
             for country in df["country"].values.tolist():
-                self.assertEqual(country, "Belgium")
+                assert country == "Belgium"
 
     def test_pd_read_utf8_eol_ignored(self):
         """Ensure we don't split lines based on the x85 utf8 EOL char.
@@ -104,17 +92,17 @@ class TestPandasIntegration(unittest.TestCase):
             df = dwca.pd_read("occurrence.txt")
             # If line properly split => 64 columns.
             # (61 - and probably an IndexError - if errors)
-            self.assertEqual(64, df.shape[1])
+            assert 64 == df.shape[1]
 
     def test_pd_read_simple_csv(self):
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
 
             df = dwca.pd_read("0008333-160118175350007.csv")
             # Ensure we get the correct number of rows
-            self.assertEqual(3, df.shape[0])
+            assert 3 == df.shape[0]
             # Ensure we can access arbitrary data
 
-            self.assertEqual(df["decimallatitude"].values.tolist()[1], -31.98333)
+            assert df["decimallatitude"].values.tolist()[1] == -31.98333
 
 
 class TestDwCAReader(unittest.TestCase):
@@ -123,103 +111,80 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_partial_default(self):
         with DwCAReader(sample_data_path("dwca-partial-default.zip")) as dwca:
-            self.assertEqual(
-                dwca.rows[0].data[qn("country")], "France"
-            )  # Value comes from data file
-            self.assertEqual(
-                dwca.rows[1].data[qn("country")], "Belgium"
-            )  # Value is field default
+            assert dwca.rows[0].data[qn("country")] == "France"  # Value comes from data file
+            assert dwca.rows[1].data[qn("country")] == "Belgium"  # Value is field default
 
     def test_core_file_location(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertEqual(dwca.core_file_location, "occurrence.txt")
+            assert dwca.core_file_location == "occurrence.txt"
 
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-            self.assertEqual(dwca.core_file_location, "0008333-160118175350007.csv")
+            assert dwca.core_file_location == "0008333-160118175350007.csv"
 
     def test_core_file(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertIsInstance(dwca.core_file, CSVDataFile)
+            assert isinstance(dwca.core_file, CSVDataFile)
 
             # Quick content check just to be sure
-            self.assertEqual(dwca.core_file.lines_to_ignore, 1)
+            assert dwca.core_file.lines_to_ignore == 1
 
     def test_extension_file_noext(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertEqual(dwca.extension_files, [])
+            assert dwca.extension_files == []
 
     def test_extension_files(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             # Check extension_files is iterable and contains the right type
             for ext in dwca.extension_files:
-                self.assertIsInstance(ext, CSVDataFile)
+                assert isinstance(ext, CSVDataFile)
 
             # Check the length is correct
-            self.assertEqual(len(dwca.extension_files), 2)
+            assert len(dwca.extension_files) == 2
 
             # Check the order of the metafile is respected + quick content check
-            self.assertEqual(
-                dwca.extension_files[0].file_descriptor.file_location, "description.txt"
-            )
-            self.assertEqual(
-                dwca.extension_files[1].file_descriptor.file_location,
-                "vernacularname.txt",
-            )
+            assert dwca.extension_files[0].file_descriptor.file_location == "description.txt"
+            assert dwca.extension_files[1].file_descriptor.file_location == \
+                "vernacularname.txt"
 
     def test_get_descriptor_for(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             # We can get a DataFileDescriptor for each data file
-            self.assertIsInstance(
-                dwca.get_descriptor_for("taxon.txt"), DataFileDescriptor
-            )
-            self.assertIsInstance(
-                dwca.get_descriptor_for("description.txt"), DataFileDescriptor
-            )
-            self.assertIsInstance(
-                dwca.get_descriptor_for("vernacularname.txt"), DataFileDescriptor
-            )
+            assert isinstance(dwca.get_descriptor_for("taxon.txt"), DataFileDescriptor)
+            assert isinstance(dwca.get_descriptor_for("description.txt"), DataFileDescriptor)
+            assert isinstance(dwca.get_descriptor_for("vernacularname.txt"), DataFileDescriptor)
 
             # But NotADataFile exception for non-data files
-            with self.assertRaises(NotADataFile):
+            with pytest.raises(NotADataFile):
                 dwca.get_descriptor_for("eml.xml")
 
-            with self.assertRaises(NotADataFile):
+            with pytest.raises(NotADataFile):
                 dwca.get_descriptor_for("meta.xml")
 
             # Also NotADataFile for files that don't actually exists
-            with self.assertRaises(NotADataFile):
+            with pytest.raises(NotADataFile):
                 dwca.get_descriptor_for("imaginary_file.txt")
 
             # Basic content checks of the descriptors
             taxon_descriptor = dwca.get_descriptor_for("taxon.txt")
-            self.assertEqual(dwca.descriptor.core, taxon_descriptor)
-            self.assertEqual(taxon_descriptor.file_location, "taxon.txt")
-            self.assertEqual(taxon_descriptor.file_encoding, "utf-8")
-            self.assertEqual(
-                taxon_descriptor.type, "http://rs.tdwg.org/dwc/terms/Taxon"
-            )
+            assert dwca.descriptor.core == taxon_descriptor
+            assert taxon_descriptor.file_location == "taxon.txt"
+            assert taxon_descriptor.file_encoding == "utf-8"
+            assert taxon_descriptor.type == "http://rs.tdwg.org/dwc/terms/Taxon"
 
             description_descriptor = dwca.get_descriptor_for("description.txt")
-            self.assertEqual(description_descriptor.file_location, "description.txt")
-            self.assertEqual(description_descriptor.file_encoding, "utf-8")
-            self.assertEqual(
-                description_descriptor.type, "http://rs.gbif.org/terms/1.0/Description"
-            )
+            assert description_descriptor.file_location == "description.txt"
+            assert description_descriptor.file_encoding == "utf-8"
+            assert description_descriptor.type == "http://rs.gbif.org/terms/1.0/Description"
 
             vernacular_descriptor = dwca.get_descriptor_for("vernacularname.txt")
-            self.assertEqual(vernacular_descriptor.file_location, "vernacularname.txt")
-            self.assertEqual(vernacular_descriptor.file_encoding, "utf-8")
-            self.assertEqual(
-                vernacular_descriptor.type,
-                "http://rs.gbif.org/terms/1.0/VernacularName",
-            )
+            assert vernacular_descriptor.file_location == "vernacularname.txt"
+            assert vernacular_descriptor.file_encoding == "utf-8"
+            assert vernacular_descriptor.type == \
+                "http://rs.gbif.org/terms/1.0/VernacularName"
 
         # Also check we can get a DataFileDescriptor for a simple Archive (without metafile)
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-            self.assertIsInstance(
-                dwca.get_descriptor_for("0008333-160118175350007.csv"),
-                DataFileDescriptor,
-            )
+            assert isinstance(dwca.get_descriptor_for("0008333-160118175350007.csv"), DataFileDescriptor)
 
     def test_open_included_file(self):
         """Ensure DwCAReader.open_included_file work as expected."""
@@ -228,7 +193,7 @@ class TestDwCAReader(unittest.TestCase):
             f = dwca.open_included_file("occurrence.txt")
 
             raw_occ = f.read()
-            self.assertTrue(raw_occ.endswith("'betta' splendens\n"))
+            assert raw_occ.endswith("'betta' splendens\n")
 
         # TODO: test more cases: opening mode, exceptions raised, ...
 
@@ -240,7 +205,7 @@ class TestDwCAReader(unittest.TestCase):
         fields in data file) fail in a visible way (previously, archive just appeared empty).
         """
         with DwCAReader(sample_data_path("dwca-malformed-descriptor")) as dwca:
-            with self.assertRaises(InvalidArchive):
+            with pytest.raises(InvalidArchive):
                 for _ in dwca:
                     pass
 
@@ -254,25 +219,25 @@ class TestDwCAReader(unittest.TestCase):
     def test_use_extensions(self):
         """Ensure the .use_extensions attribute of DwCAReader works as intended."""
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertFalse(dwca.use_extensions)  # Basic archive without extensions
+            assert not dwca.use_extensions  # Basic archive without extensions
 
         with DwCAReader(
             sample_data_path("dwca-simple-csv.zip")
         ) as dwca:  # Just a CSV file, so no extensions
-            self.assertFalse(dwca.use_extensions)
+            assert not dwca.use_extensions
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as dwca:
-            self.assertTrue(dwca.use_extensions)
+            assert dwca.use_extensions
 
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
-            self.assertTrue(dwca.use_extensions)
+            assert dwca.use_extensions
 
         with DwCAReader(
             sample_data_path("dwca-star-test-archive.zip"),
             extensions_to_ignore="vernacularname.txt",
         ) as dwca:
             # We ignore the extension, so archive appears without
-            self.assertFalse(dwca.use_extensions)
+            assert not dwca.use_extensions
 
     def test_default_metadata_filename(self):
         """Ensure that metadata is found by it's default name.
@@ -280,7 +245,7 @@ class TestDwCAReader(unittest.TestCase):
         Metadata is named "EML.xml", but no metadata attribute in Metafile.
         """
         with DwCAReader(sample_data_path("dwca-default-metadata-filename.zip")) as dwca:
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
 
             v = (
                 dwca.metadata.find("dataset")
@@ -289,7 +254,7 @@ class TestDwCAReader(unittest.TestCase):
                 .find("givenName")
                 .text
             )
-            self.assertEqual(v, "Nicolas")
+            assert v == "Nicolas"
 
     def test_subdirectory_archive(self):
         """Ensure we support Archives where all the content is under a single directory."""
@@ -298,37 +263,35 @@ class TestDwCAReader(unittest.TestCase):
         num_files_before = len(os.listdir(tmp_dir))
         with DwCAReader(sample_data_path("dwca-simple-subdir.zip")) as dwca:
             # Ensure we have access to metadata
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
 
             # And to the rows themselves
             for row in dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
             rows = list(dwca)
-            self.assertEqual("Borneo", rows[0].data[qn("locality")])
+            assert "Borneo" == rows[0].data[qn("locality")]
 
             num_files_during = len(os.listdir(tmp_dir))
 
         num_files_after = len(os.listdir(tmp_dir))
 
         # Let's also check temporary dir is correctly created and removed.
-        self.assertEqual(num_files_before + 1, num_files_during)
-        self.assertEqual(num_files_before, num_files_after)
+        assert num_files_before + 1 == num_files_during
+        assert num_files_before == num_files_after
 
     def test_exception_invalid_archives_missing_metadata(self):
         """An exception is raised when referencing a missing metadata file."""
         # Sometimes, the archive metafile references a metadata file that's not present in the
         # archive. See for example http://dev.gbif.org/issues/browse/PF-2125
-        with self.assertRaises(InvalidArchive) as cm:
+        with pytest.raises(InvalidArchive) as cm:
             a = DwCAReader(sample_data_path("dwca-invalid-lacks-metadata"))
             a.close()
-
-        the_exception = cm.exception
 
         expected_message = (
             "eml.xml is referenced in the archive descriptor but missing."
         )
-        self.assertEqual(str(the_exception), expected_message)
+        assert str(cm.value) == expected_message
 
     def test_implicit_encoding_metadata(self):
         """If the metadata file doesn't specifies encoding, use UTF-8."""
@@ -340,7 +303,7 @@ class TestDwCAReader(unittest.TestCase):
                 .find("surName")
                 .text
             )
-            self.assertEqual(v, u"Noé")
+            assert v == u"Noé"
 
     def test_explicit_encoding_metadata(self):
         """If the metadata file explicitly specifies encoding (<xml ...>), make sure it is used."""
@@ -353,7 +316,7 @@ class TestDwCAReader(unittest.TestCase):
                 .find("surName")
                 .text
             )
-            self.assertEqual(v, u"Noé")  # Is the accent properly interpreted?
+            assert v == u"Noé"  # Is the accent properly interpreted?
 
     def test_exception_invalid_simple_archives(self):
         """Ensure an exception is raised when simple archives can't be interpreted.
@@ -364,11 +327,11 @@ class TestDwCAReader(unittest.TestCase):
         """
         # There's a random file (in addition to data and EML.xml) in this one, so we can't choose
         # which file is the datafile.
-        with self.assertRaises(InvalidArchive):
+        with pytest.raises(InvalidArchive):
             a = DwCAReader(sample_data_path("dwca-invalid-simple-toomuch.zip"))
             a.close()
 
-        with self.assertRaises(InvalidArchive):
+        with pytest.raises(InvalidArchive):
             a = DwCAReader(sample_data_path("dwca-invalid-simple-two.zip"))
             a.close()
 
@@ -381,7 +344,7 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-meta-default-values")) as dwca:
             # Test iterating on rows...
             for row in dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
             # And verify the values themselves:
             # Test also "fieldsenclosedBy"?
@@ -396,41 +359,35 @@ class TestDwCAReader(unittest.TestCase):
         """
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
             # Ensure we get the correct number of rows
-            self.assertEqual(len(dwca.rows), 3)
+            assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            self.assertEqual(
-                dwca.get_corerow_by_position(1).data["decimallatitude"], "-31.98333"
-            )
+            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
             # Archive descriptor should be None
-            self.assertIsNone(dwca.descriptor)
+            assert dwca.descriptor is None
             # (scientific) metadata should be None
-            self.assertIsNone(dwca.metadata)
+            assert dwca.metadata is None
 
         # Let's do the same tests again but with DOS line endings in the data file
         with DwCAReader(sample_data_path("dwca-simple-csv-dos.zip")) as dwca:
             # Ensure we get the correct number of rows
-            self.assertEqual(len(dwca.rows), 3)
+            assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            self.assertEqual(
-                dwca.get_corerow_by_position(1).data["decimallatitude"], "-31.98333"
-            )
+            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
             # Archive descriptor should be None
-            self.assertIsNone(dwca.descriptor)
+            assert dwca.descriptor is None
             # (scientific) metadata should be None
-            self.assertIsNone(dwca.metadata)
+            assert dwca.metadata is None
 
         # And with a file where fields are not double quotes-enclosed:
         with DwCAReader(sample_data_path("dwca-simple-csv-notenclosed.zip")) as dwca:
             # Ensure we get the correct number of rows
-            self.assertEqual(len(dwca.rows), 3)
+            assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            self.assertEqual(
-                dwca.get_corerow_by_position(1).data["decimallatitude"], "-31.98333"
-            )
+            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
             # Archive descriptor should be None
-            self.assertIsNone(dwca.descriptor)
+            assert dwca.descriptor is None
             # (scientific) metadata should be None
-            self.assertIsNone(dwca.metadata)
+            assert dwca.metadata is None
 
     def test_simplecsv_archive_eml(self):
         """Test Archive without metafile, but containing metadata.
@@ -442,100 +399,92 @@ class TestDwCAReader(unittest.TestCase):
         """
         with DwCAReader(sample_data_path("dwca-simple-csv-eml.zip")) as dwca:
             # Ensure we get the correct number of rows
-            self.assertEqual(len(dwca.rows), 3)
+            assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            self.assertEqual(
-                dwca.get_corerow_by_position(1).data["decimallatitude"], "-31.98333"
-            )
+            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
             # Archive descriptor should be None
-            self.assertIsNone(dwca.descriptor)
+            assert dwca.descriptor is None
             # (scientific) metadata is found
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
             # Quick content check
-            self.assertEqual(dwca.metadata.find("dataset").find("language").text, "en")
+            assert dwca.metadata.find("dataset").find("language").text == "en"
 
     def test_unzipped_archive(self):
         """Ensure it works with non-zipped (directory) archives."""
         with DwCAReader(sample_data_path("dwca-simple-dir")) as dwca:
             # See metadata access works...
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
 
             # And iterating...
             for row in dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
     def test_csv_quote_dir_archive(self):
         """If the field separator is in a quoted field, don't break on it."""
         with DwCAReader(sample_data_path("dwca-csv-quote-dir")) as dwca:
             rows = list(dwca)
-            self.assertEqual(len(rows), 2)
-            self.assertEqual(
-                rows[0].data[qn("basisOfRecord")], "Observation, something"
-            )
+            assert len(rows) == 2
+            assert rows[0].data[qn("basisOfRecord")] == "Observation, something"
 
     def test_dont_enclose_unenclosed(self):
         """If fields_enclosed_by is set to an empty string, don't enclose (even if quotes are present)"""
         with DwCAReader(sample_data_path("dwca-simple-dir")) as dwca:
             rows = list(dwca)
 
-            self.assertEqual('"betta" splendens', rows[2].data[qn("scientificName")])
-            self.assertEqual("'betta' splendens", rows[3].data[qn("scientificName")])
+            assert '"betta" splendens' == rows[2].data[qn("scientificName")]
+            assert "'betta' splendens" == rows[3].data[qn("scientificName")]
 
     def test_tgz_archives(self):
         """Ensure the reader (basic features) works with a .tgz Archive."""
         with DwCAReader(sample_data_path("dwca-simple-test-archive.tgz")) as dwca:
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
 
             for row in dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
             rows = list(dwca)
-            self.assertEqual(len(rows), 2)
-            self.assertEqual("Borneo", rows[0].data[qn("locality")])
-            self.assertEqual("Mumbai", rows[1].data[qn("locality")])
+            assert len(rows) == 2
+            assert "Borneo" == rows[0].data[qn("locality")]
+            assert "Mumbai" == rows[1].data[qn("locality")]
 
     def test_classic_opening(self):
         """Ensure it also works w/o the 'with' statement."""
         dwca = DwCAReader(sample_data_path("dwca-simple-test-archive.zip"))
-        self.assertIsInstance(dwca.metadata, ET.Element)
+        assert isinstance(dwca.metadata, ET.Element)
         dwca.close()
 
     def test_descriptor(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as basic_dwca:
-            self.assertIsInstance(basic_dwca.descriptor, ArchiveDescriptor)
+            assert isinstance(basic_dwca.descriptor, ArchiveDescriptor)
 
     def test_row_human_representation(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as basic_dwca:
             l = basic_dwca.rows[0]
             l_repr = str(l)
-            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence", l_repr)
-            self.assertIn("Source: Core file", l_repr)
-            self.assertIn("Row id:", l_repr)
-            self.assertIn("Reference extension rows: No", l_repr)
-            self.assertIn("Reference source metadata: No", l_repr)
-            self.assertIn(
-                "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'",
-                l_repr,
-            )
+            assert "Rowtype: http://rs.tdwg.org/dwc/terms/Occurrence" in l_repr
+            assert "Source: Core file" in l_repr
+            assert "Row id:" in l_repr
+            assert "Reference extension rows: No" in l_repr
+            assert "Reference source metadata: No" in l_repr
+            assert "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'" in \
+                l_repr
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             l = star_dwca.rows[0]
             l_repr = str(l)
-            self.assertIn("Rowtype: http://rs.tdwg.org/dwc/terms/Taxon", l_repr)
-            self.assertIn("Source: Core file", l_repr)
-            self.assertIn("Row id: 1", l_repr)
-            self.assertIn("Reference extension rows: Yes", l_repr)
-            self.assertIn("Reference source metadata: No", l_repr)
+            assert "Rowtype: http://rs.tdwg.org/dwc/terms/Taxon" in l_repr
+            assert "Source: Core file" in l_repr
+            assert "Row id: 1" in l_repr
+            assert "Reference extension rows: Yes" in l_repr
+            assert "Reference source metadata: No" in l_repr
 
             extension_l_repr = str(l.extensions[0])
-            self.assertIn(
-                "Rowtype: http://rs.gbif.org/terms/1.0/VernacularName", extension_l_repr
-            )
-            self.assertIn("Source: Extension file", extension_l_repr)
-            self.assertIn("Core row id: 1", extension_l_repr)
-            self.assertIn("ostrich", extension_l_repr)
-            self.assertIn("Reference extension rows: No", extension_l_repr)
-            self.assertIn("Reference source metadata: No", extension_l_repr)
+            assert "Rowtype: http://rs.gbif.org/terms/1.0/VernacularName" in extension_l_repr
+            assert "Source: Extension file" in extension_l_repr
+            assert "Core row id: 1" in extension_l_repr
+            assert "ostrich" in extension_l_repr
+            assert "Reference extension rows: No" in extension_l_repr
+            assert "Reference source metadata: No" in extension_l_repr
 
     def test_absolute_temporary_path(self):
         """Test the absolute_temporary_path() method."""
@@ -543,13 +492,13 @@ class TestDwCAReader(unittest.TestCase):
             path_to_occ = dwca.absolute_temporary_path("occurrence.txt")
 
             # Is it absolute ?
-            self.assertTrue(os.path.isabs(path_to_occ))
+            assert os.path.isabs(path_to_occ)
             # Does file exists ?
-            self.assertTrue(os.path.isfile(path_to_occ))
+            assert os.path.isfile(path_to_occ)
             # IS it the correct content ?
             f = open(path_to_occ)
             content = f.read()
-            self.assertTrue(content.startswith("id"))
+            assert content.startswith("id")
             f.close()
 
         with DwCAReader(sample_data_path("dwca-simple-dir")) as dwca:
@@ -557,13 +506,13 @@ class TestDwCAReader(unittest.TestCase):
             path_to_occ = dwca.absolute_temporary_path("occurrence.txt")
 
             # Is it absolute ?
-            self.assertTrue(os.path.isabs(path_to_occ))
+            assert os.path.isabs(path_to_occ)
             # Does file exists ?
-            self.assertTrue(os.path.isfile(path_to_occ))
+            assert os.path.isfile(path_to_occ)
             # IS it the correct content ?
             f = open(path_to_occ)
             content = f.read()
-            self.assertTrue(content.startswith("id"))
+            assert content.startswith("id")
 
     def test_auto_cleanup_zipped(self):
         """Test no temporary files are left after execution (using 'with' statement)."""
@@ -574,7 +523,7 @@ class TestDwCAReader(unittest.TestCase):
 
         num_files_after = len(os.listdir("."))
 
-        self.assertEqual(num_files_before, num_files_after)
+        assert num_files_before == num_files_after
 
     def test_auto_cleanup_directory(self):
         """If the source is already a directory, there's nothing to create nor cleanup."""
@@ -584,7 +533,7 @@ class TestDwCAReader(unittest.TestCase):
             pass
 
         num_files_after = len(os.listdir("."))
-        self.assertEqual(num_files_before, num_files_after)
+        assert num_files_before == num_files_after
 
     def test_manual_cleanup_zipped(self):
         """Test no temporary files are left after execution (calling close() manually)."""
@@ -595,7 +544,7 @@ class TestDwCAReader(unittest.TestCase):
 
         num_files_after = len(os.listdir("."))
 
-        self.assertEqual(num_files_before, num_files_after)
+        assert num_files_before == num_files_after
 
     def test_source_data_not_destroyed_directory(self):
         """If archive is a directory, it should not be deleted after use.
@@ -607,7 +556,7 @@ class TestDwCAReader(unittest.TestCase):
 
         # If previously destroyed, this will fail...
         r = DwCAReader(sample_data_path("dwca-simple-dir"))
-        self.assertIsInstance(r.metadata, ET.Element)
+        assert isinstance(r.metadata, ET.Element)
         r.close()
 
     def test_temporary_dir_zipped(self):
@@ -621,7 +570,7 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")):
             num_files_during = len(os.listdir(tmp_dir))
 
-        self.assertEqual(num_files_before, num_files_during - 1)
+        assert num_files_before == num_files_during - 1
 
     def test_no_temporary_dir_directory(self):
         """If archive is a directory, no need to create temporary files."""
@@ -629,24 +578,24 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-simple-dir")):
             num_files_during = len(os.listdir("."))
 
-        self.assertEqual(num_files_before, num_files_during)
+        assert num_files_before == num_files_during
 
     def test_archives_without_metadata(self):
         """Ensure we can deal with an archive containing a metafile, but no metadata."""
         with DwCAReader(sample_data_path("dwca-nometadata.zip")) as dwca:
-            self.assertIsNone(dwca.metadata)
+            assert dwca.metadata is None
 
             # But the data is nevertheless accessible
             rows = list(dwca)
-            self.assertEqual(len(rows), 2)
-            self.assertEqual("Borneo", rows[0].data[qn("locality")])
-            self.assertEqual("Mumbai", rows[1].data[qn("locality")])
+            assert len(rows) == 2
+            assert "Borneo" == rows[0].data[qn("locality")]
+            assert "Mumbai" == rows[1].data[qn("locality")]
 
     def test_metadata(self):
         """A few basic tests on the metadata attribute."""
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             # Assert metadata is an instance of ElementTree.Element
-            self.assertIsInstance(dwca.metadata, ET.Element)
+            assert isinstance(dwca.metadata, ET.Element)
 
             # Assert we can read basic fields from EML:
             v = (
@@ -656,40 +605,40 @@ class TestDwCAReader(unittest.TestCase):
                 .find("givenName")
                 .text
             )
-            self.assertEqual(v, "Nicolas")
+            assert v == "Nicolas"
 
     def test_core_contains_term(self):
         """Test the core_contains_term method."""
         # Example file contains locality but no country
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertTrue(dwca.core_contains_term(qn("locality")))
-            self.assertFalse(dwca.core_contains_term(qn("country")))
+            assert dwca.core_contains_term(qn("locality"))
+            assert not dwca.core_contains_term(qn("country"))
 
         # Also test it with a simple (= no metafile) archive
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-            self.assertTrue(dwca.core_contains_term("datasetkey"))
-            self.assertFalse(dwca.core_contains_term("trucmachin"))
+            assert dwca.core_contains_term("datasetkey")
+            assert not dwca.core_contains_term("trucmachin")
 
     def test_ignore_header_lines(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             # The sample file has two real rows + 1 header line
-            self.assertEqual(2, len([l for l in dwca]))
+            assert 2 == len([l for l in dwca])
 
         with DwCAReader(sample_data_path("dwca-noheaders-1.zip")) as dwca:
             # This file has two real rows, without headers
             # (specified in meta.xml)
-            self.assertEqual(2, len([l for l in dwca]))
+            assert 2 == len([l for l in dwca])
 
         with DwCAReader(sample_data_path("dwca-noheaders-2.zip")) as dwca:
             # This file has two real rows, without headers
             # (nothing specified in meta.xml)
-            self.assertEqual(2, len([l for l in dwca]))
+            assert 2 == len([l for l in dwca])
 
     def test_iterate_rows(self):
         """Test the iterating over CoreRow(s)"""
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             for row in dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
     def test_iterate_order(self):
         """Test that the order of appearance in Core file is respected when iterating."""
@@ -697,32 +646,32 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             l = list(dwca)
             # Row IDs are ordered like this in core file: id 4-1-3-2
-            self.assertEqual(int(l[0].id), 4)
-            self.assertEqual(int(l[1].id), 1)
-            self.assertEqual(int(l[2].id), 3)
-            self.assertEqual(int(l[3].id), 2)
+            assert int(l[0].id) == 4
+            assert int(l[1].id) == 1
+            assert int(l[2].id) == 3
+            assert int(l[3].id) == 2
 
     def test_iterate_multiple_calls(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
-            self.assertEqual(4, len([l for l in dwca]))
+            assert 4 == len([l for l in dwca])
             # The second time, we can still find 4 rows...
-            self.assertEqual(4, len([l for l in dwca]))
+            assert 4 == len([l for l in dwca])
 
     def test_get_corerow_by_position(self):
         """Test the get_corerow_by_position() method work as expected"""
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             # Row IDs are ordered like this in core: id 4-1-3-2
             first_row = dwca.get_corerow_by_position(0)
-            self.assertEqual(4, int(first_row.id))
+            assert 4 == int(first_row.id)
 
             last_row = dwca.get_corerow_by_position(3)
-            self.assertEqual(2, int(last_row.id))
+            assert 2 == int(last_row.id)
 
             # Exception raised if bigger than archive (last index: 3)
-            with self.assertRaises(RowNotFound):
+            with pytest.raises(RowNotFound):
                 dwca.get_corerow_by_position(4)
 
-            with self.assertRaises(RowNotFound):
+            with pytest.raises(RowNotFound):
                 dwca.get_corerow_by_position(1000)
 
     def test_get_corerow_by_id_string(self):
@@ -731,19 +680,19 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             # Number can be passed as a string....
             r = dwca.get_corerow_by_id("3")
-            self.assertEqual("Peliperdix", r.data[genus_qn])
+            assert "Peliperdix" == r.data[genus_qn]
 
     def test_get_corerow_by_id_multiple_calls(self):
         genus_qn = "http://rs.tdwg.org/dwc/terms/genus"
 
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             r = dwca.get_corerow_by_id("3")
-            self.assertEqual("Peliperdix", r.data[genus_qn])
+            assert "Peliperdix" == r.data[genus_qn]
 
             # If iterator is not properly reset, None will be returned
             # the second time
             r = dwca.get_corerow_by_id("3")
-            self.assertEqual("Peliperdix", r.data[genus_qn])
+            assert "Peliperdix" == r.data[genus_qn]
 
     def test_get_corerow_by_id_other(self):
         genus_qn = "http://rs.tdwg.org/dwc/terms/genus"
@@ -751,12 +700,12 @@ class TestDwCAReader(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             # Passed as an integer, conversion will be tried...
             r = dwca.get_corerow_by_id(3)
-            self.assertEqual("Peliperdix", r.data[genus_qn])
+            assert "Peliperdix" == r.data[genus_qn]
 
     def test_get_inexistent_row(self):
         """ Ensure get_corerow_by_id() raises RowNotFound if we ask it an unexistent row. """
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
-            with self.assertRaises(RowNotFound):
+            with pytest.raises(RowNotFound):
                 dwca.get_corerow_by_id(8000)
 
     def test_read_core_value(self):
@@ -765,8 +714,8 @@ class TestDwCAReader(unittest.TestCase):
             rows = list(dwca)
 
             # Check basic locality values from sample file
-            self.assertEqual("Borneo", rows[0].data[qn("locality")])
-            self.assertEqual("Mumbai", rows[1].data[qn("locality")])
+            assert "Borneo" == rows[0].data[qn("locality")]
+            assert "Mumbai" == rows[1].data[qn("locality")]
 
     def test_enclosed_data(self):
         """Ensure data is properly trimmed when fieldsEnclosedBy is in use."""
@@ -776,12 +725,12 @@ class TestDwCAReader(unittest.TestCase):
             rows = list(dwca)
 
             # Locality is enclosed in "'" chars, they should be trimmed...
-            self.assertEqual("Borneo", rows[0].data[qn("locality")])
-            self.assertEqual("Mumbai", rows[1].data[qn("locality")])
+            assert "Borneo" == rows[0].data[qn("locality")]
+            assert "Mumbai" == rows[1].data[qn("locality")]
 
             # But family isn't, so it shouldn't be altered
-            self.assertEqual("Tetraodontidae", rows[0].data[qn("family")])
-            self.assertEqual("Osphronemidae", rows[1].data[qn("family")])
+            assert "Tetraodontidae" == rows[0].data[qn("family")]
+            assert "Osphronemidae" == rows[1].data[qn("family")]
 
     def test_read_core_value_default(self):
         """Retrieve a (default) value from core
@@ -793,16 +742,16 @@ class TestDwCAReader(unittest.TestCase):
         """
         with DwCAReader(sample_data_path("dwca-test-default.zip")) as dwca:
             for l in dwca:
-                self.assertEqual("Belgium", l.data[qn("country")])
+                assert "Belgium" == l.data[qn("country")]
 
     def test_qn(self):
         """Test the qn (shortcut generator) helper"""
 
         # Test success
-        self.assertEqual("http://rs.tdwg.org/dwc/terms/Occurrence", qn("Occurrence"))
+        assert "http://rs.tdwg.org/dwc/terms/Occurrence" == qn("Occurrence")
 
         # Test failure
-        with self.assertRaises(StopIteration):
+        with pytest.raises(StopIteration):
             qn("dsfsdfsdfsdfsdfsd")
 
     def test_no_cr_left(self):
@@ -816,7 +765,7 @@ class TestDwCAReader(unittest.TestCase):
         ) as simple_dwca:
             for l in simple_dwca:
                 for k, v in l.data.items():
-                    self.assertFalse(v.endswith("\n"))
+                    assert not v.endswith("\n")
 
     def test_correct_extension_rows_per_core_row(self):
         """Test we have the correct number of extensions rows."""
@@ -826,29 +775,29 @@ class TestDwCAReader(unittest.TestCase):
             sample_data_path("dwca-simple-test-archive.zip")
         ) as simple_dwca:
             for r in simple_dwca:
-                self.assertEqual(0, len(r.extensions))
+                assert 0 == len(r.extensions)
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             rows = list(star_dwca)
 
             # 3 vernacular names are given for Struthio Camelus...
-            self.assertEqual(3, len(rows[0].extensions))
+            assert 3 == len(rows[0].extensions)
             # ... 1 vernacular name for Alectoris chukar ...
-            self.assertEqual(1, len(rows[1].extensions))
+            assert 1 == len(rows[1].extensions)
             # ... and none for the last two rows
-            self.assertEqual(0, len(rows[2].extensions))
-            self.assertEqual(0, len(rows[3].extensions))
+            assert 0 == len(rows[2].extensions)
+            assert 0 == len(rows[3].extensions)
 
         # TODO: test the same thing with 2 different extensions reffering to the row
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as multi_dwca:
             rows = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
-            self.assertEqual(5, len(rows[0].extensions))
+            assert 5 == len(rows[0].extensions)
             # 1 Vernacular name, no taxon description
-            self.assertEqual(1, len(rows[1].extensions))
+            assert 1 == len(rows[1].extensions)
             # No extensions for this core line
-            self.assertEqual(0, len(rows[2].extensions))
+            assert 0 == len(rows[2].extensions)
             # No vernacular name, 1 taxon description
 
     def test_ignore_extension(self):
@@ -863,11 +812,11 @@ class TestDwCAReader(unittest.TestCase):
             rows = list(multi_dwca)
 
             # 3 vernacular names
-            self.assertEqual(3, len(rows[0].extensions))
+            assert 3 == len(rows[0].extensions)
             # 1 Vernacular name
-            self.assertEqual(1, len(rows[1].extensions))
+            assert 1 == len(rows[1].extensions)
             # No extensions for this core line
-            self.assertEqual(0, len(rows[2].extensions))
+            assert 0 == len(rows[2].extensions)
 
         # Here, we ignore the only extension of an archive
         with DwCAReader(
@@ -876,10 +825,10 @@ class TestDwCAReader(unittest.TestCase):
         ) as star_dwca:
             rows = list(star_dwca)
 
-            self.assertEqual(0, len(rows[0].extensions))
-            self.assertEqual(0, len(rows[1].extensions))
-            self.assertEqual(0, len(rows[2].extensions))
-            self.assertEqual(0, len(rows[3].extensions))
+            assert 0 == len(rows[0].extensions)
+            assert 0 == len(rows[1].extensions)
+            assert 0 == len(rows[2].extensions)
+            assert 0 == len(rows[3].extensions)
 
         # And here, we check it is silently ignored and everything works in case we ask to
         # ignore an unexisting extension
@@ -891,11 +840,11 @@ class TestDwCAReader(unittest.TestCase):
             rows = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
-            self.assertEqual(5, len(rows[0].extensions))
+            assert 5 == len(rows[0].extensions)
             # 1 Vernacular name, no taxon description
-            self.assertEqual(1, len(rows[1].extensions))
+            assert 1 == len(rows[1].extensions)
             # No extensions for this core row
-            self.assertEqual(0, len(rows[2].extensions))
+            assert 0 == len(rows[2].extensions)
 
     def test_row_rowtype(self):
         """Test the rowtype attribute of rows (for Core and extensions)."""
@@ -905,20 +854,20 @@ class TestDwCAReader(unittest.TestCase):
 
             for i, row in enumerate(star_dwca):
                 # All ine instance accessed here are core:
-                self.assertEqual(taxon_qn, row.rowtype)
+                assert taxon_qn == row.rowtype
 
                 if i == 0:
                     # First row has an extension, and only vn are in use
-                    self.assertEqual(vernacular_qn, row.extensions[0].rowtype)
+                    assert vernacular_qn == row.extensions[0].rowtype
 
     def test_row_class(self):
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             for row in star_dwca:
-                self.assertIsInstance(row, CoreRow)
+                assert isinstance(row, CoreRow)
 
                 # But the extensions are... extensions (hum)
                 for an_extension in row.extensions:
-                    self.assertIsInstance(an_extension, ExtensionRow)
+                    assert isinstance(an_extension, ExtensionRow)
 
     # TODO: Also test we return an empty list on empty archive
     def test_rows_property(self):
@@ -932,7 +881,7 @@ class TestDwCAReader(unittest.TestCase):
             for r in star_dwca:
                 by_iteration.append(r)
 
-            self.assertEqual(by_iteration, star_dwca.rows)
+            assert by_iteration == star_dwca.rows
 
     # TODO: Add more test to ensure that the specified EOL sequence
     # (and ONLY this sequence!) is used to split lines.
@@ -948,45 +897,41 @@ class TestDwCAReader(unittest.TestCase):
             rows = dwca.rows
             # If line properly split => 64 columns.
             # (61 - and probably an IndexError - if errors)
-            self.assertEqual(64, len(rows[0].data))
+            assert 64 == len(rows[0].data)
 
     def test_source_metadata(self):
         # Standard archive: no source metadata
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
-            self.assertEqual(star_dwca.source_metadata, {})
+            assert star_dwca.source_metadata == {}
 
         # GBIF download: source metadata present
         with DwCAReader(sample_data_path("gbif-results.zip")) as results:
             # We have 23 EML files in the dataset directory
-            self.assertEqual(23, len(results.source_metadata))
+            assert 23 == len(results.source_metadata)
             # Assert a key is present
-            self.assertTrue(
-                "eccf4b09-f0c8-462d-a48c-41a7ce36815a" in results.source_metadata
-            )
+            assert "eccf4b09-f0c8-462d-a48c-41a7ce36815a" in results.source_metadata
 
-            self.assertFalse("incorrect-UUID" in results.source_metadata)
+            assert not ("incorrect-UUID" in results.source_metadata)
 
             # Assert it's the correct EML file (content!)
             sm = results.source_metadata
             metadata = sm["eccf4b09-f0c8-462d-a48c-41a7ce36815a"]
 
-            self.assertIsInstance(metadata, ET.Element)
+            assert isinstance(metadata, ET.Element)
 
             # Assert we can read basic fields from EML:
-            self.assertEqual(
-                metadata.find("dataset")
-                .find("creator")
-                .find("individualName")
-                .find("givenName")
-                .text,
-                "Rob",
-            )
+            assert metadata.find("dataset") \
+                .find("creator") \
+                .find("individualName") \
+                .find("givenName") \
+                .text == \
+                "Rob"
 
     def test_row_source_metadata(self):
         # For normal DwC-A, it should always be None (NO source data
         # available in archive.)
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
-            self.assertIsNone(star_dwca.rows[0].source_metadata)
+            assert star_dwca.rows[0].source_metadata is None
 
         # But it should be supported for GBIF-originating archives
         # (was previously supported with GBIFResultsReader)
@@ -994,7 +939,7 @@ class TestDwCAReader(unittest.TestCase):
             first_row = results.get_corerow_by_id("607759330")
             m = first_row.source_metadata
 
-            self.assertIsInstance(m, ET.Element)
+            assert isinstance(m, ET.Element)
 
             v = (
                 m.find("dataset")
@@ -1004,20 +949,20 @@ class TestDwCAReader(unittest.TestCase):
                 .text
             )
 
-            self.assertEqual(v, "Stanley")
+            assert v == "Stanley"
 
             last_row = results.get_corerow_by_id("782700656")
             m = last_row.source_metadata
 
-            self.assertIsInstance(m, ET.Element)
+            assert isinstance(m, ET.Element)
             v = m.find("dataset").find("language").text
-            self.assertEqual(v, "en")
+            assert v == "en"
 
     def test_unknown_archive_format(self):
         """ Ensure InvalidArchive is raised when passed file is not a .zip nor .tgz."""
         invalid_origin_file = tempfile.NamedTemporaryFile(delete=False)
 
-        with self.assertRaises(InvalidArchive):
+        with pytest.raises(InvalidArchive):
             with DwCAReader(invalid_origin_file.name):
                 pass
 
@@ -1027,14 +972,14 @@ class TestDwCAReader(unittest.TestCase):
         """ orphaned_extension_rows returns {} when there's no extensions."""
         # Archive without extensions: we expect {}
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
-            self.assertEqual({}, dwca.orphaned_extension_rows())
+            assert {} == dwca.orphaned_extension_rows()
 
     def test_orphaned_extension_rows_no_orphans(self):
         # Archive with extensions, but no orphaned extension rows
 
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             expected = {"description.txt": {}, "vernacularname.txt": {}}
-            self.assertEqual(expected, dwca.orphaned_extension_rows())
+            assert expected == dwca.orphaned_extension_rows()
 
     def test_orphaned_extension_rows(self):
         # Archive with extensions and orphaned rows
@@ -1043,7 +988,7 @@ class TestDwCAReader(unittest.TestCase):
                 "description.txt": {u"5": [3, 4], u"6": [5]},
                 "vernacularname.txt": {u"7": [4]},
             }
-            self.assertEqual(expected, dwca.orphaned_extension_rows())
+            assert expected == dwca.orphaned_extension_rows()
 
 
 if __name__ == "__main__":

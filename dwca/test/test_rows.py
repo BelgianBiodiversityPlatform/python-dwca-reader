@@ -8,9 +8,9 @@ from .helpers import sample_data_path
 class TestUtils(unittest.TestCase):
     def test_csv_line_to_fields(self):
         raw_fields = csv_line_to_fields('field 1,"field 2, with comma",field 3', '\n', ',', '"')
-        self.assertEqual(raw_fields[0], "field 1")
-        self.assertEqual(raw_fields[1], "field 2, with comma")
-        self.assertEqual(raw_fields[2], "field 3")
+        assert raw_fields[0] == "field 1"
+        assert raw_fields[1] == "field 2, with comma"
+        assert raw_fields[2] == "field 3"
 
 
 class TestCoreRow(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestCoreRow(unittest.TestCase):
         for archive_path in archives_to_test:
             with DwCAReader(archive_path) as dwca:
                 for i, row in enumerate(dwca):
-                    self.assertEqual(i, row.position)
+                    assert i == row.position
 
 
 class TestExtensionRow(unittest.TestCase):
@@ -37,9 +37,9 @@ class TestExtensionRow(unittest.TestCase):
             vernacular_second_line = ostrich.extensions[3]
             vernacular_third_line = ostrich.extensions[4]
 
-            self.assertEqual (0, description_first_line.position)
-            self.assertEqual(1, description_second_line.position)
+            assert 0 == description_first_line.position
+            assert 1 == description_second_line.position
 
-            self.assertEqual(0, vernacular_first_line.position)
-            self.assertEqual(1, vernacular_second_line.position)
-            self.assertEqual(2, vernacular_third_line.position)
+            assert 0 == vernacular_first_line.position
+            assert 1 == vernacular_second_line.position
+            assert 2 == vernacular_third_line.position

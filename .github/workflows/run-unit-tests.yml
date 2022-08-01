@@ -27,4 +27,4 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}-pip-
       - run: python setup.py install
       - run: pip install -r requirements-dev.txt
-      - run: nosetests
+      - run: pytest
