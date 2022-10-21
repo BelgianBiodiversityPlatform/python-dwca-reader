@@ -74,7 +74,7 @@ Basic use, access to metadata and data from the Core file
         rows = dwca.rows
 
         # Or retrieve a specific row by its id:
-        occurrence_number_three = dwca.get_row_by_id(3)
+        occurrence_number_three = dwca.get_corerow_by_id(3)
 
         # Caution: ids are generally a fragile way to identify a core row in an archive, since the standard doesn't
         # guarantee unicity (nor even that there will be an id). The index (position) of the row (starting at 0) is
