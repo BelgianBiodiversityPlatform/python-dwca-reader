@@ -990,6 +990,12 @@ class TestDwCAReader(unittest.TestCase):
             }
             assert expected == dwca.orphaned_extension_rows()
 
+    def test_whitespace_before_xml_tag(self):
+        """Ensure we can parse archives with whitespace before XML tag."""
+
+        # The next line will throw an exception if metadata.xml can't be parsed
+        DwCAReader(sample_data_path("gbif-results-whitespace-in-xml.zip"))
+
 
 if __name__ == "__main__":
     unittest.main()

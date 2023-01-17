@@ -1,6 +1,7 @@
 Current
 -------
 
+- Workaround for errors with buggy GBIF downloads, see https://github.com/gbif/portal-feedback/issues/4533
 - Dropped Python 3.5
 
 v0.15.0 (2020-09-09)

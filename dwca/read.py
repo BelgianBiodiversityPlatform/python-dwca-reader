@@ -407,7 +407,15 @@ class DwCAReader(object):
 
     def _parse_xml_included_file(self, relative_path: str) -> Element:
         """Load, parse and returns (as ElementTree.Element) XML file located at relative_path."""
-        return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
+        try:
+            return ET.parse(self.absolute_temporary_path(relative_path)).getroot()
+        except ET.ParseError:
+            # In case of parsing error, it might be because of https://github.com/gbif/portal-feedback/issues/4533
+            # In that case, we work with a stripped string instead.
+            # Note that this method cannot be generalized because it won't work well with encoding specified in the xml
+            # tag. This is why we're only choosing it in case of error
+            data_as_string = self.open_included_file(relative_path, 'r').read()
+            return ET.fromstring(data_as_string.strip())
 
     def _unzip_or_untar(self) -> str:
         """Create a temporary dir. and uncompress/unarchive self.archive_path there.
