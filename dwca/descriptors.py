@@ -108,7 +108,7 @@ class DataFileDescriptor(object):
         """
         file_encoding = "utf-8"
 
-        with io.open(datafile_path, 'rU', encoding=file_encoding) as datafile:
+        with io.open(datafile_path, 'r', encoding=file_encoding) as datafile:
             # Autodetect fields/lines termination
             dialect = csv.Sniffer().sniff(datafile.readline())
 
