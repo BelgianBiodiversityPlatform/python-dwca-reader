@@ -31,8 +31,12 @@ class TestCSVDataFile(unittest.TestCase):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             extension_files = dwca.extension_files
 
+            core_txt = dwca.core_file
             description_txt = extension_files[0]
             vernacular_txt = extension_files[1]
+
+            expected_core = {'1': array('L', [0]), '2': array('L', [1]), '3': array('L', [2]), '4': array('L', [3])}
+            assert core_txt.coreid_index == expected_core
 
             expected_vernacular = {"1": array('L', [0, 1, 2]), "2": array('L', [3])}
             assert vernacular_txt.coreid_index == expected_vernacular
