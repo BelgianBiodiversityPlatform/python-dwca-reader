@@ -1,5 +1,5 @@
-Current
--------
+v0.16.0 (2023-11-13)
+--------------------
 
 - Dropped Python 3.5 and 3.6 support. Use Python 3.7 to 3.11 instead.
 - Added a star record iterator to DwCAReader (thanks to @csbrown)
