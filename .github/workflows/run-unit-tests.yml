@@ -1,7 +1,7 @@
 name: run-unit-tests
 on: [push]
 jobs:
-  run-nosetests:
+  run-pytest:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
