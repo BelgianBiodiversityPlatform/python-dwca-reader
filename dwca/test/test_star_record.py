@@ -2,7 +2,6 @@ from dwca.read import DwCAReader
 from dwca.rows import CoreRow
 from dwca.star_record import StarRecordIterator
 from .helpers import sample_data_path
-import pytest
 import unittest
 
 class TestStarRecordIterator(unittest.TestCase):

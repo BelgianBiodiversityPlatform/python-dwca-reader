@@ -90,15 +90,9 @@ class CSVDataFile(object):
             core_id2: [8, 10] # Rows at position 8 and 10 references a Core Row whose ID is core_id2
             }
 
-        :raises: AttributeError if accessed on a core data file.
-
         .. warning::
 
-            for permformance reasons, dictionary values are arrays('L') instead of regular python lists
-
-        .. warning::
-
-            coreid_index is only available for extension data files.
+            for performance reasons, dictionary values are arrays('L') instead of regular python lists
 
         .. warning::
 
