@@ -6,7 +6,7 @@ def remove_tree(path, retries=3, sleep=0.1):
     for i in range(retries):
         try:
             rmtree(path, False)
-        except WindowsError:
+        except OSError:
             time.sleep(sleep)
         else:
             break
