@@ -448,6 +448,7 @@ class DwCAReader(object):
         except zipfile.BadZipfile:
             # Doesn't look like a valid zip, let's see if it's a tar archive (possibly compressed)
             try:
+                # TODO: Once we only support Python 3.12+, we should pass the filter="data" argument to extractall()
                 tarfile.open(self.archive_path, 'r:*').extractall(tmp_dir)
             except tarfile.ReadError:
                 raise InvalidArchive("The archive cannot be read. Is it a .zip or .tgz file?")

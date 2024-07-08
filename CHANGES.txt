@@ -1,6 +1,7 @@
 Current (unreleased)
 --------------------
 
+- Added official support for Python 3.12
 - Proper error message when trying to use an unsupported combination of Pandas option
 and archives with default values (issue #106).
 
