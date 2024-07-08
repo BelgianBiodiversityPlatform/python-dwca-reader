@@ -10,6 +10,8 @@ from tempfile import mkdtemp
 from typing import List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
 
+from pandas.io.parsers import TextFileReader
+
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
@@ -200,15 +202,25 @@ class DwCAReader(object):
         kwargs['header'] = None
         kwargs['names'] = datafile_descriptor.short_headers
 
-        df = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
+        df_or_textreader = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
 
         # Add a column for default values, if present in the file descriptor
         for field in datafile_descriptor.fields:
             field_default_value = field['default']
             if field_default_value is not None:
-                df[shorten_term(field['term'])] = field_default_value
+                if isinstance(df_or_textreader, TextFileReader):
+                    # I don't see how to assign default values to a TextFileReader, so
+                    # this is currently unsupported
+                    raise ValueError(
+                        "Pandas read_csv() was called with a chunksize or iterator=True, "
+                        "and therefore returns a TextFileReader instead of a DataFrame "
+                        "which is not supported in combination with default values of "
+                        "the archive."
+                    )
 
-        return df
+                df_or_textreader[shorten_term(field['term'])] = field_default_value
+
+        return df_or_textreader
 
     def orphaned_extension_rows(self) -> Dict[str, Dict[str, List[int]]]:
         """Return a dict of the orphaned extension rows.

@@ -48,6 +48,26 @@ class TestPandasIntegration(unittest.TestCase):
             assert df["scientificName"].values.tolist() == \
                 ["tetraodon fluviatilis", "betta splendens"]
 
+    def test_pd_read_chunked_default_value(self):
+        """Pandas chuncksize should not be used with default values.
+
+        See: https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/106
+        """
+        with DwCAReader(sample_data_path("dwca-test-default.zip")) as dwca:
+            with pytest.raises(ValueError):
+                for chunk in dwca.pd_read("occurrence.txt", chunksize=1):
+                    pass
+
+    def test_pd_read_chunked(self):
+        """If no default values are available in the archive, chunksize should work.
+
+        See: https://github.com/BelgianBiodiversityPlatform/python-dwca-reader/issues/106
+        """
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            for chunk in dwca.pd_read("occurrence.txt", chunksize=2):
+                assert isinstance(chunk, pd.DataFrame)
+
+
     def test_pd_read_no_data_files(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             with pytest.raises(NotADataFile):

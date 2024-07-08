@@ -1,3 +1,9 @@
+Current (unreleased)
+--------------------
+
+- Proper error message when trying to use an unsupported combination of Pandas option
+and archives with default values (issue #106).
+
 v0.16.0 (2023-11-13)
 --------------------
 
