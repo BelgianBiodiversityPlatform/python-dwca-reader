@@ -188,7 +188,9 @@ class DwCAReader(object):
         .. note::
 
             Default values of Darwin Core Archive are supported: A column will be added to the DataFrame if a term has
-            a default value in the Metafile (but no corresponding column in the CSV Data File).
+            a default value in the Metafile (but no corresponding column in the CSV Data File). This is unfortunately
+            not supported in case the value returned by `pandas.read_csv()` is a `TextFileReader` (e.g. when using
+            `chunksize` or `iterator=True`).
         """
         datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
 
