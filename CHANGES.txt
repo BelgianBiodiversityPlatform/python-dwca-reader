@@ -1,3 +1,7 @@
+v0.16.2 (2024-08-23)
+
+- Fix a packaging issue that prevented the release of v0.16.1 on PyPI.
+
 v0.16.1 (2024-08-23)
 --------------------
 
