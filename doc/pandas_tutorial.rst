@@ -24,9 +24,9 @@ from the archive into a Pandas `DataFrame`_.
 .. note::
 
     :meth:`DwCAReader.pd_read` is a simple wrapper around
-    `pandas.read_csv() <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_ and accept the same
-    optional arguments. Only a few of them (`delimiter`, `skiprows`, `encoding`, ...) will be ignored because DwCAReader
-    sets them appropriately for the data file.
+    `pandas.read_csv() <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_ and accept the same optional arguments, with a few caveats:
+    1) Some of them (`delimiter`, `skiprows`, `encoding`, ...) will be ignored because DwCAReader sets them appropriately for the data file.
+    2) Some options of `pandas.read_csv()` make it returns a `TextFileReader` (`chunksize` or `iterator=True` for example). This should be avoided because it is incompatible with the Darwin Core Archives that make use of default values.
 
 .. note::
 
