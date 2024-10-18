@@ -1,4 +1,4 @@
-current (unreleased)
+v0.16.3 (2024-10-18)
 --------------------
 
 - Added a new `skip_metadata` parameter to the `DwCAReader` constructor. When set to `True`, the metadata file is not read. This can be useful for example if the metadata is corrupt (invalid XML) and you don't need it.
