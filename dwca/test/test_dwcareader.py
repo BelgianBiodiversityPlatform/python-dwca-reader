@@ -67,7 +67,6 @@ class TestPandasIntegration(unittest.TestCase):
             for chunk in dwca.pd_read("occurrence.txt", chunksize=2):
                 assert isinstance(chunk, pd.DataFrame)
 
-
     def test_pd_read_no_data_files(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             with pytest.raises(NotADataFile):
@@ -259,8 +258,20 @@ class TestDwCAReader(unittest.TestCase):
             # We ignore the extension, so archive appears without
             assert not dwca.use_extensions
 
+    def test_skip_metadata_option(self):
+        """Ensure the skip_metadata option works as intended."""
+        # By default, metadata should be read and parsed
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            assert isinstance(dwca.metadata, ET.Element)
+
+        # ... but it can be skipped with the 'skip_metadata' option
+        with DwCAReader(
+            sample_data_path("dwca-simple-test-archive.zip"), skip_metadata=True
+        ) as dwca:
+            assert dwca.metadata is None
+
     def test_default_metadata_filename(self):
-        """Ensure that metadata is found by it's default name.
+        """Ensure that metadata is found by its default name.
 
         Metadata is named "EML.xml", but no metadata attribute in Metafile.
         """
@@ -413,9 +424,9 @@ class TestDwCAReader(unittest.TestCase):
         """Test Archive without metafile, but containing metadata.
 
         Similar to test_simplecsv_archive, except the archive also contains a Metadata file named
-        EML.xml. This correspond to the second case on page #2 of
+        EML.xml. This corresponds to the second case on page #2 of
         http://www.gbif.org/resource/80639. The metadata file having the "standard name", it should
-        properly handled.
+        properly be handled.
         """
         with DwCAReader(sample_data_path("dwca-simple-csv-eml.zip")) as dwca:
             # Ensure we get the correct number of rows

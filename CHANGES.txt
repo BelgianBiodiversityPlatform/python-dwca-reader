@@ -1,4 +1,10 @@
+current (unreleased)
+--------------------
+
+- Added a new `skip_metadata` parameter to the `DwCAReader` constructor. When set to `True`, the metadata file is not read. This can be useful for example if the metadata is corrupt (invalid XML) and you don't need it.
+
 v0.16.2 (2024-08-23)
+--------------------
 
 - Fix a packaging issue that prevented the release of v0.16.1 on PyPI.
 

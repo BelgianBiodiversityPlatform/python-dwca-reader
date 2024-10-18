@@ -80,7 +80,11 @@ class DwCAReader(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
-    def __init__(self, path: str, extensions_to_ignore: List[str] = None, tmp_dir: str = None) -> None:
+    def __init__(self,
+                 path: str,
+                 extensions_to_ignore: List[str] = None,
+                 tmp_dir: str = None,
+                 skip_metadata: bool = False) -> None:
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
@@ -111,8 +115,10 @@ class DwCAReader(object):
                 pass
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the (scientific) metadata
-        #: of the archive, or `None` if the archive has no metadata.
-        self.metadata = self._parse_metadata_file()  # type: Optional[Element]
+        #: of the archive, or `None` if the archive has no metadata or if the `skip_metadata` parameter is True.
+        self.metadata = None  # type: Optional[Element]
+        if not skip_metadata:
+            self.metadata = self._parse_metadata_file()  # type: Optional[Element]
 
         #: If the archive contains source-level metadata (typically, GBIF downloads), this is a dict such as::
         #:
@@ -396,7 +402,7 @@ class DwCAReader(object):
         """Load the archive (scientific) Metadata file, parse it with\
         ElementTree and return its content (or `None` if the archive has no metadata).
 
-        :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references an non-existent
+        :raises: :class:`dwca.exceptions.InvalidArchive` if the archive references a non-existent
         metadata file.
         """
         # If the archive has descriptor, look for the metadata filename there.
