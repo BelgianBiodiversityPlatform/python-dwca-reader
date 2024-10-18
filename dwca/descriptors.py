@@ -28,21 +28,21 @@ class DataFileDescriptor(object):
         * :meth:`make_from_file` (created by analyzing the data file)
     """
 
-    def __init__(self,
-                 created_from_file: bool,
-                 raw_element: Element,
-                 represents_corefile: bool,
-                 datafile_type: Optional[str],
-                 file_location: str,
-                 file_encoding: str,
-                 id_index: int,
-                 coreid_index: int,
-                 fields: List[Dict],
-                 lines_terminated_by: str,
-                 fields_enclosed_by: str,
-                 fields_terminated_by: str
-                 ) -> None:
-
+    def __init__(
+        self,
+        created_from_file: bool,
+        raw_element: Element,
+        represents_corefile: bool,
+        datafile_type: Optional[str],
+        file_location: str,
+        file_encoding: str,
+        id_index: int,
+        coreid_index: int,
+        fields: List[Dict],
+        lines_terminated_by: str,
+        fields_enclosed_by: str,
+        fields_terminated_by: str,
+    ) -> None:
         #: True if this descriptor was created by analyzing the data file.
         self.created_from_file = created_from_file
         #: The <section> element describing the data file, from the metafile. None if the
@@ -108,7 +108,7 @@ class DataFileDescriptor(object):
         """
         file_encoding = "utf-8"
 
-        with io.open(datafile_path, 'r', encoding=file_encoding) as datafile:
+        with io.open(datafile_path, "r", encoding=file_encoding) as datafile:
             # Autodetect fields/lines termination
             dialect = csv.Sniffer().sniff(datafile.readline())
 
@@ -126,21 +126,26 @@ class DataFileDescriptor(object):
             columns = next(dr)
 
             fields = [
-                {'index': i, 'term': column, 'default': None} for i, column in enumerate(columns)
+                {"index": i, "term": column, "default": None}
+                for i, column in enumerate(columns)
             ]
 
-        return cls(created_from_file=True,
-                   raw_element=None,  # No metafile, so no XML section to store
-                   represents_corefile=True,  # In archives w/o metafiles, there's only core data
-                   datafile_type=None,  # No metafile => no rowType information
-                   file_location=os.path.basename(datafile_path),  # datafile_path also has the dir
-                   file_encoding=file_encoding,
-                   id_index=None,
-                   coreid_index=None,
-                   fields=fields,
-                   lines_terminated_by=lines_terminated_by,
-                   fields_enclosed_by=fields_enclosed_by,
-                   fields_terminated_by=fields_terminated_by)
+        return cls(
+            created_from_file=True,
+            raw_element=None,  # No metafile, so no XML section to store
+            represents_corefile=True,  # In archives w/o metafiles, there's only core data
+            datafile_type=None,  # No metafile => no rowType information
+            file_location=os.path.basename(
+                datafile_path
+            ),  # datafile_path also has the dir
+            file_encoding=file_encoding,
+            id_index=None,
+            coreid_index=None,
+            fields=fields,
+            lines_terminated_by=lines_terminated_by,
+            fields_enclosed_by=fields_enclosed_by,
+            fields_terminated_by=fields_terminated_by,
+        )
 
     @classmethod
     def make_from_metafile_section(cls, section_tag):
@@ -149,56 +154,66 @@ class DataFileDescriptor(object):
         :param section_tag: The XML Element section containing details about the data file.
         :type section_tag: :class:`xml.etree.ElementTree.Element`
         """
-        if section_tag.tag == 'core':
-            id_index = int(section_tag.find('id').get('index'))
+        if section_tag.tag == "core":
+            id_index = int(section_tag.find("id").get("index"))
             coreid_index = None
         else:
             id_index = None
-            coreid_index = int(section_tag.find('coreid').get('index'))
+            coreid_index = int(section_tag.find("coreid").get("index"))
 
         fields = []
-        for field_tag in section_tag.findall('field'):
-            default = field_tag.get('default', None)
+        for field_tag in section_tag.findall("field"):
+            default = field_tag.get("default", None)
 
             # Default fields don't have an index attribute
-            index = (int(field_tag.get('index')) if field_tag.get('index') else None)
+            index = int(field_tag.get("index")) if field_tag.get("index") else None
 
-            fields.append({'term': field_tag.get('term'), 'index': index, 'default': default})
+            fields.append(
+                {"term": field_tag.get("term"), "index": index, "default": default}
+            )
 
-        file_encoding = section_tag.get('encoding')
+        file_encoding = section_tag.get("encoding")
 
-        lines_terminated_by = _decode_xml_attribute(raw_element=section_tag,
-                                                    attribute_name='linesTerminatedBy',
-                                                    default_value='\n',
-                                                    encoding=file_encoding)
+        lines_terminated_by = _decode_xml_attribute(
+            raw_element=section_tag,
+            attribute_name="linesTerminatedBy",
+            default_value="\n",
+            encoding=file_encoding,
+        )
 
-        fields_terminated_by = _decode_xml_attribute(raw_element=section_tag,
-                                                     attribute_name='fieldsTerminatedBy',
-                                                     default_value='\t',
-                                                     encoding=file_encoding)
+        fields_terminated_by = _decode_xml_attribute(
+            raw_element=section_tag,
+            attribute_name="fieldsTerminatedBy",
+            default_value="\t",
+            encoding=file_encoding,
+        )
 
-        fields_enclosed_by = _decode_xml_attribute(raw_element=section_tag,
-                                                   attribute_name='fieldsEnclosedBy',
-                                                   default_value='',
-                                                   encoding=file_encoding)
+        fields_enclosed_by = _decode_xml_attribute(
+            raw_element=section_tag,
+            attribute_name="fieldsEnclosedBy",
+            default_value="",
+            encoding=file_encoding,
+        )
 
-        return cls(created_from_file=False,
-                   raw_element=section_tag,
-                   represents_corefile=(section_tag.tag == 'core'),
-                   datafile_type=section_tag.get('rowType'),
-                   file_location=section_tag.find('files').find('location').text,
-                   file_encoding=file_encoding,
-                   id_index=id_index,
-                   coreid_index=coreid_index,
-                   fields=fields,
-                   lines_terminated_by=lines_terminated_by,
-                   fields_enclosed_by=fields_enclosed_by,
-                   fields_terminated_by=fields_terminated_by)
+        return cls(
+            created_from_file=False,
+            raw_element=section_tag,
+            represents_corefile=(section_tag.tag == "core"),
+            datafile_type=section_tag.get("rowType"),
+            file_location=section_tag.find("files").find("location").text,
+            file_encoding=file_encoding,
+            id_index=id_index,
+            coreid_index=coreid_index,
+            fields=fields,
+            lines_terminated_by=lines_terminated_by,
+            fields_enclosed_by=fields_enclosed_by,
+            fields_terminated_by=fields_terminated_by,
+        )
 
     @property
     def terms(self) -> Set[str]:
         """Return a Python set containing all the Darwin Core terms appearing in file."""
-        return set([f['term'] for f in self.fields])
+        return set([f["term"] for f in self.fields])
 
     @property
     def headers(self) -> List[str]:
@@ -214,14 +229,16 @@ class DataFileDescriptor(object):
         columns = {}
 
         for f in self.fields:
-            if f['index']:  # Some (default values for example) don't have a corresponding col.
-                columns[f['index']] = f['term']
+            if f[
+                "index"
+            ]:  # Some (default values for example) don't have a corresponding col.
+                columns[f["index"]] = f["term"]
 
         # In addition to DwC terms, we may also have id (Core) or core_id (Extensions) columns
         if self.id_index is not None:
-            columns[self.id_index] = 'id'
+            columns[self.id_index] = "id"
         if self.coreid_index is not None:
-            columns[self.coreid_index] = 'coreid'
+            columns[self.coreid_index] = "coreid"
 
         return [columns[f] for f in sorted(columns.keys())]
 
@@ -244,7 +261,7 @@ class DataFileDescriptor(object):
             # Single-file archives always have a header line with DwC terms
             return 1
 
-        return int(self.raw_element.get('ignoreHeaderLines', 0))
+        return int(self.raw_element.get("ignoreHeaderLines", 0))
 
 
 class ArchiveDescriptor(object):
@@ -255,29 +272,35 @@ class ArchiveDescriptor(object):
             files_to_ignore = []
 
         # Let's drop the XML namespace to avoid prefixes
-        metaxml_content = re.sub(' xmlns="[^"]+"', '', metaxml_content, count=1)
+        metaxml_content = re.sub(' xmlns="[^"]+"', "", metaxml_content, count=1)
 
         #: A :class:`xml.etree.ElementTree.Element` instance containing the complete Archive Descriptor.
         self.raw_element = ET.fromstring(metaxml_content)  # type: Element
 
         #: The path (relative to archive root) of the (scientific) metadata of the archive.
-        self.metadata_filename = self.raw_element.get('metadata', None)
+        self.metadata_filename = self.raw_element.get("metadata", None)
 
         #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the core data file.
-        raw_core_element = self.raw_element.find('core')
-        self.core = DataFileDescriptor.make_from_metafile_section(raw_core_element)  # type: DataFileDescriptor
+        raw_core_element = self.raw_element.find("core")
+        self.core = DataFileDescriptor.make_from_metafile_section(
+            raw_core_element
+        )  # type: DataFileDescriptor
 
         #: A list of :class:`dwca.descriptors.DataFileDescriptor` instances describing each of the archive's extension
         #: data files.
         self.extensions = []  # type: List[DataFileDescriptor]
-        for extension_tag in self.raw_element.findall('extension'):  # type: Element
-            location_tag = extension_tag.find('./files/location')
+        for extension_tag in self.raw_element.findall("extension"):  # type: Element
+            location_tag = extension_tag.find("./files/location")
             if location_tag is not None:
                 extension_filename = location_tag.text
                 if extension_filename not in files_to_ignore:
-                    self.extensions.append(DataFileDescriptor.make_from_metafile_section(extension_tag))
+                    self.extensions.append(
+                        DataFileDescriptor.make_from_metafile_section(extension_tag)
+                    )
             else:
-                raise InvalidArchive("An extension file is referenced in Metafile, but its path is not specified.")
+                raise InvalidArchive(
+                    "An extension file is referenced in Metafile, but its path is not specified."
+                )
 
         #: A list of extension (types) in use in the archive.
         #:

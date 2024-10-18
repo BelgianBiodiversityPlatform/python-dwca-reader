@@ -8,12 +8,12 @@ import resource
 from dwca.read import DwCAReader
 
 
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return "%.1f%s%s" % (num, "Yi", suffix)
 
 
 def show_memory_usage():
@@ -27,8 +27,9 @@ def show_memory_usage():
 # print "Memory before:"
 # show_memory_usage()
 
+
 def test():
-    with DwCAReader('dwca-florabank1-occurrences') as dwca:
+    with DwCAReader("dwca-florabank1-occurrences") as dwca:
         # print "Time after open:"
         # print time.ctime()
 
@@ -39,7 +40,7 @@ def test():
         for row in dwca:
             # tmp = row.data[qn('locality')]
             i = i + 1
-            if (i % 100000 == 0):
+            if i % 100000 == 0:
                 print("in loop mem: ")
                 show_memory_usage()
 
@@ -53,7 +54,8 @@ def test():
     # show_memory_usage()
 
 
-if (__name__ == '__main__'):
+if __name__ == "__main__":
     from timeit import Timer
+
     t = Timer("test()", "from __main__ import test")
     print(t.timeit(number=3))

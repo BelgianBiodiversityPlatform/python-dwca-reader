@@ -38,15 +38,23 @@ class TestPandasIntegration(unittest.TestCase):
             # check types, headers and dimensions
             assert isinstance(df, pd.DataFrame)
             cols = df.columns.values.tolist()
-            assert cols == ["id", "basisOfRecord", "locality", "family", "scientificName"]
+            assert cols == [
+                "id",
+                "basisOfRecord",
+                "locality",
+                "family",
+                "scientificName",
+            ]
             assert df.shape == (2, 5)  # Row/col counts are correct
 
             # check content
             assert df["basisOfRecord"].values.tolist() == ["Observation", "Observation"]
             assert df["family"].values.tolist() == ["Tetraodontidae", "Osphronemidae"]
             assert df["locality"].values.tolist() == ["Borneo", "Mumbai"]
-            assert df["scientificName"].values.tolist() == \
-                ["tetraodon fluviatilis", "betta splendens"]
+            assert df["scientificName"].values.tolist() == [
+                "tetraodon fluviatilis",
+                "betta splendens",
+            ]
 
     def test_pd_read_chunked_default_value(self):
         """Pandas chuncksize should not be used with default values.
@@ -106,7 +114,7 @@ class TestPandasIntegration(unittest.TestCase):
         """Ensure we don't split lines based on the x85 utf8 EOL char.
 
         (only the EOL string specified in meta.xml should be used).
-         """
+        """
         with DwCAReader(sample_data_path("dwca-utf8-eol-test.zip")) as dwca:
             df = dwca.pd_read("occurrence.txt")
             # If line properly split => 64 columns.
@@ -115,7 +123,6 @@ class TestPandasIntegration(unittest.TestCase):
 
     def test_pd_read_simple_csv(self):
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-
             df = dwca.pd_read("0008333-160118175350007.csv")
             # Ensure we get the correct number of rows
             assert 3 == df.shape[0]
@@ -130,8 +137,12 @@ class TestDwCAReader(unittest.TestCase):
 
     def test_partial_default(self):
         with DwCAReader(sample_data_path("dwca-partial-default.zip")) as dwca:
-            assert dwca.rows[0].data[qn("country")] == "France"  # Value comes from data file
-            assert dwca.rows[1].data[qn("country")] == "Belgium"  # Value is field default
+            assert (
+                dwca.rows[0].data[qn("country")] == "France"
+            )  # Value comes from data file
+            assert (
+                dwca.rows[1].data[qn("country")] == "Belgium"
+            )  # Value is field default
 
     def test_core_file_location(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
@@ -161,16 +172,25 @@ class TestDwCAReader(unittest.TestCase):
             assert len(dwca.extension_files) == 2
 
             # Check the order of the metafile is respected + quick content check
-            assert dwca.extension_files[0].file_descriptor.file_location == "description.txt"
-            assert dwca.extension_files[1].file_descriptor.file_location == \
-                "vernacularname.txt"
+            assert (
+                dwca.extension_files[0].file_descriptor.file_location
+                == "description.txt"
+            )
+            assert (
+                dwca.extension_files[1].file_descriptor.file_location
+                == "vernacularname.txt"
+            )
 
     def test_get_descriptor_for(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             # We can get a DataFileDescriptor for each data file
             assert isinstance(dwca.get_descriptor_for("taxon.txt"), DataFileDescriptor)
-            assert isinstance(dwca.get_descriptor_for("description.txt"), DataFileDescriptor)
-            assert isinstance(dwca.get_descriptor_for("vernacularname.txt"), DataFileDescriptor)
+            assert isinstance(
+                dwca.get_descriptor_for("description.txt"), DataFileDescriptor
+            )
+            assert isinstance(
+                dwca.get_descriptor_for("vernacularname.txt"), DataFileDescriptor
+            )
 
             # But NotADataFile exception for non-data files
             with pytest.raises(NotADataFile):
@@ -193,17 +213,25 @@ class TestDwCAReader(unittest.TestCase):
             description_descriptor = dwca.get_descriptor_for("description.txt")
             assert description_descriptor.file_location == "description.txt"
             assert description_descriptor.file_encoding == "utf-8"
-            assert description_descriptor.type == "http://rs.gbif.org/terms/1.0/Description"
+            assert (
+                description_descriptor.type
+                == "http://rs.gbif.org/terms/1.0/Description"
+            )
 
             vernacular_descriptor = dwca.get_descriptor_for("vernacularname.txt")
             assert vernacular_descriptor.file_location == "vernacularname.txt"
             assert vernacular_descriptor.file_encoding == "utf-8"
-            assert vernacular_descriptor.type == \
-                "http://rs.gbif.org/terms/1.0/VernacularName"
+            assert (
+                vernacular_descriptor.type
+                == "http://rs.gbif.org/terms/1.0/VernacularName"
+            )
 
         # Also check we can get a DataFileDescriptor for a simple Archive (without metafile)
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
-            assert isinstance(dwca.get_descriptor_for("0008333-160118175350007.csv"), DataFileDescriptor)
+            assert isinstance(
+                dwca.get_descriptor_for("0008333-160118175350007.csv"),
+                DataFileDescriptor,
+            )
 
     def test_open_included_file(self):
         """Ensure DwCAReader.open_included_file work as expected."""
@@ -334,7 +362,7 @@ class TestDwCAReader(unittest.TestCase):
                 .find("surName")
                 .text
             )
-            assert v == u"Noé"
+            assert v == "Noé"
 
     def test_explicit_encoding_metadata(self):
         """If the metadata file explicitly specifies encoding (<xml ...>), make sure it is used."""
@@ -347,7 +375,7 @@ class TestDwCAReader(unittest.TestCase):
                 .find("surName")
                 .text
             )
-            assert v == u"Noé"  # Is the accent properly interpreted?
+            assert v == "Noé"  # Is the accent properly interpreted?
 
     def test_exception_invalid_simple_archives(self):
         """Ensure an exception is raised when simple archives can't be interpreted.
@@ -392,7 +420,9 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            assert (
+                dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            )
             # Archive descriptor should be None
             assert dwca.descriptor is None
             # (scientific) metadata should be None
@@ -403,7 +433,9 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            assert (
+                dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            )
             # Archive descriptor should be None
             assert dwca.descriptor is None
             # (scientific) metadata should be None
@@ -414,7 +446,9 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            assert (
+                dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            )
             # Archive descriptor should be None
             assert dwca.descriptor is None
             # (scientific) metadata should be None
@@ -432,7 +466,9 @@ class TestDwCAReader(unittest.TestCase):
             # Ensure we get the correct number of rows
             assert len(dwca.rows) == 3
             # Ensure we can access arbitrary data
-            assert dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            assert (
+                dwca.get_corerow_by_position(1).data["decimallatitude"] == "-31.98333"
+            )
             # Archive descriptor should be None
             assert dwca.descriptor is None
             # (scientific) metadata is found
@@ -497,8 +533,10 @@ class TestDwCAReader(unittest.TestCase):
             assert "Row id:" in l_repr
             assert "Reference extension rows: No" in l_repr
             assert "Reference source metadata: No" in l_repr
-            assert "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'" in \
-                l_repr
+            assert (
+                "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'"
+                in l_repr
+            )
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             l = star_dwca.rows[0]
@@ -510,7 +548,10 @@ class TestDwCAReader(unittest.TestCase):
             assert "Reference source metadata: No" in l_repr
 
             extension_l_repr = str(l.extensions[0])
-            assert "Rowtype: http://rs.gbif.org/terms/1.0/VernacularName" in extension_l_repr
+            assert (
+                "Rowtype: http://rs.gbif.org/terms/1.0/VernacularName"
+                in extension_l_repr
+            )
             assert "Source: Extension file" in extension_l_repr
             assert "Core row id: 1" in extension_l_repr
             assert "ostrich" in extension_l_repr
@@ -734,7 +775,7 @@ class TestDwCAReader(unittest.TestCase):
             assert "Peliperdix" == r.data[genus_qn]
 
     def test_get_inexistent_row(self):
-        """ Ensure get_corerow_by_id() raises RowNotFound if we ask it an unexistent row. """
+        """Ensure get_corerow_by_id() raises RowNotFound if we ask it an unexistent row."""
         with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
             with pytest.raises(RowNotFound):
                 dwca.get_corerow_by_id(8000)
@@ -839,7 +880,6 @@ class TestDwCAReader(unittest.TestCase):
             sample_data_path("dwca-2extensions.zip"),
             extensions_to_ignore="description.txt",
         ) as multi_dwca:
-
             rows = list(multi_dwca)
 
             # 3 vernacular names
@@ -867,7 +907,6 @@ class TestDwCAReader(unittest.TestCase):
             sample_data_path("dwca-2extensions.zip"),
             extensions_to_ignore="helloworld.txt",
         ) as multi_dwca:
-
             rows = list(multi_dwca)
 
             # 3 vernacular names + 2 taxon descriptions
@@ -922,7 +961,7 @@ class TestDwCAReader(unittest.TestCase):
         """Ensure we don't split lines based on the x85 utf8 EOL char.
 
         (only the EOL string specified in meta.xml should be used).
-         """
+        """
 
         with DwCAReader(sample_data_path("dwca-utf8-eol-test.zip")) as dwca:
             rows = dwca.rows
@@ -951,12 +990,14 @@ class TestDwCAReader(unittest.TestCase):
             assert isinstance(metadata, ET.Element)
 
             # Assert we can read basic fields from EML:
-            assert metadata.find("dataset") \
-                .find("creator") \
-                .find("individualName") \
-                .find("givenName") \
-                .text == \
-                "Rob"
+            assert (
+                metadata.find("dataset")
+                .find("creator")
+                .find("individualName")
+                .find("givenName")
+                .text
+                == "Rob"
+            )
 
     def test_row_source_metadata(self):
         # For normal DwC-A, it should always be None (NO source data
@@ -990,7 +1031,7 @@ class TestDwCAReader(unittest.TestCase):
             assert v == "en"
 
     def test_unknown_archive_format(self):
-        """ Ensure InvalidArchive is raised when passed file is not a .zip nor .tgz."""
+        """Ensure InvalidArchive is raised when passed file is not a .zip nor .tgz."""
         invalid_origin_file = tempfile.NamedTemporaryFile(delete=False)
 
         with pytest.raises(InvalidArchive):
@@ -1000,7 +1041,7 @@ class TestDwCAReader(unittest.TestCase):
         invalid_origin_file.close()
 
     def test_orphaned_extension_rows_noext(self):
-        """ orphaned_extension_rows returns {} when there's no extensions."""
+        """orphaned_extension_rows returns {} when there's no extensions."""
         # Archive without extensions: we expect {}
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             assert {} == dwca.orphaned_extension_rows()
@@ -1016,8 +1057,8 @@ class TestDwCAReader(unittest.TestCase):
         # Archive with extensions and orphaned rows
         with DwCAReader(sample_data_path("dwca-orphaned-rows.zip")) as dwca:
             expected = {
-                "description.txt": {u"5": [3, 4], u"6": [5]},
-                "vernacularname.txt": {u"7": [4]},
+                "description.txt": {"5": [3, 4], "6": [5]},
+                "vernacularname.txt": {"7": [4]},
             }
             assert expected == dwca.orphaned_extension_rows()
 

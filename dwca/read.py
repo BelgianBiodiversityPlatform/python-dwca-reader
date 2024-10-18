@@ -14,7 +14,12 @@ from pandas.io.parsers import TextFileReader
 
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
-from dwca.exceptions import RowNotFound, InvalidArchive, InvalidSimpleArchive, NotADataFile
+from dwca.exceptions import (
+    RowNotFound,
+    InvalidArchive,
+    InvalidSimpleArchive,
+    NotADataFile,
+)
 from dwca.files import CSVDataFile
 from dwca.helpers import remove_tree
 from dwca.rows import CoreRow
@@ -72,7 +77,7 @@ class DwCAReader(object):
 
     default_metadata_filename = "EML.xml"
     default_metafile_name = "meta.xml"
-    source_metadata_directory = 'dataset'
+    source_metadata_directory = "dataset"
 
     def __enter__(self):
         return self
@@ -80,11 +85,13 @@ class DwCAReader(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
 
-    def __init__(self,
-                 path: str,
-                 extensions_to_ignore: List[str] = None,
-                 tmp_dir: str = None,
-                 skip_metadata: bool = False) -> None:
+    def __init__(
+        self,
+        path: str,
+        extensions_to_ignore: List[str] = None,
+        tmp_dir: str = None,
+        skip_metadata: bool = False,
+    ) -> None:
         """Open the Darwin Core Archive."""
         if extensions_to_ignore is None:
             extensions_to_ignore = []
@@ -96,7 +103,9 @@ class DwCAReader(object):
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path  # type: str
 
-        if os.path.isdir(self.archive_path):  # Archive is a (directly readable) directory
+        if os.path.isdir(
+            self.archive_path
+        ):  # Archive is a (directly readable) directory
             self._working_directory_path = self.archive_path
             self._directory_to_clean = None  # type: Optional[str]
         else:  # Archive is zipped/tgzipped, we have to extract it first.
@@ -108,8 +117,9 @@ class DwCAReader(object):
         self._metafile_handle = None
         try:
             self._metafile_handle = self.open_included_file(self.default_metafile_name)
-            self.descriptor = ArchiveDescriptor(self._metafile_handle.read(),
-                                                files_to_ignore=extensions_to_ignore)
+            self.descriptor = ArchiveDescriptor(
+                self._metafile_handle.read(), files_to_ignore=extensions_to_ignore
+            )
         except IOError as exc:
             if exc.errno == ENOENT:
                 pass
@@ -128,23 +138,33 @@ class DwCAReader(object):
         #: See :doc:`gbif_results` for more details.
         self.source_metadata = self._get_source_metadata()  # type: Dict[str, Element]
 
-        if self.descriptor:  # We have an Archive descriptor that we can use to access data files.
+        if (
+            self.descriptor
+        ):  # We have an Archive descriptor that we can use to access data files.
             #: An instance of :class:`dwca.files.CSVDataFile` for the core data file.
-            self.core_file = CSVDataFile(self._working_directory_path, self.descriptor.core)  # type: CSVDataFile
+            self.core_file = CSVDataFile(
+                self._working_directory_path, self.descriptor.core
+            )  # type: CSVDataFile
 
             #: A list of :class:`dwca.files.CSVDataFile`, one entry for each extension data file , sorted by order of
             #: appearance in the Metafile (or an empty list if the archive doesn't use extensions).
-            self.extension_files = [CSVDataFile(work_directory=self._working_directory_path,
-                                                file_descriptor=d)
-                                    for d in self.descriptor.extensions]  # type: List[CSVDataFile]
+            self.extension_files = [
+                CSVDataFile(
+                    work_directory=self._working_directory_path, file_descriptor=d
+                )
+                for d in self.descriptor.extensions
+            ]  # type: List[CSVDataFile]
         else:  # Archive without descriptor, we'll have to find and inspect the data file
             try:
                 datafile_name = self._is_valid_simple_archive()
                 descriptor = DataFileDescriptor.make_from_file(
-                    os.path.join(self._working_directory_path, datafile_name))
+                    os.path.join(self._working_directory_path, datafile_name)
+                )
 
-                self.core_file = CSVDataFile(work_directory=self._working_directory_path,
-                                             file_descriptor=descriptor)
+                self.core_file = CSVDataFile(
+                    work_directory=self._working_directory_path,
+                    file_descriptor=descriptor,
+                )
                 self.extension_files = []
             except InvalidSimpleArchive:
                 msg = "No Metafile was found, but the archive contains multiple files/directories."
@@ -152,14 +172,17 @@ class DwCAReader(object):
 
     def _get_source_metadata(self) -> Dict[str, Element]:
         source_metadata = {}  # type: Dict[str, Element]
-        source_metadata_dir = os.path.join(self._working_directory_path, self.source_metadata_directory)
+        source_metadata_dir = os.path.join(
+            self._working_directory_path, self.source_metadata_directory
+        )
 
         if os.path.isdir(source_metadata_dir):
             for f in os.listdir(source_metadata_dir):
                 if os.path.isfile(os.path.join(source_metadata_dir, f)):
                     dataset_key = os.path.splitext(f)[0]
                     source_metadata[dataset_key] = self._parse_xml_included_file(
-                        os.path.join(self.source_metadata_directory, f))
+                        os.path.join(self.source_metadata_directory, f)
+                    )
 
         return source_metadata
 
@@ -198,23 +221,27 @@ class DwCAReader(object):
             not supported in case the value returned by `pandas.read_csv()` is a `TextFileReader` (e.g. when using
             `chunksize` or `iterator=True`).
         """
-        datafile_descriptor = self.get_descriptor_for(relative_path)  # type: DataFileDescriptor
+        datafile_descriptor = self.get_descriptor_for(
+            relative_path
+        )  # type: DataFileDescriptor
 
         if not dwca.vendor._has_pandas:
             raise ImportError("Pandas is missing.")
 
         from pandas import read_csv
 
-        kwargs['delimiter'] = datafile_descriptor.fields_terminated_by
-        kwargs['skiprows'] = datafile_descriptor.lines_to_ignore
-        kwargs['header'] = None
-        kwargs['names'] = datafile_descriptor.short_headers
+        kwargs["delimiter"] = datafile_descriptor.fields_terminated_by
+        kwargs["skiprows"] = datafile_descriptor.lines_to_ignore
+        kwargs["header"] = None
+        kwargs["names"] = datafile_descriptor.short_headers
 
-        df_or_textreader = read_csv(self.absolute_temporary_path(relative_path), **kwargs)
+        df_or_textreader = read_csv(
+            self.absolute_temporary_path(relative_path), **kwargs
+        )
 
         # Add a column for default values, if present in the file descriptor
         for field in datafile_descriptor.fields:
-            field_default_value = field['default']
+            field_default_value = field["default"]
             if field_default_value is not None:
                 if isinstance(df_or_textreader, TextFileReader):
                     # I don't see how to assign default values to a TextFileReader, so
@@ -226,7 +253,7 @@ class DwCAReader(object):
                         "the archive."
                     )
 
-                df_or_textreader[shorten_term(field['term'])] = field_default_value
+                df_or_textreader[shorten_term(field["term"])] = field_default_value
 
         return df_or_textreader
 
@@ -255,7 +282,9 @@ class DwCAReader(object):
             ids = temp_ids.keys()
 
             for extension in self.extension_files:
-                coreid_index = dict((k, v.tolist()) for k, v in extension.coreid_index.items())
+                coreid_index = dict(
+                    (k, v.tolist()) for k, v in extension.coreid_index.items()
+                )
                 for id in ids:
                     coreid_index.pop(id, None)
                 indexes[extension.file_descriptor.file_location] = coreid_index
@@ -317,7 +346,7 @@ class DwCAReader(object):
             - The position is often an appropriate way to unambiguously identify a core row in a DwCA.
 
         """
-        for (i, row) in enumerate(self):
+        for i, row in enumerate(self):
             if i == position:
                 return row
 
@@ -346,7 +375,9 @@ class DwCAReader(object):
             File existence is not tested.
 
         """
-        return os.path.abspath(os.path.join(self._working_directory_path, relative_path))
+        return os.path.abspath(
+            os.path.join(self._working_directory_path, relative_path)
+        )
 
     def get_descriptor_for(self, relative_path: str) -> DataFileDescriptor:
         """Return a descriptor for the data file located at relative_path.
@@ -371,7 +402,6 @@ class DwCAReader(object):
         raise NotADataFile("{fn} is not a data file".format(fn=relative_path))
 
     def _is_valid_simple_archive(self) -> str:
-
         # If the working dir appear to contains a valid simple darwin core archive
         # (one single data file + possibly some metadata), returns the name of the data file.
         #
@@ -413,14 +443,18 @@ class DwCAReader(object):
                 return self._parse_xml_included_file(filename)
             except IOError as exc:
                 if exc.errno == ENOENT:  # File not found
-                    msg = "{} is referenced in the archive descriptor but missing.".format(filename)
+                    msg = "{} is referenced in the archive descriptor but missing.".format(
+                        filename
+                    )
                     raise InvalidArchive(msg)
 
         else:  # Otherwise, the metadata file has to be named 'EML.xml'
             try:
                 return self._parse_xml_included_file(self.default_metadata_filename)
             except IOError as exc:
-                if exc.errno == ENOENT:  # File not found, this is an archive without metadata
+                if (
+                    exc.errno == ENOENT
+                ):  # File not found, this is an archive without metadata
                     return None
 
         assert False  # For MyPy, see: https://github.com/python/mypy/issues/4223#issuecomment-342865133
@@ -434,7 +468,7 @@ class DwCAReader(object):
             # In that case, we work with a stripped string instead.
             # Note that this method cannot be generalized because it won't work well with encoding specified in the xml
             # tag. This is why we're only choosing it in case of error
-            data_as_string = self.open_included_file(relative_path, 'r').read()
+            data_as_string = self.open_included_file(relative_path, "r").read()
             return ET.fromstring(data_as_string.strip())
 
     def _unzip_or_untar(self) -> str:
@@ -450,14 +484,16 @@ class DwCAReader(object):
         try:
             # Security note: with Python < 2.7.4, a zip file may be able to write outside of the
             # directory using absolute paths, parent (..) path, ... See note in ZipFile.extract doc
-            zipfile.ZipFile(self.archive_path, 'r').extractall(tmp_dir)
+            zipfile.ZipFile(self.archive_path, "r").extractall(tmp_dir)
         except zipfile.BadZipfile:
             # Doesn't look like a valid zip, let's see if it's a tar archive (possibly compressed)
             try:
                 # TODO: Once we only support Python 3.12+, we should pass the filter="data" argument to extractall()
-                tarfile.open(self.archive_path, 'r:*').extractall(tmp_dir)
+                tarfile.open(self.archive_path, "r:*").extractall(tmp_dir)
             except tarfile.ReadError:
-                raise InvalidArchive("The archive cannot be read. Is it a .zip or .tgz file?")
+                raise InvalidArchive(
+                    "The archive cannot be read. Is it a .zip or .tgz file?"
+                )
 
         return tmp_dir
 
@@ -493,7 +529,7 @@ class DwCAReader(object):
             extension_file.close()
         if self._metafile_handle:
             self._metafile_handle.close()
-        
+
         if self._directory_to_clean:
             remove_tree(self._directory_to_clean)
 
@@ -501,7 +537,7 @@ class DwCAReader(object):
         """Return `True` if the Core file of the archive contains the `term_url` term."""
         return term_url in self.core_file.file_descriptor.terms
 
-    def __iter__(self) -> 'DwCAReader':
+    def __iter__(self) -> "DwCAReader":
         self._corefile_pointer = 0
         return self
 

@@ -29,4 +29,4 @@ def qualname(short_term):
 
     """
 
-    return next(t for t in TERMS if t.endswith('/' + short_term))
+    return next(t for t in TERMS if t.endswith("/" + short_term))

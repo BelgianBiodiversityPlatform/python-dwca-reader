@@ -7,7 +7,9 @@ from .helpers import sample_data_path
 
 class TestUtils(unittest.TestCase):
     def test_csv_line_to_fields(self):
-        raw_fields = csv_line_to_fields('field 1,"field 2, with comma",field 3', '\n', ',', '"')
+        raw_fields = csv_line_to_fields(
+            'field 1,"field 2, with comma",field 3', "\n", ",", '"'
+        )
         assert raw_fields[0] == "field 1"
         assert raw_fields[1] == "field 2, with comma"
         assert raw_fields[2] == "field 3"
@@ -16,7 +18,10 @@ class TestUtils(unittest.TestCase):
 class TestCoreRow(unittest.TestCase):
     def test_position(self):
         # Test with archives with and without headers:
-        archives_to_test = (sample_data_path('dwca-simple-test-archive.zip'), sample_data_path('dwca-noheaders-1.zip'))
+        archives_to_test = (
+            sample_data_path("dwca-simple-test-archive.zip"),
+            sample_data_path("dwca-noheaders-1.zip"),
+        )
 
         for archive_path in archives_to_test:
             with DwCAReader(archive_path) as dwca:
@@ -26,8 +31,7 @@ class TestCoreRow(unittest.TestCase):
 
 class TestExtensionRow(unittest.TestCase):
     def test_position(self):
-
-        with DwCAReader(sample_data_path('dwca-2extensions.zip')) as dwca:
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             ostrich = dwca.rows[0]
 
             description_first_line = ostrich.extensions[0]

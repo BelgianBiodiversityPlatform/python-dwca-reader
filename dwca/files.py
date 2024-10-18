@@ -79,7 +79,7 @@ class CSVDataFile(object):
         raise StopIteration
 
     @property
-    def coreid_index(self)  -> Dict[str, array]:
+    def coreid_index(self) -> Dict[str, array]:
         """An index of the core rows referenced by this data file.
 
         It is a Python dict such as:
@@ -110,11 +110,11 @@ class CSVDataFile(object):
 
         for position, row in enumerate(self):
             if self.file_descriptor.represents_corefile:
-              tmp = CoreRow(row, position, self.file_descriptor)
-              index.setdefault(tmp.id, array('L')).append(position)
+                tmp = CoreRow(row, position, self.file_descriptor)
+                index.setdefault(tmp.id, array("L")).append(position)
             else:
-              tmp = ExtensionRow(row, position, self.file_descriptor)
-              index.setdefault(tmp.core_id, array('L')).append(position)
+                tmp = ExtensionRow(row, position, self.file_descriptor)
+                index.setdefault(tmp.core_id, array("L")).append(position)
 
         return index
 
