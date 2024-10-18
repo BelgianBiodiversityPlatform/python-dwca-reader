@@ -10,8 +10,6 @@ from tempfile import mkdtemp
 from typing import List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
 
-from pandas.io.parsers import TextFileReader
-
 import dwca.vendor
 from dwca.descriptors import ArchiveDescriptor, DataFileDescriptor, shorten_term
 from dwca.exceptions import (
@@ -229,6 +227,7 @@ class DwCAReader(object):
             raise ImportError("Pandas is missing.")
 
         from pandas import read_csv
+        from pandas.io.parsers import TextFileReader
 
         kwargs["delimiter"] = datafile_descriptor.fields_terminated_by
         kwargs["skiprows"] = datafile_descriptor.lines_to_ignore
