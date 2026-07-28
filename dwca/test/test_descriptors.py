@@ -796,3 +796,97 @@ fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/
         descriptor = self._descriptor('<field index="0" term="http://x/a"/>')
 
         assert descriptor.field_plan is descriptor.field_plan
+
+
+class TestTermGetter(unittest.TestCase):
+    def _plan(self, fields_xml):
+        section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\\t" linesTerminatedBy="\\n" fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files><location>occurrence.txt</location></files>
+            <id index="0" />
+            {fields}
+        </core>
+        """.format(
+            fields=fields_xml
+        )
+        descriptor = DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(section)
+        )
+        return descriptor.field_plan
+
+    def test_returns_values_in_the_requested_order(self):
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b"/>'
+            '<field index="2" term="http://x/c"/>'
+        )
+        getter = plan.term_getter(["http://x/c", "http://x/a"])
+
+        assert ("third", "first") == getter(["first", "second", "third"])
+
+    def test_a_single_term_still_yields_a_tuple(self):
+        plan = self._plan('<field index="1" term="http://x/b"/>')
+        getter = plan.term_getter(["http://x/b"])
+
+        assert ("second",) == getter(["first", "second"])
+
+    def test_no_terms(self):
+        plan = self._plan('<field index="0" term="http://x/a"/>')
+        getter = plan.term_getter([])
+
+        assert () == getter(["first"])
+
+    def test_a_term_may_be_requested_twice(self):
+        plan = self._plan('<field index="0" term="http://x/a"/>')
+        getter = plan.term_getter(["http://x/a", "http://x/a"])
+
+        assert ("first", "first") == getter(["first"])
+
+    def test_default_only_term_yields_the_constant(self):
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field term="http://x/country" default="Belgium"/>'
+        )
+        getter = plan.term_getter(["http://x/country", "http://x/a"])
+
+        assert ("Belgium", "first") == getter(["first"])
+
+    def test_default_fills_an_empty_cell(self):
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b" default="fallback"/>'
+        )
+        getter = plan.term_getter(["http://x/b"])
+
+        assert ("value",) == getter(["first", "value"])
+        assert ("fallback",) == getter(["first", ""])
+
+    def test_missing_value_without_default_becomes_empty_string(self):
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b" default=""/>'
+        )
+        getter = plan.term_getter(["http://x/b"])
+
+        assert ("",) == getter(["first", ""])
+
+    def test_unknown_terms_are_named_in_the_error(self):
+        plan = self._plan('<field index="0" term="http://x/a"/>')
+
+        with pytest.raises(ValueError) as excinfo:
+            plan.term_getter(["http://x/missing", "http://x/a", "http://x/gone"])
+
+        message = str(excinfo.value)
+        assert "http://x/missing" in message
+        assert "http://x/gone" in message
+        assert "http://x/a" not in message
+
+    def test_short_row_raises_invalid_archive(self):
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="4" term="http://x/e"/>'
+        )
+        getter = plan.term_getter(["http://x/e"])
+
+        with pytest.raises(InvalidArchive):
+            getter(["first", "second"])

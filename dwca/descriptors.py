@@ -417,6 +417,58 @@ class FieldPlan(object):
 
         return data
 
+    def term_getter(self, terms):
+        """Return a callable mapping a split data row to a tuple of values for `terms`.
+
+        :raises ValueError: if any requested term is absent from the data file.
+        """
+        by_term = {f["term"]: f for f in self._fields}
+
+        missing = [term for term in terms if term not in by_term]
+        if missing:
+            raise ValueError(
+                "These terms are not in this data file: {t}".format(
+                    t=", ".join(sorted(missing))
+                )
+            )
+
+        indexes = tuple(by_term[term]["index"] for term in terms)
+        defaults = tuple(by_term[term]["default"] for term in terms)
+
+        if indexes and all(i is not None for i in indexes) and not any(defaults):
+            # Fast path: every term maps to a column and none has a default, so the whole
+            # tuple comes out of a single C-level call.
+            getter = itemgetter(*indexes)
+            required = max(indexes) + 1
+
+            if len(indexes) == 1:
+                # itemgetter with a single argument returns a scalar, not a tuple.
+                def get_one(raw_fields):
+                    if len(raw_fields) < required:
+                        self._raise_missing_column(raw_fields)
+                    return (getter(raw_fields),)
+
+                return get_one
+
+            def get_many(raw_fields):
+                if len(raw_fields) < required:
+                    self._raise_missing_column(raw_fields)
+                return getter(raw_fields)
+
+            return get_many
+
+        required = max([i for i in indexes if i is not None] or [-1]) + 1
+
+        def get_general(raw_fields):
+            if len(raw_fields) < required:
+                self._raise_missing_column(raw_fields)
+            return tuple(
+                (raw_fields[index] if index is not None else None) or default or ""
+                for index, default in zip(indexes, defaults)
+            )
+
+        return get_general
+
     def _raise_missing_column(self, raw_fields):
         # Slow path: report the same index the old per-field loop would have reported.
         for field in self._fields:
