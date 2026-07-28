@@ -88,6 +88,35 @@ Basic use, access to metadata and data from the Core file
         path = dwca.absolute_temporary_path('occurrence.txt')
 
 
+Reading only a few terms
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you only need a handful of terms and the archive is large, :meth:`~dwca.read.DwCAReader.iter_terms`
+is roughly twice as fast as iterating over rows: it yields a plain tuple per row and never
+builds a :class:`~dwca.rows.CoreRow` object nor its ``data`` dictionary.
+
+.. code:: python
+
+    from dwca.read import DwCAReader
+    from dwca.darwincore.utils import qualname as qn
+
+    with DwCAReader('my-archive.zip') as dwca:
+        for locality, family, scientific_name in dwca.iter_terms(
+                [qn('locality'), qn('family'), qn('scientificName')]):
+            print(locality, family, scientific_name)
+
+Values are returned in the order the terms were requested, and they are normalised exactly as
+``row.data`` would be: an empty cell falls back to the term's default value from the Metafile,
+or to an empty string. Requesting a term the data file does not contain raises ``ValueError``.
+
+A single term still yields a one-element tuple:
+
+.. code:: python
+
+    for (locality,) in dwca.iter_terms([qn('locality')]):
+        print(locality)
+
+
 Access to Darwin Core Archives with extensions (star schema)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
