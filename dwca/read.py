@@ -559,8 +559,11 @@ class DwCAReader(object):
         """Return the next core row.
 
         .. deprecated::
-            Iterate over the reader instead. This method shares a single implicit iterator
-            between all callers.
+            Iterate over the reader instead. This method keeps its own implicit iterator,
+            which is independent of any `for row in reader:` loop: interleaving the two makes
+            each of them scan the archive separately. Once this iterator is exhausted it
+            raises StopIteration, and the call after that starts a fresh pass from the first
+            row rather than raising again.
         """
         if self._default_iterator is None:
             self._default_iterator = self._iter_core_rows()

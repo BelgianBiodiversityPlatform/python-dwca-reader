@@ -14,6 +14,23 @@ v0.17.0 (unreleased)
   hashes) by value: the data file layout it describes.
 - Fixed: comparing a CoreRow to an ExtensionRow (or either to a non-row object) raised
   AttributeError instead of returning False.
+- Performance: iterating over an archive is a single streaming pass instead of one seek and
+  one throwaway csv.reader per row. Roughly 3.5x faster on a 400000-row GBIF download.
+- Performance: the line offset index used for random access is now built on first use, so
+  opening an archive no longer scans every data file.
+- Fixed: ignoreHeaderLines values above 1 only skipped a single line when iterating a
+  CSVDataFile directly, which let header lines leak into coreid_index and
+  orphaned_extension_rows.
+- Fixed: an undecodable byte in a data file desynchronised the line offset index, so rows
+  after it were silently truncated or rejected.
+- Fixed: a field whose content started or ended with the archive's fieldsEnclosedBy
+  character had that character stripped.
+- Fixed: DwCAReader was its own iterator, so nesting two loops over the same reader silently
+  ran the inner one once, and calling get_corerow_by_id() or get_corerow_by_position() from
+  inside a loop never terminated. Each iteration now gets its own iterator.
+- Changed: DwCAReader.next() now keeps an implicit iterator independent of any for loop over
+  the same reader, and starts a new pass after being exhausted. Iterate over the reader
+  instead; next() remains only for backwards compatibility.
 
 v0.16.4 (2024-10-18)
 --------------------
