@@ -229,9 +229,9 @@ class DataFileDescriptor(object):
         columns = {}
 
         for f in self.fields:
-            if f[
-                "index"
-            ]:  # Some (default values for example) don't have a corresponding col.
+            # Some fields (those carrying only a default value) have no column. Note the
+            # explicit None test: index 0 is a valid column and must not be dropped.
+            if f["index"] is not None:
                 columns[f["index"]] = f["term"]
 
         # In addition to DwC terms, we may also have id (Core) or core_id (Extensions) columns

@@ -594,3 +594,13 @@ class TestArchiveDescriptor(unittest.TestCase):
             descriptor = dwca.descriptor
 
             assert descriptor.metadata_filename == "eml.xml"
+
+
+class TestHeadersIndexZero(unittest.TestCase):
+    def test_column_at_index_zero_is_not_dropped(self):
+        """A metafile-less archive has no id_index, so column 0 comes only from fields."""
+        with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
+            descriptor = dwca.core_file.file_descriptor
+
+            assert len(descriptor.fields) == len(descriptor.headers)
+            assert "gbifid" == descriptor.headers[0]

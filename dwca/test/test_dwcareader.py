@@ -124,10 +124,16 @@ class TestPandasIntegration(unittest.TestCase):
     def test_pd_read_simple_csv(self):
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
             df = dwca.pd_read("0008333-160118175350007.csv")
-            # Ensure we get the correct number of rows
+            # Ensure we get the correct number of rows and columns
             assert 3 == df.shape[0]
-            # Ensure we can access arbitrary data
+            assert 42 == df.shape[1]
+            # This archive has no metafile, so the first column (gbifid) has no id_index to
+            # rely on. It must come from the headers list as a regular column, not be silently
+            # promoted to the DataFrame index by pandas because of a missing header name.
+            assert "gbifid" in df.columns
+            assert df.index.name is None
 
+            # Ensure we can access arbitrary data
             assert df["decimallatitude"].values.tolist()[1] == -31.98333
 
 
