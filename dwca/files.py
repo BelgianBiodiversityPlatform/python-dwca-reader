@@ -1,9 +1,11 @@
 """File-related classes and functions."""
 
+import csv
 import io
 import os
 from array import array
-from typing import List, Union, IO, Dict, Optional
+from itertools import islice
+from typing import Iterator, List, Union, IO, Dict, Optional
 
 from dwca.descriptors import DataFileDescriptor
 from dwca.rows import CoreRow, ExtensionRow, Row
@@ -38,12 +40,11 @@ class CSVDataFile(object):
         #: constructor.
         self.file_descriptor = file_descriptor  # type: DataFileDescriptor
 
-        self._file_stream = io.open(
-            os.path.join(work_directory, self.file_descriptor.file_location),
-            mode="r",
-            encoding=self.file_descriptor.file_encoding,
-            newline=self.file_descriptor.lines_terminated_by,
-            errors="replace",
+        self._file_path = os.path.join(
+            work_directory, self.file_descriptor.file_location
+        )
+        self._file_stream = self._open_stream(
+            newline=self.file_descriptor.lines_terminated_by
         )
 
         # On init, we parse the file once to build an index of newlines (including lines to ignore)
@@ -60,10 +61,67 @@ class CSVDataFile(object):
     def __str__(self) -> str:
         return self.file_descriptor.file_location
 
+    def _open_stream(self, newline: str) -> IO:
+        return io.open(
+            self._file_path,
+            mode="r",
+            encoding=self.file_descriptor.file_encoding,
+            newline=newline,
+            errors="replace",
+        )
+
+    def _iter_field_lists(self) -> Iterator[List[str]]:
+        """Yield each data row of the file as a list of raw field values.
+
+        Header lines are skipped. This is a single forward pass over a dedicated stream, so
+        it is safe to run several of these concurrently and alongside random access.
+        """
+        descriptor = self.file_descriptor
+        quoted = descriptor.fields_enclosed_by != ""
+
+        # The csv module refuses a stream that can hand it an embedded carriage return, so
+        # the quoted path has to let Python handle newlines. The unquoted path keeps the
+        # archive's own terminator, which is what stops U+0085 from being treated as a line
+        # break (issue #20).
+        stream = self._open_stream(
+            newline="" if quoted else descriptor.lines_terminated_by
+        )
+        try:
+            if quoted:
+                source = csv.reader(
+                    stream,
+                    delimiter=descriptor.fields_terminated_by,
+                    quotechar=descriptor.fields_enclosed_by,
+                    quoting=csv.QUOTE_MINIMAL,
+                )  # type: Iterator[List[str]]
+            else:
+                line_ending = descriptor.lines_terminated_by
+                separator = descriptor.fields_terminated_by
+                source = (line.rstrip(line_ending).split(separator) for line in stream)
+
+            for fields in islice(source, self.lines_to_ignore, None):
+                yield fields
+        finally:
+            stream.close()
+
+    def iter_rows(self) -> Iterator[Union[CoreRow, ExtensionRow]]:
+        """Yield every data row of the file, in order of appearance.
+
+        Unlike repeated :meth:`get_row_by_position` calls this is a single forward pass and
+        never touches the line offset index.
+        """
+        descriptor = self.file_descriptor
+        row_class = CoreRow if descriptor.represents_corefile else ExtensionRow
+
+        for position, fields in enumerate(self._iter_field_lists()):
+            yield row_class.from_fields(fields, position, descriptor)
+
     def _position_file_after_header(self) -> None:
         self._file_stream.seek(0, 0)
-        if self.lines_to_ignore > 0:
-            self._file_stream.readlines(self.lines_to_ignore)
+        # NOTE: readlines() takes a byte-size hint, not a line count, so it cannot be used
+        # here. With ignoreHeaderLines="2" it would read a single line.
+        for _ in range(self.lines_to_ignore):
+            self._file_stream.readline()
 
     def __iter__(self) -> "CSVDataFile":
         self._position_file_after_header()
@@ -108,13 +166,10 @@ class CSVDataFile(object):
         """Build and return an index of Core Rows IDs suitable for `CSVDataFile.coreid_index`."""
         index = {}  # type: Dict[str, array[int]]
 
-        for position, row in enumerate(self):
-            if self.file_descriptor.represents_corefile:
-                tmp = CoreRow(row, position, self.file_descriptor)
-                index.setdefault(tmp.id, array("L")).append(position)
-            else:
-                tmp = ExtensionRow(row, position, self.file_descriptor)
-                index.setdefault(tmp.core_id, array("L")).append(position)
+        represents_corefile = self.file_descriptor.represents_corefile
+        for row in self.iter_rows():
+            key = row.id if represents_corefile else row.core_id
+            index.setdefault(key, array("L")).append(row.position)
 
         return index
 

@@ -160,3 +160,61 @@ class TestCSVDataFile(unittest.TestCase):
 
         for row in data_file:
             assert isinstance(row, str)
+
+
+class TestStreamingIteration(unittest.TestCase):
+    def test_iter_rows_yields_every_row_in_order(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            rows = list(dwca.core_file.iter_rows())
+
+        # Row IDs appear in the core file in this order: 4-1-3-2
+        assert ["4", "1", "3", "2"] == [row.id for row in rows]
+        assert [0, 1, 2, 3] == [row.position for row in rows]
+
+    def test_iter_rows_agrees_with_random_access(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            for data_file in [dwca.core_file] + dwca.extension_files:
+                streamed = list(data_file.iter_rows())
+                seeked = [
+                    data_file.get_row_by_position(i) for i in range(len(streamed))
+                ]
+
+                assert [r.data for r in streamed] == [r.data for r in seeked]
+                assert [r.raw_fields for r in streamed] == [
+                    r.raw_fields for r in seeked
+                ]
+
+    def test_iter_rows_can_be_nested(self):
+        """Each call gets its own stream, so concurrent passes do not interfere."""
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            pairs = [
+                (outer.id, inner.id)
+                for outer in dwca.core_file.iter_rows()
+                for inner in dwca.core_file.iter_rows()
+            ]
+
+        assert 16 == len(pairs)
+
+    def test_iter_rows_on_a_quoted_archive(self):
+        with DwCAReader(sample_data_path("dwca-csv-quote-dir")) as dwca:
+            rows = list(dwca.core_file.iter_rows())
+
+        assert 2 == len(rows)
+
+    def test_raw_line_iteration_skips_every_header_line(self):
+        """readlines() takes a byte-size hint, not a line count, so with two header lines
+        the second used to leak through as data."""
+        from .archive_builder import build_archive, temp_archive_dir
+
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            ignore_header_lines=2,
+            header_rows=[["idA", "locA"], ["idB", "locB"]],
+        )
+        with DwCAReader(path) as dwca:
+            lines = list(dwca.core_file)
+
+            assert 2 == len(lines)
+            assert lines[0].startswith("1\t")
+            assert lines[1].startswith("2\t")
