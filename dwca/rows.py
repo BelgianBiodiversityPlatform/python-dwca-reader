@@ -1,7 +1,6 @@
 """Objects that represents data rows coming from DarwinCore Archives."""
 
 import csv
-import sys
 from typing import Dict, List, Optional
 
 from dwca.descriptors import DataFileDescriptor

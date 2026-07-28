@@ -7,9 +7,9 @@ Not part of the test suite. Run manually before and after a change that claims a
 
 `generate_archive.py` writes a GBIF-shaped archive: 50 columns, tab separated, no field
 enclosure, no header line. 400000 rows is roughly 250MB. Because `fieldsEnclosedBy=""`,
-only the unquoted parsing path (`csv.QUOTE_NONE`, see `csv_line_to_fields()` in
-`dwca/rows.py`) is exercised by these benchmarks - the quoted-field path is not measured
-here.
+only the unquoted parsing path (the `line.rstrip(...).split(...)` branch of
+`CSVDataFile._iter_field_lists()` in `dwca/files.py`) is exercised by these benchmarks - the
+quoted-field path is not measured here.
 
 `PYTHONPATH=.` is required because the scripts are run directly (not via `python -m`),
 so the repository root is not otherwise on `sys.path` and `import dwca` fails.
@@ -136,3 +136,12 @@ runs on each side:
 the same runs) because that is the first operation in the process that builds the line
 offset index; it remains well below the "before" side's peak, where the index was built
 eagerly on open.
+
+The absolute timings above are not comparable across sessions - only the ratio between two
+runs measured back to back in the same sitting is. Confirmed later: the same two commits
+(`fd829b6` and `c481240`) that recorded `iterate + read 14 terms` at 6.86s and 1.77s here
+measured 9.34s and 2.50s on a later, busier session on the same machine - the absolute
+numbers moved by roughly a third, but the ratio held (3.7x-4.0x measured back to back that
+time, against 3.8x-4.0x recorded above). Do not read the absolute seconds as a target or a
+regression signal in isolation; re-measure both sides back to back before drawing any
+conclusion from them.

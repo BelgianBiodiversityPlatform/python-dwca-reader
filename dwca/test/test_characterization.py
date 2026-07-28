@@ -350,11 +350,12 @@ class TestExtensionFiles(unittest.TestCase):
     """extension= was never passed to build_archive by any test, so that whole branch of the
     builder was dead code, and every extension-bearing behavior below ran only on the three
     bundled sample archives, which all happen to share one configuration (utf-8, tab, no
-    enclosure, ignoreHeaderLines="1"). CSVDataFile.coreid_index is built through
+    enclosure, ignoreHeaderLines="1"). CSVDataFile.coreid_index used to be built through
     CSVDataFile.__iter__ (the readlines(byte-hint) header bug, see TestHeaderLines above and
-    B1), and get_all_rows_by_coreid() feeds those positions into get_row_by_position(), which
-    re-applies lines_to_ignore - exactly the seam the B1 bug lives in, and it was unpinned for
-    extensions until now.
+    B1), and get_all_rows_by_coreid() fed those positions into get_row_by_position(), which
+    re-applied lines_to_ignore - exactly the seam the B1 bug lived in, and it was unpinned for
+    extensions until this test was added. coreid_index is now built through iter_rows()
+    instead, so that seam no longer exists here.
     """
 
     def _archive(self, **kwargs):
