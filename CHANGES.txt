@@ -1,11 +1,18 @@
 v0.17.0 (unreleased)
 --------------------
 
-- Removed the undeclared typing_extensions dependency (dwca.star_record now uses
-  typing.Literal). Python 3.7, which reached end of life in June 2023, is no longer
-  supported; the minimum is now 3.8.
+- New: DwCAReader.iter_terms() and CSVDataFile.iter_terms() yield a tuple of values per row
+  for a chosen list of terms, skipping both the Row object and its data dict. Measured
+  roughly 2.9x faster than iterating over rows and reading the same terms, and roughly 10x
+  faster than the pre-rewrite implementation, on a 400000-row archive reading 14 of 50
+  columns, on one machine; see benchmarks/README.md for the full measurement.
+- Performance: iterating over an archive is a single streaming pass instead of one seek and
+  one throwaway csv.reader per row. Measured roughly 3.8-4.0x faster on a 400000-row GBIF
+  download on one machine; see benchmarks/README.md for the full before/after measurement.
+- Performance: the line offset index used for random access is now built on first use, so
+  opening an archive no longer scans every data file.
 - Fixed: iterating a CSVDataFile or a DwCAReader after close() silently returned rows instead
-  of raising, for archives read directly from a directory.
+  of raising.
 - Fixed: DataFileDescriptor.headers dropped the column at index 0 for archives without a
   metafile, which also made pd_read() promote that column to the DataFrame index.
 - Fixed: hash() on a CoreRow or an ExtensionRow raised TypeError. Rows have been documented
@@ -19,11 +26,6 @@ v0.17.0 (unreleased)
   hashes) by value: the data file layout it describes.
 - Fixed: comparing a CoreRow to an ExtensionRow (or either to a non-row object) raised
   AttributeError instead of returning False.
-- Performance: iterating over an archive is a single streaming pass instead of one seek and
-  one throwaway csv.reader per row. Measured roughly 3.8-4.0x faster on a 400000-row GBIF
-  download on one machine; see benchmarks/README.md for the full before/after measurement.
-- Performance: the line offset index used for random access is now built on first use, so
-  opening an archive no longer scans every data file.
 - Fixed: ignoreHeaderLines values above 1 only skipped a single line when iterating a
   CSVDataFile directly, which let header lines leak into coreid_index and
   orphaned_extension_rows.
@@ -34,15 +36,15 @@ v0.17.0 (unreleased)
 - Fixed: DwCAReader was its own iterator, so nesting two loops over the same reader silently
   ran the inner one once, and calling get_corerow_by_id() or get_corerow_by_position() from
   inside a loop never terminated. Each iteration now gets its own iterator.
-- Changed: DwCAReader.next() now keeps an implicit iterator independent of any for loop over
-  the same reader, and starts a new pass after being exhausted. Iterate over the reader
-  instead; next() remains only for backwards compatibility.
 - Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator made
   random access and iteration disagree, so CoreRow.extensions could return silently truncated
   rows. The line offset index now indexes CSV records rather than physical lines.
-- New: DwCAReader.iter_terms() and CSVDataFile.iter_terms() yield a tuple of values per row
-  for a chosen list of terms, skipping both the Row object and its data dict. Roughly twice
-  as fast as iterating over rows when only a few terms are needed.
+- Changed: removed the undeclared typing_extensions dependency (dwca.star_record now uses
+  typing.Literal). Python 3.7, which reached end of life in June 2023, is no longer
+  supported; the minimum is now 3.8.
+- Changed: DwCAReader.next() now keeps an implicit iterator independent of any for loop over
+  the same reader, and starts a new pass after being exhausted. Iterate over the reader
+  instead; next() remains only for backwards compatibility.
 - Documentation: the tutorial and the GBIF results page still called get_row_by_index(),
   removed in v0.15.0. They now use get_corerow_by_position().
 
