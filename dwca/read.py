@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from errno import ENOENT
 from tempfile import mkdtemp
-from typing import List, Optional, Dict, Any, IO, Tuple
+from typing import Iterator, List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
@@ -38,6 +38,10 @@ class DwCAReader(object):
     :param tmp_dir: temporary directory to use to uncompress the archive (if needed). If not provided, Python default \
      will be used.
     :type tmp_dir: str
+    :param skip_metadata: if `True`, the archive's scientific metadata file is not parsed and the `metadata` \
+    attribute stays `None`. This does not affect `source_metadata`, which is still populated either way. Use this \
+    to avoid the parsing cost when only the data rows are needed.
+    :type skip_metadata: bool
 
     :raises: :class:`dwca.exceptions.InvalidArchive`
     :raises: :class:`dwca.exceptions.InvalidSimpleArchive`
@@ -100,6 +104,7 @@ class DwCAReader(object):
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path  # type: str
+        self._default_iterator = None  # type: Optional[Iterator[CoreRow]]
 
         if os.path.isdir(
             self.archive_path
@@ -256,6 +261,30 @@ class DwCAReader(object):
 
         return df_or_textreader
 
+    def iter_terms(self, terms: List[str]) -> Iterator[Tuple[str, ...]]:
+        """Yield one tuple of values per core row, holding `terms` in the order given.
+
+        A faster alternative to iterating over the reader when only a few terms are needed.
+        See :meth:`dwca.files.CSVDataFile.iter_terms`.
+
+        Usage::
+
+            for identifier, latitude, longitude in dwca.iter_terms(
+                    [qn('occurrenceID'), qn('decimalLatitude'), qn('decimalLongitude')]):
+                pass
+
+        The special name "id" requests the core file's id column - the same name used by
+        :attr:`dwca.descriptors.DataFileDescriptor.headers`. It resolves even when the
+        Metafile declares no ``<field>`` for that column, which is the common case. If the
+        core file declares an actual term named "id" (possible in metafile-less archives,
+        where terms are raw CSV header names), that declared term takes precedence, which
+        matches what `CoreRow.data['id']` already returns.
+
+        :param terms: a list of full term identifiers.
+        :raises ValueError: if any of `terms` is not present in the core data file.
+        """
+        return self.core_file.iter_terms(terms)
+
     def orphaned_extension_rows(self) -> Dict[str, Dict[str, List[int]]]:
         """Return a dict of the orphaned extension rows.
 
@@ -296,9 +325,11 @@ class DwCAReader(object):
         return (self.descriptor is not None) and (len(self.descriptor.extensions) > 0)
 
     @property
-    # TODO: decide, test and document what we guarantee about ordering
     def rows(self) -> List[CoreRow]:
         """A list of :class:`rows.CoreRow` objects representing the content of the archive.
+
+        The list is in order of appearance in the core data file, the same order produced by
+        iterating the reader.
 
         .. warning::
 
@@ -341,8 +372,8 @@ class DwCAReader(object):
 
         .. note::
 
-            - If index is bigger than the length of the archive, None is returned
-            - The position is often an appropriate way to unambiguously identify a core row in a DwCA.
+            The position is often an appropriate way to unambiguously identify a core row in
+            a DwCA.
 
         """
         for i, row in enumerate(self):
@@ -536,22 +567,39 @@ class DwCAReader(object):
         """Return `True` if the Core file of the archive contains the `term_url` term."""
         return term_url in self.core_file.file_descriptor.terms
 
-    def __iter__(self) -> "DwCAReader":
-        self._corefile_pointer = 0
-        return self
+    def __iter__(self) -> Iterator[CoreRow]:
+        # A fresh iterator each time, so nesting loops (or calling get_corerow_by_id() from
+        # inside one) behaves as expected.
+        return self._iter_core_rows()
+
+    def _iter_core_rows(self) -> Iterator[CoreRow]:
+        extension_files = self.extension_files
+        source_metadata = self.source_metadata
+
+        for row in self.core_file.iter_rows():
+            # Set up linked data so the CoreRow will know about them
+            row.link_extension_files(extension_files)
+            row.link_source_metadata(source_metadata)
+            yield row
 
     def __next__(self):
         return self.next()
 
     def next(self) -> CoreRow:  # NOQA
+        """Return the next core row.
+
+        .. deprecated::
+            Iterate over the reader instead. This method keeps its own implicit iterator,
+            which is independent of any `for row in reader:` loop: interleaving the two makes
+            each of them scan the archive separately. Once this iterator is exhausted it
+            raises StopIteration, and the call after that starts a fresh pass from the first
+            row rather than raising again.
+        """
+        if self._default_iterator is None:
+            self._default_iterator = self._iter_core_rows()
+
         try:
-            row = self.core_file.get_row_by_position(self._corefile_pointer)
-
-            # Set up linked data so the CoreRow will know about them
-            row.link_extension_files(self.extension_files)
-            row.link_source_metadata(self.source_metadata)
-
-            self._corefile_pointer = self._corefile_pointer + 1
-            return row
-        except IndexError:
-            raise StopIteration
+            return next(self._default_iterator)
+        except StopIteration:
+            self._default_iterator = None
+            raise

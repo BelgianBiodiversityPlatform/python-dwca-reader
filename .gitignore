@@ -10,3 +10,4 @@ build/
 .python-version
 .mypy_cache
 .tmp/
+requirements-ci.txt

@@ -28,6 +28,12 @@ File objects
 .. automodule:: dwca.files
     :members:
 
+Star record objects
+-------------------
+
+.. automodule:: dwca.star_record
+    :members:
+
 Helpers
 -------
 

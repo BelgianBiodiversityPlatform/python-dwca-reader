@@ -3,7 +3,6 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-import pandas as pd
 from unittest.mock import patch
 
 from dwca.darwincore.utils import qualname as qn
@@ -12,8 +11,17 @@ from dwca.exceptions import RowNotFound, InvalidArchive, NotADataFile
 from dwca.files import CSVDataFile
 from dwca.read import DwCAReader
 from dwca.rows import CoreRow, ExtensionRow
+from dwca.vendor import _has_pandas
 from .helpers import sample_data_path
 import pytest
+
+# Pandas is an optional dependency of the library, so the test suite has to run without
+# it too. The tests that genuinely exercise pd_read() are skipped when it is absent; the
+# one that checks pd_read's behavior WITHOUT pandas deliberately still runs.
+if _has_pandas:
+    import pandas as pd
+
+requires_pandas = unittest.skipUnless(_has_pandas, "pandas is not installed")
 
 
 class TestPandasIntegration(unittest.TestCase):
@@ -31,6 +39,7 @@ class TestPandasIntegration(unittest.TestCase):
             with pytest.raises(ImportError):
                 dwca.pd_read("occurrence.txt")
 
+    @requires_pandas
     def test_pd_read_simple_case(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             df = dwca.pd_read("occurrence.txt")
@@ -56,6 +65,7 @@ class TestPandasIntegration(unittest.TestCase):
                 "betta splendens",
             ]
 
+    @requires_pandas
     def test_pd_read_chunked_default_value(self):
         """Pandas chuncksize should not be used with default values.
 
@@ -66,6 +76,7 @@ class TestPandasIntegration(unittest.TestCase):
                 for chunk in dwca.pd_read("occurrence.txt", chunksize=1):
                     pass
 
+    @requires_pandas
     def test_pd_read_chunked(self):
         """If no default values are available in the archive, chunksize should work.
 
@@ -75,6 +86,7 @@ class TestPandasIntegration(unittest.TestCase):
             for chunk in dwca.pd_read("occurrence.txt", chunksize=2):
                 assert isinstance(chunk, pd.DataFrame)
 
+    @requires_pandas
     def test_pd_read_no_data_files(self):
         with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
             with pytest.raises(NotADataFile):
@@ -83,6 +95,7 @@ class TestPandasIntegration(unittest.TestCase):
             with pytest.raises(NotADataFile):
                 dwca.pd_read("eml.xml")
 
+    @requires_pandas
     def test_pd_read_extensions(self):
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             desc_df = dwca.pd_read("description.txt")
@@ -95,6 +108,7 @@ class TestPandasIntegration(unittest.TestCase):
             assert vern_df.shape == (4, 4)
             assert vern_df["countryCode"].values.tolist() == ["US", "ZA", "FI", "ZA"]
 
+    @requires_pandas
     def test_pd_read_quotedir(self):
         with DwCAReader(sample_data_path("dwca-csv-quote-dir")) as dwca:
             df = dwca.pd_read("occurrence.txt")
@@ -102,6 +116,7 @@ class TestPandasIntegration(unittest.TestCase):
             assert df.shape == (2, 5)
             assert df["basisOfRecord"].values.tolist()[0] == "Observation, something"
 
+    @requires_pandas
     def test_pd_read_default_values(self):
         with DwCAReader(sample_data_path("dwca-test-default.zip")) as dwca:
             df = dwca.pd_read("occurrence.txt")
@@ -110,6 +125,7 @@ class TestPandasIntegration(unittest.TestCase):
             for country in df["country"].values.tolist():
                 assert country == "Belgium"
 
+    @requires_pandas
     def test_pd_read_utf8_eol_ignored(self):
         """Ensure we don't split lines based on the x85 utf8 EOL char.
 
@@ -121,13 +137,20 @@ class TestPandasIntegration(unittest.TestCase):
             # (61 - and probably an IndexError - if errors)
             assert 64 == df.shape[1]
 
+    @requires_pandas
     def test_pd_read_simple_csv(self):
         with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
             df = dwca.pd_read("0008333-160118175350007.csv")
-            # Ensure we get the correct number of rows
+            # Ensure we get the correct number of rows and columns
             assert 3 == df.shape[0]
-            # Ensure we can access arbitrary data
+            assert 42 == df.shape[1]
+            # This archive has no metafile, so the first column (gbifid) has no id_index to
+            # rely on. It must come from the headers list as a regular column, not be silently
+            # promoted to the DataFrame index by pandas because of a missing header name.
+            assert "gbifid" in df.columns
+            assert df.index.name is None
 
+            # Ensure we can access arbitrary data
             assert df["decimallatitude"].values.tolist()[1] == -31.98333
 
 
@@ -257,11 +280,15 @@ class TestDwCAReader(unittest.TestCase):
                     pass
 
     def test_custom_tempdir(self):
-        tmp_dir = os.path.abspath(".tmp")
-        with DwCAReader(
-            sample_data_path("dwca-simple-test-archive.zip"), tmp_dir=tmp_dir
-        ) as dwca:
-            assert dwca.absolute_temporary_path("occurrence.txt").startswith(tmp_dir)
+        previous_tempdir = tempfile.tempdir
+        try:
+            tmp_dir = os.path.abspath(".tmp")
+            with DwCAReader(
+                sample_data_path("dwca-simple-test-archive.zip"), tmp_dir=tmp_dir
+            ) as dwca:
+                assert dwca.absolute_temporary_path("occurrence.txt").startswith(tmp_dir)
+        finally:
+            tempfile.tempdir = previous_tempdir
 
     def test_use_extensions(self):
         """Ensure the .use_extensions attribute of DwCAReader works as intended."""
@@ -533,10 +560,9 @@ class TestDwCAReader(unittest.TestCase):
             assert "Row id:" in l_repr
             assert "Reference extension rows: No" in l_repr
             assert "Reference source metadata: No" in l_repr
-            assert (
-                "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'"
-                in l_repr
-            )
+            # Assert the value reaches the representation, not how Python formats a dict.
+            assert "tetraodon fluviatilis" in l_repr
+            assert "tetraodon fluviatilis" == l.data[qn("scientificName")]
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             l = star_dwca.rows[0]
@@ -1067,6 +1093,42 @@ class TestDwCAReader(unittest.TestCase):
 
         # The next line will throw an exception if metadata.xml can't be parsed
         DwCAReader(sample_data_path("gbif-results-whitespace-in-xml.zip"))
+
+    def test_nested_iteration_is_independent(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            pairs = [(outer.id, inner.id) for outer in dwca for inner in dwca]
+
+        assert 16 == len(pairs)
+
+    def test_lookup_inside_a_loop_terminates(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            seen = []
+            for row in dwca:
+                seen.append(row.id)
+                dwca.get_corerow_by_id("1")
+
+        assert ["4", "1", "3", "2"] == seen
+
+    def test_next_still_works(self):
+        dwca = DwCAReader(sample_data_path("dwca-ids.zip"))
+        try:
+            assert "4" == dwca.next().id
+            assert "1" == dwca.next().id
+        finally:
+            dwca.close()
+
+    def test_iter_terms_on_the_reader(self):
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            values = list(
+                dwca.iter_terms(
+                    [
+                        "http://rs.tdwg.org/dwc/terms/locality",
+                        "http://rs.tdwg.org/dwc/terms/family",
+                    ]
+                )
+            )
+
+        assert [("Borneo", "Tetraodontidae"), ("Mumbai", "Osphronemidae")] == values
 
 
 if __name__ == "__main__":

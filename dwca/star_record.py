@@ -1,6 +1,5 @@
 from dwca.files import CSVDataFile
-from typing import List
-from typing_extensions import Literal
+from typing import List, Literal
 import itertools
 
 

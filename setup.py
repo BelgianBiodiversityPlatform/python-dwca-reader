@@ -12,13 +12,15 @@ setup(
     license="BSD licence, see LICENCE.txt",
     description="A simple Python package to read Darwin Core Archive (DwC-A) files.",
     long_description=open("README.rst").read(),
+    python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
 )
