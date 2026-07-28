@@ -257,7 +257,7 @@ class DwCAReader(object):
 
         return df_or_textreader
 
-    def iter_terms(self, terms: List[str]) -> Iterator[tuple]:
+    def iter_terms(self, terms: List[str]) -> Iterator[Tuple[str, ...]]:
         """Yield one tuple of values per core row, holding `terms` in the order given.
 
         A faster alternative to iterating over the reader when only a few terms are needed.

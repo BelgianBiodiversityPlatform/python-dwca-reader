@@ -5,7 +5,7 @@ import io
 import os
 from array import array
 from itertools import islice
-from typing import Iterator, List, Union, IO, Dict, Optional
+from typing import Iterator, List, Tuple, Union, IO, Dict, Optional
 
 from dwca.descriptors import DataFileDescriptor
 from dwca.rows import CoreRow, ExtensionRow, Row
@@ -60,7 +60,7 @@ class CSVDataFile(object):
 
         self._coreid_index = None  # type: Optional[Dict[str, List[int]]]
 
-    def iter_terms(self, terms: List[str]) -> Iterator[tuple]:
+    def iter_terms(self, terms: List[str]) -> Iterator[Tuple[str, ...]]:
         """Yield one tuple of values per data row, holding `terms` in the order given.
 
         This is a faster alternative to iterating over rows for consumers that only need a

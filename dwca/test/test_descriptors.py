@@ -890,3 +890,21 @@ class TestTermGetter(unittest.TestCase):
 
         with pytest.raises(InvalidArchive):
             getter(["first", "second"])
+
+    def test_terms_may_be_a_one_shot_iterable(self):
+        # term_getter() used to iterate `terms` three times internally (missing, indexes,
+        # defaults). A generator is exhausted after the first pass, which silently made
+        # every later pass - and therefore every returned tuple - empty.
+        plan = self._plan(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b"/>'
+        )
+        expected = ("second", "first")
+
+        terms_list = ["http://x/b", "http://x/a"]
+        assert expected == plan.term_getter(t for t in terms_list)(["first", "second"])
+
+        # A tuple and a set of a single term must still work (the normalisation must not
+        # break non-list iterables that already worked before).
+        assert expected == plan.term_getter(tuple(terms_list))(["first", "second"])
+        assert ("second",) == plan.term_getter({"http://x/b"})(["first", "second"])

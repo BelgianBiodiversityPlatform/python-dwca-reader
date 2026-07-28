@@ -11,8 +11,6 @@ v0.17.0 (unreleased)
   download on one machine; see benchmarks/README.md for the full before/after measurement.
 - Performance: the line offset index used for random access is now built on first use, so
   opening an archive no longer scans every data file.
-- Fixed: iterating a CSVDataFile or a DwCAReader after close() silently returned rows instead
-  of raising.
 - Fixed: DataFileDescriptor.headers dropped the column at index 0 for archives without a
   metafile, which also made pd_read() promote that column to the DataFrame index.
 - Fixed: hash() on a CoreRow or an ExtensionRow raised TypeError. Rows have been documented
@@ -37,8 +35,9 @@ v0.17.0 (unreleased)
   ran the inner one once, and calling get_corerow_by_id() or get_corerow_by_position() from
   inside a loop never terminated. Each iteration now gets its own iterator.
 - Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator made
-  random access and iteration disagree, so CoreRow.extensions could return silently truncated
-  rows. The line offset index now indexes CSV records rather than physical lines.
+  iteration raise InvalidArchive and random access (e.g. CoreRow.extensions) silently return
+  a truncated row. Such archives are now read correctly. The line offset index now indexes
+  CSV records rather than physical lines.
 - Changed: removed the undeclared typing_extensions dependency (dwca.star_record now uses
   typing.Literal). Python 3.7, which reached end of life in June 2023, is no longer
   supported; the minimum is now 3.8.

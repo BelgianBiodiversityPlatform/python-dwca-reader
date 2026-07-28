@@ -422,6 +422,11 @@ class FieldPlan(object):
 
         :raises ValueError: if any requested term is absent from the data file.
         """
+        # `terms` is iterated three times below (missing, indexes, defaults). A generator or
+        # other one-shot iterable would be exhausted after the first pass, silently turning
+        # every later pass empty rather than raising - so normalise to a list once up front.
+        terms = list(terms)
+
         by_term = {f["term"]: f for f in self._fields}
 
         missing = [term for term in terms if term not in by_term]
