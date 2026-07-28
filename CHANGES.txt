@@ -38,6 +38,8 @@ v0.17.0 (unreleased)
 - New: DwCAReader.iter_terms() and CSVDataFile.iter_terms() yield a tuple of values per row
   for a chosen list of terms, skipping both the Row object and its data dict. Roughly twice
   as fast as iterating over rows when only a few terms are needed.
+- Documentation: the tutorial and the GBIF results page still called get_row_by_index(),
+  removed in v0.15.0. They now use get_corerow_by_position().
 
 v0.16.4 (2024-10-18)
 --------------------

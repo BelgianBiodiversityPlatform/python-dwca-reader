@@ -359,8 +359,8 @@ class DwCAReader(object):
 
         .. note::
 
-            - If index is bigger than the length of the archive, None is returned
-            - The position is often an appropriate way to unambiguously identify a core row in a DwCA.
+            The position is often an appropriate way to unambiguously identify a core row in
+            a DwCA.
 
         """
         for i, row in enumerate(self):

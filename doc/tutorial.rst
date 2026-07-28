@@ -80,7 +80,7 @@ Basic use, access to metadata and data from the Core file
         # guarantee unicity (nor even that there will be an id). The index (position) of the row (starting at 0) is
         # generally preferable.
 
-        occurrence_on_second_line = dwca.get_row_by_index(1)
+        occurrence_on_second_line = dwca.get_corerow_by_position(1)
 
         # We can retreive the (absolute) of embedded files
         # NOTE: this path point to a temporary directory that will be removed at the end of the DwCAReader object life

@@ -29,7 +29,7 @@ You can access this source metadata like this:
         #  'dataset2_UUID': <dataset2 EML (xml.etree.ElementTree.Element instance)>, ...}
 
         # 2. From a CoreRow instance, we can get back to the metadata of its source dataset:
-        first_row = results.get_row_by_index(0)
+        first_row = results.get_corerow_by_position(0)
         print(first_row.source_metadata)
         # => <Source dataset EML (xml.etree.ElementTree.Element instance)>
 
@@ -45,7 +45,7 @@ Because there's a standard core-extension relationship (star schema) between tho
     from dwca.read import DwCAReader
 
     with DwCAReader('gbif-results.zip') as results:
-        first_row = results.get_row_by_index(0)
+        first_row = results.get_corerow_by_position(0)
 
         first_row.extensions
 
