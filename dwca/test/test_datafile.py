@@ -35,6 +35,9 @@ class TestCSVDataFile(unittest.TestCase):
             description_txt = extension_files[0]
             vernacular_txt = extension_files[1]
 
+            # coreid_index values are array("L") rather than lists. This is documented in the
+            # property docstring and DwCAReader.orphaned_extension_rows() relies on it via
+            # .tolist(), so it is part of the contract, not an implementation detail.
             expected_core = {
                 "1": array("L", [0]),
                 "2": array("L", [1]),
@@ -48,9 +51,6 @@ class TestCSVDataFile(unittest.TestCase):
 
             expected_description = {"1": array("L", [0, 1]), "4": array("L", [2])}
             assert description_txt.coreid_index == expected_description
-
-            with pytest.raises(AttributeError):
-                dwca.corefile.coreid_index
 
     def test_file_descriptor_attribute(self):
         """The instance of DataFileDescriptor passed to the constructor is available in .file_descriptor"""

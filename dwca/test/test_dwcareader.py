@@ -263,11 +263,15 @@ class TestDwCAReader(unittest.TestCase):
                     pass
 
     def test_custom_tempdir(self):
-        tmp_dir = os.path.abspath(".tmp")
-        with DwCAReader(
-            sample_data_path("dwca-simple-test-archive.zip"), tmp_dir=tmp_dir
-        ) as dwca:
-            assert dwca.absolute_temporary_path("occurrence.txt").startswith(tmp_dir)
+        previous_tempdir = tempfile.tempdir
+        try:
+            tmp_dir = os.path.abspath(".tmp")
+            with DwCAReader(
+                sample_data_path("dwca-simple-test-archive.zip"), tmp_dir=tmp_dir
+            ) as dwca:
+                assert dwca.absolute_temporary_path("occurrence.txt").startswith(tmp_dir)
+        finally:
+            tempfile.tempdir = previous_tempdir
 
     def test_use_extensions(self):
         """Ensure the .use_extensions attribute of DwCAReader works as intended."""
@@ -539,10 +543,9 @@ class TestDwCAReader(unittest.TestCase):
             assert "Row id:" in l_repr
             assert "Reference extension rows: No" in l_repr
             assert "Reference source metadata: No" in l_repr
-            assert (
-                "http://rs.tdwg.org/dwc/terms/scientificName': 'tetraodon fluviatilis'"
-                in l_repr
-            )
+            # Assert the value reaches the representation, not how Python formats a dict.
+            assert "tetraodon fluviatilis" in l_repr
+            assert "tetraodon fluviatilis" == l.data[qn("scientificName")]
 
         with DwCAReader(sample_data_path("dwca-star-test-archive.zip")) as star_dwca:
             l = star_dwca.rows[0]
