@@ -1,3 +1,4 @@
+import os
 import unittest
 import xml.etree.ElementTree as ET
 from array import array
@@ -218,3 +219,68 @@ class TestStreamingIteration(unittest.TestCase):
             assert 2 == len(lines)
             assert lines[0].startswith("1\t")
             assert lines[1].startswith("2\t")
+
+
+class TestLineOffsets(unittest.TestCase):
+    def test_opening_an_archive_does_not_build_the_index(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            assert dwca.core_file._line_offsets is None
+
+            dwca.core_file.get_row_by_position(0)
+
+            assert dwca.core_file._line_offsets is not None
+
+    def test_offsets_survive_an_undecodable_byte(self):
+        from .archive_builder import build_archive, temp_archive_dir
+
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b"1\tcaf\xe9\n2\tMumbai\n3\tBorneo\n",
+        )
+        with DwCAReader(path) as dwca:
+            term = "http://rs.tdwg.org/dwc/terms/term1"
+
+            assert "Mumbai" == dwca.core_file.get_row_by_position(1).data[term]
+            assert "Borneo" == dwca.core_file.get_row_by_position(2).data[term]
+
+    def test_offsets_with_dos_line_endings(self):
+        from .archive_builder import build_archive, temp_archive_dir
+
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            lines_terminated_by="\r\n",
+        )
+        with DwCAReader(path) as dwca:
+            term = "http://rs.tdwg.org/dwc/terms/term1"
+
+            assert "Borneo" == dwca.core_file.get_row_by_position(0).data[term]
+            assert "Mumbai" == dwca.core_file.get_row_by_position(1).data[term]
+
+    def test_offsets_are_correct_across_a_chunk_boundary(self):
+        """The scanner reads in chunks, so a terminator can straddle two reads."""
+        from dwca.files import _build_line_offsets
+        from .archive_builder import build_archive, temp_archive_dir
+
+        rows = [[str(i), "locality-" + str(i)] for i in range(5000)]
+        path = build_archive(temp_archive_dir(self), rows=rows)
+
+        data_path = os.path.join(path, "occurrence.txt")
+        reference = _build_line_offsets(data_path, "utf-8", "\n")
+        chunked = _build_line_offsets(data_path, "utf-8", "\n", chunk_size=7)
+
+        assert 5000 == len(reference)
+        assert list(reference) == list(chunked)
+
+    def test_a_zero_byte_core_file_has_no_rows(self):
+        """A zero-byte file must report no lines at all, not one spurious empty line."""
+        from .archive_builder import build_archive, temp_archive_dir
+
+        path = build_archive(
+            temp_archive_dir(self), rows=[], columns=2, raw_payload=b""
+        )
+        with DwCAReader(path) as dwca:
+            with pytest.raises(IndexError):
+                dwca.core_file.get_row_by_position(0)
