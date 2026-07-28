@@ -67,3 +67,72 @@ calls on an already-built dict add only marginal cost on top of the row-parsing 
 both variants pay. The gap between the two iterate variants is a better indicator of
 "reading fields" cost added ON TOP of parsing than a full picture of parsing cost itself,
 which the "no field access" line represents.
+
+## After the streaming engine
+
+Measured on:
+
+- Commit: `c48124009f02fa24b0d5b3f853036f7b8f302f0a` (branch `parsing-performance`)
+- Python: 3.12.0 (CPython)
+- Machine: MacBook Pro (Mac14,5, Apple Silicon, arm64), macOS 26.5
+
+The Phase 0 baseline above was recorded in a separate session. Machine variance between
+sessions has been observed to be as large as ~40 percent on identical code, so it is not a
+trustworthy comparison by itself. To get an honest pair, both sides below were re-measured
+back to back, in one sitting, on an otherwise idle machine: the Phase 0 starting commit
+(`fd829b6`, checked out into a scratch worktree) immediately followed by the current commit
+above, against the same generated archive.
+
+Generator output (shared by both sides):
+
+    wrote 400000 rows, 50 columns, 248MB to /tmp/dwca-bench
+
+Before (commit `fd829b61962b5a813705a0f7c5d1f12c1efe07e7`, run 1 of 2):
+
+    archive: /tmp/dwca-bench
+      open archive                                    0.23s  n=occurrence.txt  peak=73MB
+      iterate, no field access                        6.76s  n=400000  peak=73MB
+      iterate + read 14 terms                         6.84s  n=400000  peak=73MB
+      random access, every 7th row up to 100k         0.40s  n=14286  peak=73MB
+
+Before, run 2 of 2 (same archive, same process type, run immediately after):
+
+    archive: /tmp/dwca-bench
+      open archive                                    0.16s  n=occurrence.txt  peak=71MB
+      iterate, no field access                        6.80s  n=400000  peak=71MB
+      iterate + read 14 terms                         6.88s  n=400000  peak=71MB
+      random access, every 7th row up to 100k         0.38s  n=14286  peak=71MB
+
+After (commit `c48124009f02fa24b0d5b3f853036f7b8f302f0a`, run 1 of 2, measured immediately
+after the "before" runs, same archive):
+
+    archive: /tmp/dwca-bench
+      open archive                                    0.00s  n=occurrence.txt  peak=67MB
+      iterate, no field access                        1.65s  n=400000  peak=67MB
+      iterate + read 14 terms                         1.74s  n=400000  peak=67MB
+      random access, every 7th row up to 100k         0.26s  n=14286  peak=79MB
+
+After, run 2 of 2:
+
+    archive: /tmp/dwca-bench
+      open archive                                    0.00s  n=occurrence.txt  peak=67MB
+      iterate, no field access                        1.68s  n=400000  peak=67MB
+      iterate + read 14 terms                         1.79s  n=400000  peak=67MB
+      random access, every 7th row up to 100k         0.19s  n=14286  peak=76MB
+
+Both sides are consistent run to run (within a few percent). Using the average of the two
+runs on each side:
+
+- `open archive`: 0.20s -> 0.00s (below the timer's resolution; opening no longer scans the
+  data file to build the line offset index, it is now built lazily on first positional
+  access).
+- `iterate, no field access`: 6.78s -> 1.67s, roughly 4.1x faster.
+- `iterate + read 14 terms`: 6.86s -> 1.77s, roughly 3.9x faster (range 3.8x-4.0x across the
+  two run pairs). This is the headline number: it clears the phase's 2.5x target by a wide
+  margin.
+- `random access, every 7th row up to 100k`: 0.39s -> 0.23s, roughly 1.7x faster.
+
+`peak=` rose slightly on the "after" random access line (79MB / 76MB vs 67MB elsewhere in
+the same runs) because that is the first operation in the process that builds the line
+offset index; it remains well below the "before" side's peak, where the index was built
+eagerly on open.

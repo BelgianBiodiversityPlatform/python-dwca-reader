@@ -63,11 +63,12 @@ def main(archive_path):
     def random_access():
         with DwCAReader(archive_path, skip_metadata=True) as reader:
             data_file = reader.core_file
-            # No public API exposes the row count. _line_offsets is already built when the
-            # CSVDataFile is opened (that's the whole point of the index), so reading its
-            # length here is free and lets the range below scale with the actual archive
-            # instead of hardcoding 100000 (which raises IndexError on smaller archives).
-            row_count = len(data_file._line_offsets) - data_file.lines_to_ignore
+            # No public API exposes the row count. _line_offsets is built lazily on first
+            # positional access, so we go through _get_line_offsets() (which builds it if
+            # needed) rather than reading the raw attribute directly. This lets the range
+            # below scale with the actual archive instead of hardcoding 100000 (which raises
+            # IndexError on smaller archives).
+            row_count = len(data_file._get_line_offsets()) - data_file.lines_to_ignore
             upper_bound = min(row_count, 100000)
             return sum(
                 1

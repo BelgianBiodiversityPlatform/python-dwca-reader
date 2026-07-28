@@ -32,7 +32,6 @@ class CSVDataFile(object):
     access faster.
     """
 
-    # TODO: More tests for this class
     def __init__(
         self, work_directory: str, file_descriptor: DataFileDescriptor
     ) -> None:
