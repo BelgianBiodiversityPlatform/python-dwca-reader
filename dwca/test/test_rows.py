@@ -64,6 +64,21 @@ class TestRowHashing(unittest.TestCase):
 
             assert len(set(extension_rows)) == len(extension_rows)
 
+    def test_unlinked_core_rows_are_comparable(self):
+        """A CoreRow obtained directly from CSVDataFile.get_row_by_position() (rather than by
+        iterating the DwCAReader) is never linked to extension files or source metadata, so
+        self.extension_data_files and self.source_metadata don't exist on it. __key() used to
+        access self.extensions and self.source_metadata unconditionally, so hash()/__eq__ on
+        such a row raised AttributeError - which set() and put in a set both trigger."""
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            one = dwca.core_file.get_row_by_position(0)
+            two = dwca.core_file.get_row_by_position(0)
+
+            assert one is not two
+            assert one == two
+            assert hash(one) == hash(two)
+            assert len({one, two}) == 1
+
     def test_equal_rows_hash_equally(self):
         # Uses two independently-fetched (but equal) CoreRow instances from the *same* reader,
         # rather than from two separate readers. DataFileDescriptor has no __eq__ of its own, so

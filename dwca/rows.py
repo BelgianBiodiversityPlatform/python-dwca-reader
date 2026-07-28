@@ -183,12 +183,23 @@ class CoreRow(Row):
     # Should these 3 be factorized ? How ? Mixin ? Parent class ?
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
+        # A CoreRow obtained without going through DwCAReader iteration (e.g.
+        # CSVDataFile.get_row_by_position() called directly) never had link_extension_files()
+        # / link_source_metadata() called on it, so self.extensions and self.source_metadata
+        # don't exist. Fall back to None for those rows instead of letting the attribute
+        # access raise AttributeError. This doesn't change equality for linked rows (both
+        # attributes are always present after DwCAReader.next() links them).
+        extensions = self.extensions if hasattr(self, "extension_data_files") else None
+        source_metadata = (
+            self.source_metadata if hasattr(self, "source_metadata") else None
+        )
+
         return (
             self.descriptor,
             self.id,
             self.data,
-            self.extensions,
-            self.source_metadata,
+            extensions,
+            source_metadata,
             self.rowtype,
             self.raw_fields,
             self.position,

@@ -6,6 +6,7 @@ know to be incorrect. Phase 1 changes them deliberately.
 """
 
 import unittest
+from array import array
 
 import pytest
 
@@ -13,9 +14,10 @@ from dwca.exceptions import InvalidArchive
 from dwca.read import DwCAReader
 
 from .archive_builder import build_archive, temp_archive_dir
+from .helpers import sample_data_path
 
-TERM0 = "http://rs.tdwg.org/dwc/terms/term0"
 TERM1 = "http://rs.tdwg.org/dwc/terms/term1"
+VERNACULAR_TERM = "http://rs.tdwg.org/dwc/terms/vernacularName"
 
 
 class TestArchiveBuilder(unittest.TestCase):
@@ -173,9 +175,9 @@ class TestEncodings(unittest.TestCase):
         with DwCAReader(path) as dwca:
             rows = list(dwca)
 
-        # CHARACTERIZATION: the encoding is "utf-8", not "utf-8-sig", so the byte order
-        # mark becomes part of the id. A rewrite adding BOM handling changes this
-        # deliberately.
+        # Surprising but not a known bug: the encoding is "utf-8", not "utf-8-sig", so the
+        # byte order mark becomes part of the id instead of being stripped. A rewrite adding
+        # BOM handling would change this deliberately.
         assert "\ufeff1" == rows[0].id
 
     def test_undecodable_byte_desynchronises_random_access(self):
@@ -352,8 +354,11 @@ class TestIterationSemantics(unittest.TestCase):
                     break
 
         # CHARACTERIZATION: wrong, see B4. get_corerow_by_id() resets the shared pointer,
-        # so this never terminates. Without the break it would loop forever.
-        assert len(seen) > 3
+        # so this never terminates. Without the break it would loop forever. The exact value
+        # (rather than a looser bound) makes a future fix's effect on this test unambiguous:
+        # get_corerow_by_id("2") always rewinds to id "2", so after the first row (id "1"),
+        # every subsequent row is "3" until the len(seen) > 8 guard fires.
+        assert 9 == len(seen)
 
     def test_random_access_interleaved_with_iteration_is_safe(self):
         with DwCAReader(self._archive()) as dwca:
@@ -364,3 +369,212 @@ class TestIterationSemantics(unittest.TestCase):
                 assert "1" == dwca.core_file.get_row_by_position(0).id
 
         assert ["1", "2", "3"] == seen
+
+
+class TestExtensionFiles(unittest.TestCase):
+    """extension= was never passed to build_archive by any test, so that whole branch of the
+    builder was dead code, and every extension-bearing behavior below ran only on the three
+    bundled sample archives, which all happen to share one configuration (utf-8, tab, no
+    enclosure, ignoreHeaderLines="1"). CSVDataFile.coreid_index is built through
+    CSVDataFile.__iter__ (the readlines(byte-hint) header bug, see TestHeaderLines above and
+    B1), and get_all_rows_by_coreid() feeds those positions into get_row_by_position(), which
+    re-applies lines_to_ignore - exactly the seam the B1 bug lives in, and it was unpinned for
+    extensions until now.
+    """
+
+    def _archive(self, **kwargs):
+        return build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            extension=[["1", "elephant"], ["1", "tiger"], ["2", "monkey"]],
+            **kwargs,
+        )
+
+    def test_coreid_index(self):
+        path = self._archive()
+
+        with DwCAReader(path) as dwca:
+            index = dwca.extension_files[0].coreid_index
+
+            assert {"1": array("L", [0, 1]), "2": array("L", [2])} == index
+
+    def test_get_all_rows_by_coreid(self):
+        path = self._archive()
+
+        with DwCAReader(path) as dwca:
+            ext = dwca.extension_files[0]
+
+            several = ext.get_all_rows_by_coreid("1")
+            assert ["elephant", "tiger"] == [r.data[VERNACULAR_TERM] for r in several]
+
+            one = ext.get_all_rows_by_coreid("2")
+            assert ["monkey"] == [r.data[VERNACULAR_TERM] for r in one]
+
+            assert [] == ext.get_all_rows_by_coreid("unknown")
+
+    def test_orphaned_extension_rows(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            extension=[["1", "elephant"], ["99", "ghost"]],
+        )
+
+        with DwCAReader(path) as dwca:
+            assert {"extension.txt": {"99": [1]}} == dwca.orphaned_extension_rows()
+
+    def test_core_row_extensions_content_and_ordering(self):
+        path = self._archive()
+
+        with DwCAReader(path) as dwca:
+            rows = list(dwca)
+
+            assert ["elephant", "tiger"] == [
+                r.data[VERNACULAR_TERM] for r in rows[0].extensions
+            ]
+            assert ["monkey"] == [r.data[VERNACULAR_TERM] for r in rows[1].extensions]
+
+    def test_ignore_header_lines_leaks_into_extension_index(self):
+        path = self._archive(
+            ignore_header_lines=2, header_rows=[["idA", "locA"], ["idB", "locB"]]
+        )
+
+        with DwCAReader(path) as dwca:
+            index = dwca.extension_files[0].coreid_index
+
+            # CHARACTERIZATION: wrong, see B1. Same readlines(byte-hint) bug as the core file
+            # (TestHeaderLines.test_two_headers_iteration_and_random_access_agree): the second
+            # header line leaks into the index as a data row referencing core id "idB", and
+            # every position after it is shifted by one.
+            assert {
+                "idB": array("L", [0]),
+                "1": array("L", [1, 2]),
+                "2": array("L", [3]),
+            } == index
+
+
+class TestRandomAccessDirect(unittest.TestCase):
+    """DwCAReader.next() is implemented as CSVDataFile.get_row_by_position() (see
+    dwca/read.py), so today every iteration test incidentally exercises random access too.
+    A rewrite that stops delegating would make that coverage disappear silently unless
+    something calls get_row_by_position() directly, which is what these tests do.
+    """
+
+    def test_multibyte_utf8(self):
+        # "\u4e2d\u6587" ("Chinese" in Chinese) is 2 characters but 6 bytes in UTF-8, so the
+        # byte offset of row 1 (used internally for seek()) differs from what a
+        # character-based offset would be.
+        locality = "caf\u00e9 \u4e2d\u6587"
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", locality], ["2", "Mumbai"]],
+        )
+
+        with DwCAReader(path) as dwca:
+            first = dwca.core_file.get_row_by_position(0)
+            second = dwca.core_file.get_row_by_position(1)
+
+        assert locality == first.data[TERM1]
+        assert ["1", locality] == first.raw_fields
+        assert "Mumbai" == second.data[TERM1]
+        assert ["2", "Mumbai"] == second.raw_fields
+
+    def test_dos_terminator(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            lines_terminated_by="\r\n",
+        )
+
+        with DwCAReader(path) as dwca:
+            first = dwca.core_file.get_row_by_position(0)
+            second = dwca.core_file.get_row_by_position(1)
+
+        assert "Borneo" == first.data[TERM1]
+        assert ["1", "Borneo"] == first.raw_fields
+        assert "Mumbai" == second.data[TERM1]
+        assert ["2", "Mumbai"] == second.raw_fields
+
+    def test_quoted_field_containing_the_separator(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "plain, with comma"], ["2", "second"]],
+            fields_terminated_by=",",
+            fields_enclosed_by='"',
+        )
+
+        with DwCAReader(path) as dwca:
+            first = dwca.core_file.get_row_by_position(0)
+            second = dwca.core_file.get_row_by_position(1)
+
+        assert "plain, with comma" == first.data[TERM1]
+        assert ["1", "plain, with comma"] == first.raw_fields
+        assert "second" == second.data[TERM1]
+        assert ["2", "second"] == second.raw_fields
+
+
+class TestRowExtensionsDuringCoreIteration(unittest.TestCase):
+    def _archive(self):
+        return build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"]],
+            extension=[["1", "elephant"], ["1", "tiger"], ["2", "monkey"]],
+        )
+
+    def test_row_extensions_accessible_during_core_iteration(self):
+        path = self._archive()
+
+        seen = {}
+        with DwCAReader(path) as dwca:
+            for row in dwca:
+                seen[row.id] = [e.data[VERNACULAR_TERM] for e in row.extensions]
+
+        assert {"1": ["elephant", "tiger"], "2": ["monkey"]} == seen
+
+    def test_row_extensions_are_cached(self):
+        path = self._archive()
+
+        with DwCAReader(path) as dwca:
+            row = next(iter(dwca))
+            first = row.extensions
+            second = row.extensions
+
+        # Lazy-loaded and cached on the instance: same list object both times, not rebuilt.
+        assert first is second
+        assert ["elephant", "tiger"] == [e.data[VERNACULAR_TERM] for e in first]
+
+
+class TestNegativePosition(unittest.TestCase):
+    def test_negative_position_returns_the_header_line(self):
+        # get_row_by_position() computes self._line_offsets[position + lines_to_ignore]. For
+        # position=-1 this wraps around to the last entry in the offsets array, which is the
+        # header line (kept in the index but skipped during normal iteration).
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            row = dwca.core_file.get_row_by_position(-1)
+
+        # CHARACTERIZATION: wrong, see B7. A rewrite will likely raise IndexError instead.
+        assert "id" == row.id
+
+
+class TestDuplicateCoreIds(unittest.TestCase):
+    """get_corerow_by_id()'s docstring disclaims which row wins when ids repeat, and
+    coreid_index maps one id to several positions. Pin both so a rewrite has to decide
+    deliberately rather than by accident.
+    """
+
+    def _archive(self):
+        return build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["1", "Mumbai"], ["2", "Paris"]],
+        )
+
+    def test_get_corerow_by_id_returns_the_first_match(self):
+        with DwCAReader(self._archive()) as dwca:
+            row = dwca.get_corerow_by_id("1")
+
+        assert "Borneo" == row.data[TERM1]
+
+    def test_coreid_index_holds_every_position(self):
+        with DwCAReader(self._archive()) as dwca:
+            index = dwca.core_file.coreid_index
+
+        assert {"1": array("L", [0, 1]), "2": array("L", [2])} == index

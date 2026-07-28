@@ -6,10 +6,25 @@ Not part of the test suite. Run manually before and after a change that claims a
     PYTHONPATH=. .venv/bin/python benchmarks/bench_reader.py /tmp/dwca-bench
 
 `generate_archive.py` writes a GBIF-shaped archive: 50 columns, tab separated, no field
-enclosure, no header line. 400000 rows is roughly 250MB.
+enclosure, no header line. 400000 rows is roughly 250MB. Because `fieldsEnclosedBy=""`,
+only the unquoted parsing path (`csv.QUOTE_NONE`, see `csv_line_to_fields()` in
+`dwca/rows.py`) is exercised by these benchmarks - the quoted-field path is not measured
+here.
 
 `PYTHONPATH=.` is required because the scripts are run directly (not via `python -m`),
 so the repository root is not otherwise on `sys.path` and `import dwca` fails.
+
+The `peak=` column comes from `resource.getrusage(...).ru_maxrss`, which is a process-wide
+high-water mark, not a per-measurement figure: it never decreases within a run, so each
+`timed()` line reports the peak RSS seen so far across the whole process, including
+everything measured by earlier lines. Compare `peak=` across separate invocations of the
+script, not across lines of the same run.
+
+The "open archive" timing is the only one that isolates archive-opening cost: "iterate,
+..." and "random access, ..." both open a fresh `DwCAReader` (via `with DwCAReader(...)`)
+inside the timed region, so their reported time includes opening the archive (parsing the
+metafile and building the core file's line-offset index) on top of the operation the label
+describes.
 
 ## Baseline
 
