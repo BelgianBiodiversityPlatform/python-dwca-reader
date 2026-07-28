@@ -38,6 +38,10 @@ class DwCAReader(object):
     :param tmp_dir: temporary directory to use to uncompress the archive (if needed). If not provided, Python default \
      will be used.
     :type tmp_dir: str
+    :param skip_metadata: if `True`, the archive's scientific metadata file is not parsed and the `metadata` \
+    attribute stays `None`. This does not affect `source_metadata`, which is still populated either way. Use this \
+    to avoid the parsing cost when only the data rows are needed.
+    :type skip_metadata: bool
 
     :raises: :class:`dwca.exceptions.InvalidArchive`
     :raises: :class:`dwca.exceptions.InvalidSimpleArchive`
@@ -321,9 +325,11 @@ class DwCAReader(object):
         return (self.descriptor is not None) and (len(self.descriptor.extensions) > 0)
 
     @property
-    # TODO: decide, test and document what we guarantee about ordering
     def rows(self) -> List[CoreRow]:
         """A list of :class:`rows.CoreRow` objects representing the content of the archive.
+
+        The list is in order of appearance in the core data file, the same order produced by
+        iterating the reader.
 
         .. warning::
 

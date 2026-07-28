@@ -181,6 +181,12 @@ class CSVDataFile(object):
         return self.next()
 
     def next(self) -> str:  # NOQA
+        """Return the next raw line of the data file, including its line terminator.
+
+        Header lines are skipped. Raises `StopIteration` once the file is exhausted. This is
+        the iterator protocol behind `for line in data_file`, described in the class
+        docstring.
+        """
         for line in self._file_stream:
             return line
 
@@ -223,10 +229,15 @@ class CSVDataFile(object):
 
         return index
 
-    # TODO: For ExtensionRow and a specific field only, generalize ?
-    # TODO: What happens if called on a Core Row?
     def get_all_rows_by_coreid(self, core_id: int) -> List[Row]:
-        """Return a list of :class:`dwca.rows.ExtensionRow` whose Core Id field match `core_id`."""
+        """Return the rows whose linking id matches `core_id`.
+
+        For an extension file, this is the row's `coreid` field. For a core file, it is the
+        row's own `id`, since `coreid_index` then maps each row's id to its position. The
+        return type is `List[Row]` to cover both :class:`dwca.rows.CoreRow` (core file) and
+        :class:`dwca.rows.ExtensionRow` (extension file). Returns an empty list if `core_id`
+        is not found.
+        """
         if core_id not in self.coreid_index:
             return []
 
