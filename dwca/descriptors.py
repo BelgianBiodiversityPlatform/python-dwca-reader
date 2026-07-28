@@ -12,6 +12,7 @@ import csv
 import io
 import os
 import re
+from operator import itemgetter
 import xml.etree.ElementTree as ET
 from typing import Optional, List, Dict, Set
 from xml.etree.ElementTree import Element
@@ -262,6 +263,15 @@ class DataFileDescriptor(object):
         )
 
     @property
+    def field_plan(self) -> "FieldPlan":
+        """A cached :class:`FieldPlan` turning a split data row into a term -> value dict."""
+        plan = self.__dict__.get("_field_plan")
+        if plan is None:
+            plan = FieldPlan(self.fields)
+            self.__dict__["_field_plan"] = plan
+        return plan
+
+    @property
     def terms(self) -> Set[str]:
         """Return a Python set containing all the Darwin Core terms appearing in file."""
         return set([f["term"] for f in self.fields])
@@ -313,6 +323,111 @@ class DataFileDescriptor(object):
             return 1
 
         return int(self.raw_element.get("ignoreHeaderLines", 0))
+
+
+class FieldPlan(object):
+    """Precomputed mapping from a split CSV line to a term -> value dict.
+
+    Built once per :class:`DataFileDescriptor` (see its ``field_plan`` property) so that
+    parsing a row costs one C-level ``dict(zip(...))`` instead of a Python loop over the
+    field descriptors.
+    """
+
+    __slots__ = (
+        "_fields",
+        "_contiguous_terms",
+        "_terms",
+        "_getter",
+        "_single_column",
+        "_defaults",
+        "_constants",
+        "_ordered",
+        "required_columns",
+    )
+
+    def __init__(self, fields):
+        self._fields = fields
+
+        indexed = [f for f in fields if f["index"] is not None]
+        indexes = [f["index"] for f in indexed]
+
+        #: Number of columns a data row must have for this plan to apply.
+        self.required_columns = max(indexes) + 1 if indexes else 0
+
+        # Terms without a column: the value is always the default.
+        self._constants = tuple(
+            (f["term"], f["default"] or "") for f in fields if f["index"] is None
+        )
+        # Indexed terms that also carry a default, used when the cell is empty (issue #80).
+        self._defaults = tuple(
+            (f["term"], f["default"]) for f in indexed if f["default"]
+        )
+
+        # When some terms have no column, the fast paths below would append them after the
+        # mapped ones and change the key order of Row.data (which is user-visible through
+        # str(row)). Those archives use an ordered path instead; they are rare, and the
+        # ordered path is still free of the per-field try/except and int() it replaces.
+        self._ordered = (
+            tuple((f["term"], f["index"], f["default"]) for f in fields)
+            if self._constants
+            else None
+        )
+
+        if indexes and sorted(indexes) == list(range(len(indexes))):
+            # Fast path: the indexed fields cover columns 0..n-1 exactly once.
+            ordered = sorted(indexed, key=lambda f: f["index"])
+            self._contiguous_terms = tuple(f["term"] for f in ordered)
+            self._terms = None
+            self._getter = None
+            self._single_column = False
+        else:
+            self._contiguous_terms = None
+            self._terms = tuple(f["term"] for f in indexed)
+            self._getter = itemgetter(*indexes) if indexes else None
+            # itemgetter with a single argument returns a scalar, not a tuple.
+            self._single_column = len(indexes) == 1
+
+    def build_data(self, raw_fields):
+        """Return the term -> value dict for an already-split data row."""
+        if len(raw_fields) < self.required_columns:
+            self._raise_missing_column(raw_fields)
+
+        if self._ordered is not None:
+            data = {}
+            for term, index, default in self._ordered:
+                value = raw_fields[index] if index is not None else None
+                data[term] = value or default or ""
+            return data
+
+        if self._contiguous_terms is not None:
+            data = dict(zip(self._contiguous_terms, raw_fields))
+        elif self._getter is not None:
+            values = self._getter(raw_fields)
+            if self._single_column:
+                values = (values,)
+            data = dict(zip(self._terms, values))
+        else:
+            data = {}
+
+        for term, default in self._defaults:
+            if not data[term]:
+                data[term] = default
+        for term, constant in self._constants:
+            data[term] = constant
+
+        return data
+
+    def _raise_missing_column(self, raw_fields):
+        # Slow path: report the same index the old per-field loop would have reported.
+        for field in self._fields:
+            index = field["index"]
+            if index is not None and index >= len(raw_fields):
+                raise InvalidArchive(
+                    "The descriptor references a non-existent field (index={i})".format(
+                        i=index
+                    )
+                )
+        raise InvalidArchive("The descriptor references a non-existent field")
 
 
 class ArchiveDescriptor(object):

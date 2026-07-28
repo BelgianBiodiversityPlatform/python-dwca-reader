@@ -3,8 +3,11 @@ import unittest
 import xml.etree.ElementTree as ET
 import zipfile
 
+import pytest
+
 from dwca.darwincore.utils import qualname as qn
 from dwca.descriptors import DataFileDescriptor, ArchiveDescriptor
+from dwca.exceptions import InvalidArchive
 from dwca.read import DwCAReader
 from .helpers import sample_data_path
 
@@ -700,3 +703,96 @@ class TestHeadersIndexZero(unittest.TestCase):
 
             assert len(descriptor.fields) == len(descriptor.headers)
             assert "gbifid" == descriptor.headers[0]
+
+
+class TestFieldPlan(unittest.TestCase):
+    def _descriptor(self, fields_xml, tag="core", id_tag='<id index="0" />'):
+        section = """
+        <{tag} encoding="utf-8" fieldsTerminatedBy="\\t" linesTerminatedBy="\\n" \
+fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files><location>occurrence.txt</location></files>
+            {id_tag}
+            {fields}
+        </{tag}>
+        """.format(
+            tag=tag, id_tag=id_tag, fields=fields_xml
+        )
+        return DataFileDescriptor.make_from_metafile_section(ET.fromstring(section))
+
+    def test_contiguous_columns(self):
+        descriptor = self._descriptor(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b"/>'
+        )
+
+        assert {"http://x/a": "1", "http://x/b": "Borneo"} == (
+            descriptor.field_plan.build_data(["1", "Borneo"])
+        )
+
+    def test_columns_out_of_order_and_with_gaps(self):
+        descriptor = self._descriptor(
+            '<field index="2" term="http://x/a"/>'
+            '<field index="0" term="http://x/b"/>'
+        )
+
+        assert {"http://x/a": "third", "http://x/b": "first"} == (
+            descriptor.field_plan.build_data(["first", "second", "third"])
+        )
+
+    def test_single_column(self):
+        descriptor = self._descriptor('<field index="1" term="http://x/a"/>')
+
+        assert {"http://x/a": "Borneo"} == descriptor.field_plan.build_data(
+            ["1", "Borneo"]
+        )
+
+    def test_default_only_field_has_no_column(self):
+        descriptor = self._descriptor(
+            '<field index="0" term="http://x/a"/>'
+            '<field term="http://x/country" default="Belgium"/>'
+        )
+
+        assert {"http://x/a": "1", "http://x/country": "Belgium"} == (
+            descriptor.field_plan.build_data(["1"])
+        )
+
+    def test_default_fills_an_empty_cell(self):
+        """A field can have both a column and a default (issue #80)."""
+        descriptor = self._descriptor(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b" default="fallback"/>'
+        )
+
+        assert "Borneo" == descriptor.field_plan.build_data(["1", "Borneo"])["http://x/b"]
+        assert "fallback" == descriptor.field_plan.build_data(["1", ""])["http://x/b"]
+
+    def test_missing_value_without_default_becomes_empty_string(self):
+        descriptor = self._descriptor(
+            '<field index="0" term="http://x/a"/>'
+            '<field index="1" term="http://x/b"/>'
+        )
+
+        assert "" == descriptor.field_plan.build_data(["1", ""])["http://x/b"]
+
+    def test_key_order_follows_the_metafile(self):
+        """Row.data key order is visible through str(row), so it must not drift."""
+        descriptor = self._descriptor(
+            '<field index="0" term="http://x/a"/>'
+            '<field term="http://x/country" default="Belgium"/>'
+            '<field index="1" term="http://x/b"/>'
+        )
+
+        assert ["http://x/a", "http://x/country", "http://x/b"] == list(
+            descriptor.field_plan.build_data(["1", "Borneo"])
+        )
+
+    def test_row_with_too_few_columns_raises(self):
+        descriptor = self._descriptor('<field index="3" term="http://x/a"/>')
+
+        with pytest.raises(InvalidArchive):
+            descriptor.field_plan.build_data(["1", "Borneo"])
+
+    def test_the_plan_is_cached(self):
+        descriptor = self._descriptor('<field index="0" term="http://x/a"/>')
+
+        assert descriptor.field_plan is descriptor.field_plan
