@@ -1,0 +1,14 @@
+# Declaring the build backend makes builds reproducible: `python -m build` resolves these
+# requirements in an isolated environment instead of using whatever setuptools happens to be
+# first on PATH.
+#
+# The version floor is not arbitrary. setuptools 69.3 is where sdist filenames became
+# PEP 625 normalised ("python_dwca_reader-X.Y.Z.tar.gz" rather than "python-dwca-reader-..."),
+# and PyPI now rejects the old form outright. Building 0.17.0 with an older setuptools
+# produced an sdist the upload refused.
+#
+# Package metadata deliberately stays in setup.py for now; this file only pins how the build
+# happens, not what is built.
+[build-system]
+requires = ["setuptools>=69.3", "wheel"]
+build-backend = "setuptools.build_meta"
