@@ -9,4 +9,5 @@ build/
 *.egg-info/
 .python-version
 .mypy_cache
-.tmp/requirements-ci.txt
+.tmp/
+requirements-ci.txt
