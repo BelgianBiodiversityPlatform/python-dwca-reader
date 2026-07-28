@@ -158,3 +158,65 @@ class TestRowEquality(unittest.TestCase):
             extension_row = core_row.extensions[0]
 
             assert len({core_row, extension_row}) == 2
+
+
+class TestRowFromFields(unittest.TestCase):
+    def _descriptor(self):
+        import xml.etree.ElementTree as ET
+
+        from dwca.descriptors import DataFileDescriptor
+
+        section = """
+        <core encoding="utf-8" fieldsTerminatedBy="\\t" linesTerminatedBy="\\n" \
+fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files><location>occurrence.txt</location></files>
+            <id index="0" />
+            <field index="0" term="http://x/id"/>
+            <field index="1" term="http://x/locality"/>
+        </core>
+        """
+        return DataFileDescriptor.make_from_metafile_section(ET.fromstring(section))
+
+    def test_from_fields_matches_the_raw_line_constructor(self):
+        from dwca.rows import CoreRow
+
+        descriptor = self._descriptor()
+
+        from_line = CoreRow("1\tBorneo\n", 0, descriptor)
+        from_fields = CoreRow.from_fields(["1", "Borneo"], 0, descriptor)
+
+        assert from_line.data == from_fields.data
+        assert from_line.raw_fields == from_fields.raw_fields
+        assert from_line.id == from_fields.id
+        assert from_line.position == from_fields.position
+        assert from_line.rowtype == from_fields.rowtype
+
+    def test_from_fields_returns_the_right_class(self):
+        from dwca.rows import CoreRow
+
+        row = CoreRow.from_fields(["1", "Borneo"], 0, self._descriptor())
+
+        assert isinstance(row, CoreRow)
+
+
+class TestCsvLineToFieldsQuoting(unittest.TestCase):
+    def test_quote_at_the_edge_of_content_is_preserved(self):
+        """The csv module already un-doubles escaped quotes; stripping afterwards ate a
+        legitimate leading or trailing quote from the field's own content."""
+        assert ['1', 'say "hi"'] == csv_line_to_fields(
+            '"1","say ""hi"""', "\n", ",", '"'
+        )
+        assert ['1', '"hi" she said'] == csv_line_to_fields(
+            '"1","""hi"" she said"', "\n", ",", '"'
+        )
+
+    def test_delimiter_inside_a_quoted_field_still_works(self):
+        """Regression guard for the v0.11.0 fix."""
+        assert ["field 1", "field 2, with comma", "field 3"] == csv_line_to_fields(
+            'field 1,"field 2, with comma",field 3', "\n", ",", '"'
+        )
+
+    def test_unenclosed_line_keeps_quote_characters(self):
+        assert ["1", '"betta" splendens'] == csv_line_to_fields(
+            '1\t"betta" splendens', "\n", "\t", ""
+        )

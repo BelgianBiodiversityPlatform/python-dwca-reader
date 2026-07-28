@@ -2,10 +2,9 @@
 
 import csv
 import sys
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from dwca.descriptors import DataFileDescriptor
-from dwca.exceptions import InvalidArchive
 
 
 class Row(object):
@@ -13,6 +12,8 @@ class Row(object):
 
     This class is intended to be subclassed rather than used directly.
     """
+
+    __slots__ = ("descriptor", "position", "rowtype", "raw_fields", "data")
 
     # Common ground for __str__ between subclasses
     def _build_str(self, source_str, id_str):
@@ -52,33 +53,50 @@ class Row(object):
     def __init__(
         self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor
     ) -> None:
-        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the originating
-        #: data file.
+        self._populate(
+            csv_line_to_fields(
+                csv_line,
+                line_ending=datafile_descriptor.lines_terminated_by,
+                field_ending=datafile_descriptor.fields_terminated_by,
+                fields_enclosed_by=datafile_descriptor.fields_enclosed_by,
+            ),
+            position,
+            datafile_descriptor,
+        )
+
+    @classmethod
+    def from_fields(
+        cls,
+        raw_fields: List[str],
+        position: int,
+        datafile_descriptor: DataFileDescriptor,
+    ) -> "Row":
+        """Build a Row from an already-split data row.
+
+        This is the constructor used by the streaming engine. :meth:`__init__`, which takes a
+        raw CSV line, is kept for backwards compatibility.
+        """
+        row = cls.__new__(cls)
+        row._populate(raw_fields, position, datafile_descriptor)
+        return row
+
+    def _populate(self, raw_fields, position, datafile_descriptor) -> None:
+        #: An instance of :class:`dwca.descriptors.DataFileDescriptor` describing the
+        #: originating data file.
         self.descriptor = datafile_descriptor  # type: DataFileDescriptor
 
-        #: The row position/index (starting at 0) in the source data file. This can be used, for example with
-        #: :meth:`dwca.read.DwCAReader.get_corerow_by_position` or :meth:`dwca.files.CSVDataFile.get_row_by_position`.
+        #: The row position/index (starting at 0) in the source data file. This can be used,
+        #: for example with :meth:`dwca.read.DwCAReader.get_corerow_by_position` or
+        #: :meth:`dwca.files.CSVDataFile.get_row_by_position`.
         self.position = position  # type: int
 
-        #: The csv line type as stated in the archive descriptor.
-        #: (or None if the archive has no descriptor). Examples:
-        #: http://rs.tdwg.org/dwc/terms/Occurrence,
+        #: The csv line type as stated in the archive descriptor (or None if the archive has
+        #: no descriptor). Examples: http://rs.tdwg.org/dwc/terms/Occurrence,
         #: http://rs.gbif.org/terms/1.0/VernacularName, ...
         self.rowtype = self.descriptor.type  # type: Optional[str]
 
-        # self.raw_fields is a list of the csv_line's content
-        #:
-        self.raw_fields = csv_line_to_fields(
-            csv_line,
-            line_ending=self.descriptor.lines_terminated_by,
-            field_ending=self.descriptor.fields_terminated_by,
-            fields_enclosed_by=self.descriptor.fields_enclosed_by,
-        )
-
-        # TODO: raw_fields is a new property: to test
-
-        # TODO: Consistency check ?? self.raw_fields length should be :
-        # num of self.raw_fields described in core_meta + 2 (id and \n)
+        #: A list of the row's raw (unmapped) field values.
+        self.raw_fields = raw_fields
 
         #: A dict containing the Row data, such as::
         #:
@@ -90,29 +108,11 @@ class Row(object):
         #:
         #:      myrow.data['http://rs.tdwg.org/dwc/terms/locality']  # => "Brussels"
         #:
-        #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make such calls less verbose.
-        self.data = {}  # type: Dict[str, str]
-
-        for field_descriptor in self.descriptor.fields:
-            try:
-                column_index = int(field_descriptor["index"])
-                field_row_value = self.raw_fields[column_index]
-            except TypeError:
-                # int() argument must be a string... We don't have an index for this field
-                field_row_value = None
-            except IndexError:
-                msg = (
-                    "The descriptor references a non-existent field (index={i})".format(
-                        i=column_index
-                    )
-                )
-                raise InvalidArchive(msg)
-
-            field_default_value = field_descriptor["default"]
-
-            self.data[field_descriptor["term"]] = (
-                field_row_value or field_default_value or ""
-            )
+        #: .. note:: The :func:`dwca.darwincore.utils.qualname` helper is available to make
+        #:    such calls less verbose.
+        self.data = datafile_descriptor.field_plan.build_data(
+            raw_fields
+        )  # type: Dict[str, str]
 
 
 class CoreRow(Row):
@@ -127,14 +127,14 @@ class CoreRow(Row):
         id_str = "Row id: " + str(self.id)
         return super(CoreRow, self)._build_str("Core file", id_str)
 
-    def __init__(
-        self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor
-    ) -> None:
-        super(CoreRow, self).__init__(csv_line, position, datafile_descriptor)
+    __slots__ = ("id", "source_metadata", "extension_data_files", "_extensions")
 
-        if self.descriptor.id_index is not None:
+    def _populate(self, raw_fields, position, datafile_descriptor) -> None:
+        super(CoreRow, self)._populate(raw_fields, position, datafile_descriptor)
+
+        if datafile_descriptor.id_index is not None:
             #: The row id
-            self.id = self.raw_fields[self.descriptor.id_index]
+            self.id = raw_fields[datafile_descriptor.id_index]
         else:
             self.id = None
 
@@ -232,13 +232,13 @@ class ExtensionRow(Row):
         id_str = "Core row id: " + str(self.core_id)
         return super(ExtensionRow, self)._build_str("Extension file", id_str)
 
-    def __init__(
-        self, csv_line: str, position: int, datafile_descriptor: DataFileDescriptor
-    ) -> None:
-        super(ExtensionRow, self).__init__(csv_line, position, datafile_descriptor)
+    __slots__ = ("core_id",)
+
+    def _populate(self, raw_fields, position, datafile_descriptor) -> None:
+        super(ExtensionRow, self)._populate(raw_fields, position, datafile_descriptor)
 
         #: The id of the core row this extension row is referring to.
-        self.core_id = self.raw_fields[datafile_descriptor.coreid_index]
+        self.core_id = raw_fields[datafile_descriptor.coreid_index]
 
     def __key(self):
         """Return a tuple representing the row. Common ground between equality and hash."""
@@ -269,15 +269,21 @@ def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
     Return a list of fields. Content is not trimmed.
     """
     csv_line = csv_line.rstrip(line_ending)
-    raw_fields = []
 
     if fields_enclosed_by == "":
-        opts = {"quoting": csv.QUOTE_NONE}
-    else:
-        opts = {"quoting": csv.QUOTE_ALL, "quotechar": fields_enclosed_by}
+        # No enclosure: the line is simply split on the separator. This also keeps any
+        # quote character that happens to appear in the content.
+        return csv_line.split(field_ending)
 
-    for row in csv.reader([csv_line], delimiter=field_ending, **opts):
-        for f in row:
-            field = f.strip(fields_enclosed_by)
-            raw_fields.append(field)
-    return raw_fields
+    # The csv module unwraps the enclosure and un-doubles escaped quote characters itself.
+    # Stripping the quote character afterwards would eat a legitimate leading or trailing
+    # one from the field's own content.
+    for row in csv.reader(
+        [csv_line],
+        delimiter=field_ending,
+        quotechar=fields_enclosed_by,
+        quoting=csv.QUOTE_MINIMAL,
+    ):
+        return row
+
+    return []
