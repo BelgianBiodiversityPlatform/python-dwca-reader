@@ -110,6 +110,30 @@ class TestLineTerminators(unittest.TestCase):
         with DwCAReader(path) as dwca:
             assert ["Borneo", "Mumbai"] == [row.data[TERM1] for row in dwca]
 
+    def test_crlf_file_declaring_a_bare_lf_terminator(self):
+        """A CRLF file whose Metafile declares "\\n" must not leave a stray CR on the row.
+
+        This combination is common rather than exotic: git checks text files out with CRLF on
+        Windows, so an archive committed to a repository hits it without anyone choosing it.
+        The library's own dwca-simple-dir fixture behaves this way on a Windows runner, which
+        is how a regression here was caught.
+        """
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b"1\tBorneo\r\n2\tMumbai\r\n",
+        )
+
+        with DwCAReader(path) as dwca:
+            streamed = [row.data[TERM1] for row in dwca]
+            seeked = [
+                dwca.core_file.get_row_by_position(i).data[TERM1] for i in range(2)
+            ]
+
+        assert ["Borneo", "Mumbai"] == streamed
+        assert streamed == seeked
+
     def test_multichar_terminator_is_rejected_by_python_io(self):
         path = build_archive(
             temp_archive_dir(self),

@@ -145,7 +145,11 @@ class CSVDataFile(object):
                     quoting=csv.QUOTE_MINIMAL,
                 )  # type: Iterator[List[str]]
             else:
-                line_ending = descriptor.lines_terminated_by
+                # A carriage return is stripped alongside the declared terminator: archives
+                # routinely declare "\n" while the file itself has CRLF line endings, and the
+                # csv module this replaced dropped the stray CR for us. Without this, the last
+                # field of every row would keep it.
+                line_ending = descriptor.lines_terminated_by + "\r"
                 separator = descriptor.fields_terminated_by
                 source = (line.rstrip(line_ending).split(separator) for line in stream)
 

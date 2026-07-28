@@ -267,7 +267,10 @@ def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
 
     Return a list of fields. Content is not trimmed.
     """
-    csv_line = csv_line.rstrip(line_ending)
+    # A carriage return is stripped alongside the declared terminator: archives routinely
+    # declare "\n" while the file itself has CRLF line endings. This matches both the csv
+    # module's own behavior and CSVDataFile._iter_field_lists, so the two access paths agree.
+    csv_line = csv_line.rstrip(line_ending + "\r")
 
     if fields_enclosed_by == "":
         # No enclosure: the line is simply split on the separator. This also keeps any
