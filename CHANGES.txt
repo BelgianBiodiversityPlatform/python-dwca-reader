@@ -32,6 +32,9 @@ v0.17.0 (unreleased)
 - Changed: DwCAReader.next() now keeps an implicit iterator independent of any for loop over
   the same reader, and starts a new pass after being exhausted. Iterate over the reader
   instead; next() remains only for backwards compatibility.
+- Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator made
+  random access and iteration disagree, so CoreRow.extensions could return silently truncated
+  rows. The line offset index now indexes CSV records rather than physical lines.
 
 v0.16.4 (2024-10-18)
 --------------------

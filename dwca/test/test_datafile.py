@@ -284,3 +284,49 @@ class TestLineOffsets(unittest.TestCase):
         with DwCAReader(path) as dwca:
             with pytest.raises(IndexError):
                 dwca.core_file.get_row_by_position(0)
+
+    def test_multibyte_utf8_and_an_embedded_newline_in_the_same_file(self):
+        """_read_record() must use a byte-accurate read.
+
+        offsets are byte offsets, but a text stream's read(n) counts characters, so a
+        naive `self._file_stream.read(next_offset - start)` would desync as soon as the
+        file contains a character that takes more than one byte in UTF-8 - truncating or
+        over-reading the record. This archive puts multi-byte characters (which make
+        byte count and character count diverge) and a quoted embedded newline (which
+        makes a record span more than one physical line) in the same file, so both
+        failure modes would have to hold simultaneously to pass.
+        """
+        from .archive_builder import build_archive, temp_archive_dir
+
+        # ACCENTED_E is a 2-byte UTF-8 character, SNOWMAN a 3-byte one: both make byte
+        # count and character count diverge. Row 2's third field is quoted and contains
+        # an embedded newline, so that record spans two physical lines.
+        ACCENTED_E = "\xe9"
+        SNOWMAN = "\u2603"
+        payload = (
+            "1,caf" + ACCENTED_E + "," + SNOWMAN + "\n"
+            '2,"multi\nline",' + SNOWMAN + ACCENTED_E + "\n"
+            "3," + ACCENTED_E * 3 + ",end\n"
+        ).encode("utf-8")
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=3,
+            raw_payload=payload,
+            fields_terminated_by=",",
+            fields_enclosed_by='"',
+        )
+
+        with DwCAReader(path) as dwca:
+            streamed = [row.raw_fields for row in dwca]
+            seeked = [
+                dwca.core_file.get_row_by_position(i).raw_fields
+                for i in range(len(streamed))
+            ]
+
+        assert [
+            ["1", "caf" + ACCENTED_E, SNOWMAN],
+            ["2", "multi\nline", SNOWMAN + ACCENTED_E],
+            ["3", ACCENTED_E * 3, "end"],
+        ] == streamed
+        assert streamed == seeked

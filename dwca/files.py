@@ -47,6 +47,10 @@ class CSVDataFile(object):
             newline=self.file_descriptor.lines_terminated_by
         )
 
+        # Opened lazily, on first random-access read: a dedicated binary stream used to
+        # fetch the exact byte range of a record (see _read_record).
+        self._binary_stream = None  # type: Optional[IO]
+
         # The index of line offsets is only needed for random access, so it is built on
         # first use rather than here: opening an archive stays O(1) whatever its size.
         self._line_offsets = None  # type: Optional[array]
@@ -70,10 +74,13 @@ class CSVDataFile(object):
 
     def _get_line_offsets(self) -> array:
         if self._line_offsets is None:
+            descriptor = self.file_descriptor
             self._line_offsets = _build_line_offsets(
                 self._file_path,
-                self.file_descriptor.file_encoding,
-                self.file_descriptor.lines_terminated_by,
+                descriptor.file_encoding,
+                descriptor.lines_terminated_by,
+                descriptor.fields_enclosed_by,
+                descriptor.fields_terminated_by,
             )
         return self._line_offsets
 
@@ -209,8 +216,44 @@ class CSVDataFile(object):
             raise ValueError("The data file has been closed.")
 
         offsets = self._get_line_offsets()
-        self._file_stream.seek(offsets[position + self.lines_to_ignore], 0)
-        return self._file_stream.readline()
+        index = position + self.lines_to_ignore
+        return self._read_record(offsets, index)
+
+    def _get_binary_stream(self) -> IO:
+        # A dedicated handle, separate from self._file_stream: random access reads the
+        # exact byte range of a record (see _read_record), and must not disturb the
+        # position of the text stream used for sequential iteration.
+        if self._binary_stream is None:
+            self._binary_stream = io.open(self._file_path, mode="rb")
+        return self._binary_stream
+
+    def _read_record(self, offsets: array, index: int) -> str:
+        """Return the full text of the record starting at offsets[index].
+
+        offsets holds byte offsets, computed by scanning the file as bytes (see
+        _build_line_offsets). A text stream's read(n) counts characters, not bytes, so
+        turning a byte delta into a character count would silently truncate or over-read
+        wherever a character takes more than one byte in the file's encoding (e.g.
+        multi-byte UTF-8). Reading the exact byte range through a dedicated binary stream
+        and decoding it afterwards keeps this correct regardless of encoding, and also
+        regardless of how many physical lines the record spans (a quoted field may
+        legally contain the line terminator).
+
+        `index` supports the same negative-indexing quirk as a plain list/array
+        (get_row_by_position(-1) is pinned by TestNegativePosition), so `offsets[index]`
+        is used rather than any manual wraparound arithmetic.
+        """
+        start = offsets[index]
+        stream = self._get_binary_stream()
+        stream.seek(start, 0)
+
+        following = index + 1
+        if following < len(offsets) and offsets[following] > start:
+            raw = stream.read(offsets[following] - start)
+        else:
+            raw = stream.read()
+
+        return raw.decode(self.file_descriptor.file_encoding, errors="replace")
 
     def close(self) -> None:
         """Close the file.
@@ -218,14 +261,26 @@ class CSVDataFile(object):
         The content of the file will not be accessible in any way afterwards.
         """
         self._file_stream.close()
+        if self._binary_stream is not None:
+            self._binary_stream.close()
 
 
 def _build_line_offsets(
-    path: str, encoding: str, lines_terminated_by: str, chunk_size: int = 1024 * 1024
+    path: str,
+    encoding: str,
+    lines_terminated_by: str,
+    fields_enclosed_by: str = "",
+    fields_terminated_by: str = "\t",
+    chunk_size: int = 1024 * 1024,
 ) -> array:
-    """Return an array of the byte offset of every line in the file at `path`.
+    """Return an array of the byte offset of every CSV record in the file at `path`.
 
     The values are suitable for seek() on a stream opened with the same encoding.
+
+    Without an enclosure character every terminator ends a record, so this is a plain scan.
+    With one, a terminator inside an enclosed field is data rather than a record boundary
+    (a quoted field may legally contain the line terminator), so the scan tracks whether it
+    is inside an enclosure.
 
     The file is scanned as bytes rather than as decoded text: decoding with
     errors="replace" turns an undecodable byte into U+FFFD, which does not re-encode to the
@@ -236,36 +291,166 @@ def _build_line_offsets(
     tests with 1-4Gb uncompressed archives didn't show any significant slowdown.
     """
     terminator = lines_terminated_by.encode(encoding)
-    terminator_length = len(terminator)
+    tlen = len(terminator)
 
-    line_offsets = array("L", [0])
+    if not fields_enclosed_by:
+        return _scan_plain(path, terminator, tlen, chunk_size)
+
+    quote = fields_enclosed_by.encode(encoding)
+
+    # Fast screen: if no physical line ends with an unbalanced number of quote characters,
+    # then no record spans a line break and the plain scan is already correct. This is the
+    # overwhelmingly common case - including files where EVERY field is quoted - and it costs
+    # one C-level count() per line instead of a Python step per quote character.
+    offsets = _scan_screened(path, terminator, tlen, quote, chunk_size)
+    if offsets is not None:
+        return offsets
+
+    return _scan_enclosed(
+        path,
+        terminator,
+        tlen,
+        quote,
+        fields_terminated_by.encode(encoding),
+        chunk_size,
+    )
+
+
+def _scan_plain(path, terminator, tlen, chunk_size):
+    offsets = array("L", [0])
     buffer = b""
-    base = 0  # absolute offset of buffer[0] within the file
-
+    base = 0
     with io.open(path, "rb") as f:
         while True:
             chunk = f.read(chunk_size)
             if not chunk:
                 break
-
             buffer += chunk
             consumed = 0
             while True:
                 found = buffer.find(terminator, consumed)
                 if found == -1:
                     break
-                consumed = found + terminator_length
-                line_offsets.append(base + consumed)
-
-            # Whatever follows the last terminator stays in the buffer: it may be an
-            # unfinished line, or a terminator straddling the chunk boundary.
+                consumed = found + tlen
+                offsets.append(base + consumed)
             base += consumed
             buffer = buffer[consumed:]
+    _trim(offsets, path)
+    return offsets
 
+
+def _scan_screened(path, terminator, tlen, quote, chunk_size):
+    """Return record offsets if every physical line has balanced quotes, else None."""
+    offsets = array("L", [0])
+    buffer = b""
+    base = 0
+    line_start = 0  # index within buffer of the current line's first byte
+    with io.open(path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            buffer += chunk
+            consumed = 0
+            while True:
+                found = buffer.find(terminator, consumed)
+                if found == -1:
+                    break
+                if buffer.count(quote, line_start, found) % 2:
+                    return None  # a quoted field spans this line break; needs the exact scan
+                consumed = found + tlen
+                line_start = consumed
+                offsets.append(base + consumed)
+            base += consumed
+            buffer = buffer[consumed:]
+            line_start = 0
+    _trim(offsets, path)
+    return offsets
+
+
+def _scan_enclosed(path, terminator, tlen, quote, delimiter, chunk_size):
+    qlen = len(quote)
+    dlen = len(delimiter)
+    # A quote opens a field only at the very start of a record or immediately after a
+    # delimiter; anywhere else it is literal content, which is what csv.reader does under
+    # QUOTE_MINIMAL. Deciding that needs to look back at the bytes before the quote, and
+    # deciding whether a quote is escaped needs to look ahead, so the buffer keeps a margin
+    # of context on both sides of the cursor rather than being trimmed flush to it.
+    margin = max(dlen, tlen, 2 * qlen)
+
+    offsets = array("L", [0])
+    buffer = b""
+    base = 0           # absolute offset of buffer[0]
+    pos = 0            # cursor within buffer
+    in_quotes = False
+    record_start = 0   # absolute offset of the current record
+
+    with io.open(path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            eof = not chunk
+            if not eof:
+                buffer += chunk
+
+            # Without more bytes coming, patterns can be resolved right up to the end.
+            limit = len(buffer) if eof else len(buffer) - margin
+
+            while pos < len(buffer):
+                if in_quotes:
+                    found = buffer.find(quote, pos)
+                    if found == -1 or (not eof and found > limit):
+                        pos = max(pos, limit)
+                        break
+                    if not eof and found + 2 * qlen > len(buffer):
+                        break  # cannot yet tell an escaped quote from a closing one
+                    if buffer.startswith(quote, found + qlen):
+                        pos = found + 2 * qlen
+                        continue
+                    in_quotes = False
+                    pos = found + qlen
+                    continue
+
+                nq = buffer.find(quote, pos)
+                nt = buffer.find(terminator, pos)
+                if nt == -1 and nq == -1:
+                    pos = max(pos, limit)
+                    break
+                if not eof and min(x for x in (nq, nt) if x != -1) > limit:
+                    pos = max(pos, limit)
+                    break
+                if nt != -1 and (nq == -1 or nt < nq):
+                    pos = nt + tlen
+                    offsets.append(base + pos)
+                    record_start = base + pos
+                    continue
+                if base + nq == record_start:
+                    opens = True
+                else:
+                    opens = (
+                        (nq >= dlen and buffer.startswith(delimiter, nq - dlen))
+                        or (nq >= tlen and buffer.startswith(terminator, nq - tlen))
+                    )
+                if opens:
+                    in_quotes = True
+                pos = nq + qlen
+
+            if eof:
+                break
+
+            # Keep `margin` bytes behind the cursor so the look-back above still works after
+            # the buffer is trimmed.
+            drop = max(0, pos - margin)
+            buffer = buffer[drop:]
+            base += drop
+            pos -= drop
+
+    _trim(offsets, path)
+    return offsets
+
+
+def _trim(offsets: array, path: str) -> None:
     # A file ending with the terminator has no extra empty line after it, so the offset
     # pointing at EOF is spurious. This also empties the index for a zero-byte file, which
     # must report no lines at all rather than one empty one.
-    if line_offsets and line_offsets[-1] == os.path.getsize(path):
-        line_offsets.pop()
-
-    return line_offsets
+    if offsets and offsets[-1] == os.path.getsize(path):
+        offsets.pop()

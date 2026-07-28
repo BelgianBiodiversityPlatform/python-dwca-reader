@@ -545,3 +545,48 @@ class TestDuplicateCoreIds(unittest.TestCase):
             index = dwca.core_file.coreid_index
 
         assert {"1": array("L", [0, 1]), "2": array("L", [2])} == index
+
+
+class TestQuotedRecordsSpanningLines(unittest.TestCase):
+    """A quoted field may contain the line terminator. Iteration and random access must agree."""
+
+    QUOTED_META = {"fields_terminated_by": ",", "fields_enclosed_by": '"'}
+
+    def _archive(self, payload, columns=3):
+        return build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=columns,
+            raw_payload=payload,
+            **self.QUOTED_META
+        )
+
+    def test_iteration_and_random_access_agree(self):
+        path = self._archive(b'0,b,a\n1,a,"x\ny\nz"\n2,"x\ny\nz",a\n')
+
+        with DwCAReader(path) as dwca:
+            streamed = [row.raw_fields for row in dwca]
+            seeked = [
+                dwca.core_file.get_row_by_position(i).raw_fields
+                for i in range(len(streamed))
+            ]
+
+        assert [["0", "b", "a"], ["1", "a", "x\ny\nz"], ["2", "x\ny\nz", "a"]] == streamed
+        assert streamed == seeked
+
+    def test_extensions_are_not_truncated(self):
+        """coreid_index is built from the streaming pass but consumed through seeks."""
+        directory = temp_archive_dir(self)
+        path = build_archive(
+            directory,
+            rows=[["1", "Lagopus"], ["2", "Struthio"]],
+            fields_terminated_by=",",
+            fields_enclosed_by='"',
+            extension=[["1", "grouse\nfoo"], ["2", "ostrich"]],
+        )
+
+        with DwCAReader(path) as dwca:
+            per_core = [[e.raw_fields for e in row.extensions] for row in dwca]
+
+        assert [["1", "grouse\nfoo"]] == per_core[0]
+        assert [["2", "ostrich"]] == per_core[1]
