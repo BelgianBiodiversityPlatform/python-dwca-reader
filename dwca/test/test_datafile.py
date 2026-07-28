@@ -385,6 +385,45 @@ class TestIterTerms(unittest.TestCase):
         assert 16 == len(pairs)
 
 
+class TestIterTermsKeyColumns(unittest.TestCase):
+    def test_core_id_is_reachable(self):
+        """dwca-ids.zip declares no <field> for its id column."""
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            from_rows = [row.id for row in dwca]
+            from_terms = [values[0] for values in dwca.iter_terms(["id"])]
+
+        assert ["4", "1", "3", "2"] == from_rows
+        assert from_rows == from_terms
+
+    def test_extension_coreid_is_reachable(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            extension = dwca.extension_files[0]
+
+            from_rows = [row.core_id for row in extension.iter_rows()]
+            from_terms = [values[0] for values in extension.iter_terms(["coreid"])]
+
+        assert from_rows == from_terms
+
+    def test_key_column_mixes_with_real_terms_in_the_requested_order(self):
+        order = "http://rs.tdwg.org/dwc/terms/order"
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            got = list(dwca.iter_terms([order, "id"]))
+            expected = [(row.data[order], row.id) for row in dwca]
+
+        assert expected == got
+
+    def test_id_is_still_unknown_when_the_file_has_no_id_column(self):
+        """A metafile-less archive has no id column, so the name must not resolve."""
+        with DwCAReader(sample_data_path("dwca-simple-csv.zip")) as dwca:
+            with pytest.raises(ValueError):
+                dwca.iter_terms(["id"])
+
+    def test_coreid_is_unknown_on_a_core_file(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            with pytest.raises(ValueError):
+                dwca.iter_terms(["coreid"])
+
+
 class TestClosedFileGuarantee(unittest.TestCase):
     def test_iteration_after_close_raises(self):
         """close() documents that content is not accessible in any way afterwards."""

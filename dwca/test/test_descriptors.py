@@ -908,3 +908,20 @@ class TestTermGetter(unittest.TestCase):
         # break non-list iterables that already worked before).
         assert expected == plan.term_getter(tuple(terms_list))(["first", "second"])
         assert ("second",) == plan.term_getter({"http://x/b"})(["first", "second"])
+
+    def test_a_declared_term_named_id_wins_over_the_key_column(self):
+        """Terms in metafile-less archives are raw header names, so one can be "id".
+
+        The declared term wins, which is what row.data["id"] already returns.
+        """
+        section = """
+        <core encoding="utf-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+            <files><location>occurrence.txt</location></files>
+            <id index="0" />
+            <field index="1" term="id"/>
+        </core>
+        """
+        descriptor = DataFileDescriptor.make_from_metafile_section(ET.fromstring(section))
+        getter = descriptor.field_plan.term_getter(["id"])
+
+        assert ("declared",) == getter(["key", "declared"])

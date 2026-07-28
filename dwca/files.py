@@ -73,6 +73,13 @@ class CSVDataFile(object):
                                                             qn('decimalLatitude')]):
                 pass
 
+        The special names "id" and "coreid" request the file's key column - the same names
+        used by :attr:`dwca.descriptors.DataFileDescriptor.headers`. "id" resolves for a core
+        file, "coreid" for an extension file; the other one raises, as does either name when
+        the file has no such column (metafile-less archives have neither). If the file
+        declares an actual term of the same name, that declared term takes precedence, which
+        matches what `Row.data['id']` already returns.
+
         :param terms: a list of full term identifiers.
         :raises ValueError: if any of `terms` is not present in this data file.
         """

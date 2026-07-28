@@ -267,7 +267,7 @@ class DataFileDescriptor(object):
         """A cached :class:`FieldPlan` turning a split data row into a term -> value dict."""
         plan = self.__dict__.get("_field_plan")
         if plan is None:
-            plan = FieldPlan(self.fields)
+            plan = FieldPlan(self.fields, self.id_index, self.coreid_index)
             self.__dict__["_field_plan"] = plan
         return plan
 
@@ -335,6 +335,8 @@ class FieldPlan(object):
 
     __slots__ = (
         "_fields",
+        "_id_index",
+        "_coreid_index",
         "_contiguous_terms",
         "_terms",
         "_getter",
@@ -345,8 +347,10 @@ class FieldPlan(object):
         "required_columns",
     )
 
-    def __init__(self, fields):
+    def __init__(self, fields, id_index=None, coreid_index=None):
         self._fields = fields
+        self._id_index = id_index
+        self._coreid_index = coreid_index
 
         indexed = [f for f in fields if f["index"] is not None]
         indexes = [f["index"] for f in indexed]
@@ -428,6 +432,15 @@ class FieldPlan(object):
         terms = list(terms)
 
         by_term = {f["term"]: f for f in self._fields}
+
+        # "id" and "coreid" name the archive's key columns. These are the names this library
+        # already uses for them in headers(), short_headers() and pd_read(). A declared term of
+        # the same name wins, which matters for metafile-less archives whose terms are raw CSV
+        # header names, and keeps this consistent with row.data.
+        if "id" not in by_term and self._id_index is not None:
+            by_term["id"] = {"term": "id", "index": self._id_index, "default": None}
+        if "coreid" not in by_term and self._coreid_index is not None:
+            by_term["coreid"] = {"term": "coreid", "index": self._coreid_index, "default": None}
 
         missing = [term for term in terms if term not in by_term]
         if missing:

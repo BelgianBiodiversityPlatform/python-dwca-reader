@@ -6,6 +6,8 @@ v0.17.0 (unreleased)
   roughly 2.9x faster than iterating over rows and reading the same terms, and roughly 10x
   faster than the pre-rewrite implementation, on a 400000-row archive reading 14 of 50
   columns, on one machine; see benchmarks/README.md for the full measurement.
+- New: iter_terms() accepts "id" and "coreid" to request the archive's key columns, which
+  often have no declared term of their own. These are the names headers() already uses.
 - Performance: iterating over an archive is a single streaming pass instead of one seek and
   one throwaway csv.reader per row. Measured roughly 3.8-4.0x faster on a 400000-row GBIF
   download on one machine; see benchmarks/README.md for the full before/after measurement.

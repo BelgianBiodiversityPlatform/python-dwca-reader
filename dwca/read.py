@@ -269,6 +269,13 @@ class DwCAReader(object):
                     [qn('occurrenceID'), qn('decimalLatitude'), qn('decimalLongitude')]):
                 pass
 
+        The special name "id" requests the core file's id column - the same name used by
+        :attr:`dwca.descriptors.DataFileDescriptor.headers`. It resolves even when the
+        Metafile declares no ``<field>`` for that column, which is the common case. If the
+        core file declares an actual term named "id" (possible in metafile-less archives,
+        where terms are raw CSV header names), that declared term takes precedence, which
+        matches what `CoreRow.data['id']` already returns.
+
         :param terms: a list of full term identifiers.
         :raises ValueError: if any of `terms` is not present in the core data file.
         """

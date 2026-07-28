@@ -116,6 +116,22 @@ A single term still yields a one-element tuple:
     for (locality,) in dwca.iter_terms([qn('locality')]):
         print(locality)
 
+The special name ``"id"`` requests the core file's id column - the same name used by
+:attr:`~dwca.descriptors.DataFileDescriptor.headers`. It can be mixed freely with regular
+terms, and it resolves even when the Metafile declares no ``<field>`` for that column, which
+is the common case:
+
+.. code:: python
+
+    for identifier, family in dwca.iter_terms(['id', qn('family')]):
+        print(identifier, family)
+
+If the Metafile happens to declare a field literally named ``"id"`` (this occurs with
+metafile-less archives, where terms are the raw CSV header names), that declared term takes
+precedence over the id column, matching what ``row.data['id']`` already returns. The same
+applies to ``"coreid"`` when calling :meth:`~dwca.files.CSVDataFile.iter_terms` on an
+extension file (``dwca.extension_files[i]``) instead of on the reader.
+
 
 Access to Darwin Core Archives with extensions (star schema)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
