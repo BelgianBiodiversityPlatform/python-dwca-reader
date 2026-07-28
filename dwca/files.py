@@ -116,6 +116,9 @@ class CSVDataFile(object):
         Header lines are skipped. This is a single forward pass over a dedicated stream, so
         it is safe to run several of these concurrently and alongside random access.
         """
+        if self._file_stream.closed:
+            raise ValueError("The data file has been closed.")
+
         descriptor = self.file_descriptor
         quoted = descriptor.fields_enclosed_by != ""
 

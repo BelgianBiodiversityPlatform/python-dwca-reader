@@ -383,3 +383,24 @@ class TestIterTerms(unittest.TestCase):
             ]
 
         assert 16 == len(pairs)
+
+
+class TestClosedFileGuarantee(unittest.TestCase):
+    def test_iteration_after_close_raises(self):
+        """close() documents that content is not accessible in any way afterwards."""
+        with DwCAReader(sample_data_path("dwca-simple-dir")) as dwca:
+            data_file = dwca.core_file
+
+            assert list(data_file.iter_rows())  # works while open
+            data_file.close()
+
+            with pytest.raises(ValueError):
+                list(data_file.iter_rows())
+
+    def test_reader_iteration_after_close_raises(self):
+        dwca = DwCAReader(sample_data_path("dwca-simple-dir"))
+        assert list(dwca)
+        dwca.close()
+
+        with pytest.raises(ValueError):
+            list(dwca)

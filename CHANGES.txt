@@ -4,6 +4,8 @@ v0.17.0 (unreleased)
 - Removed the undeclared typing_extensions dependency (dwca.star_record now uses
   typing.Literal). Python 3.7, which reached end of life in June 2023, is no longer
   supported; the minimum is now 3.8.
+- Fixed: iterating a CSVDataFile or a DwCAReader after close() silently returned rows instead
+  of raising, for archives read directly from a directory.
 - Fixed: DataFileDescriptor.headers dropped the column at index 0 for archives without a
   metafile, which also made pd_read() promote that column to the DataFrame index.
 - Fixed: hash() on a CoreRow or an ExtensionRow raised TypeError. Rows have been documented
