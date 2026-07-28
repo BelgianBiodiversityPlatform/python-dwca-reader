@@ -1077,6 +1077,29 @@ class TestDwCAReader(unittest.TestCase):
         # The next line will throw an exception if metadata.xml can't be parsed
         DwCAReader(sample_data_path("gbif-results-whitespace-in-xml.zip"))
 
+    def test_nested_iteration_is_independent(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            pairs = [(outer.id, inner.id) for outer in dwca for inner in dwca]
+
+        assert 16 == len(pairs)
+
+    def test_lookup_inside_a_loop_terminates(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            seen = []
+            for row in dwca:
+                seen.append(row.id)
+                dwca.get_corerow_by_id("1")
+
+        assert ["4", "1", "3", "2"] == seen
+
+    def test_next_still_works(self):
+        dwca = DwCAReader(sample_data_path("dwca-ids.zip"))
+        try:
+            assert "4" == dwca.next().id
+            assert "1" == dwca.next().id
+        finally:
+            dwca.close()
+
 
 if __name__ == "__main__":
     unittest.main()

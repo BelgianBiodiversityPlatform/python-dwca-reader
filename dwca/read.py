@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from errno import ENOENT
 from tempfile import mkdtemp
-from typing import List, Optional, Dict, Any, IO, Tuple
+from typing import Iterator, List, Optional, Dict, Any, IO, Tuple
 from xml.etree.ElementTree import Element
 
 import dwca.vendor
@@ -100,6 +100,7 @@ class DwCAReader(object):
 
         #: The path to the Darwin Core Archive file, as passed to the constructor.
         self.archive_path = path  # type: str
+        self._default_iterator = None  # type: Optional[Iterator[CoreRow]]
 
         if os.path.isdir(
             self.archive_path
@@ -536,22 +537,36 @@ class DwCAReader(object):
         """Return `True` if the Core file of the archive contains the `term_url` term."""
         return term_url in self.core_file.file_descriptor.terms
 
-    def __iter__(self) -> "DwCAReader":
-        self._corefile_pointer = 0
-        return self
+    def __iter__(self) -> Iterator[CoreRow]:
+        # A fresh iterator each time, so nesting loops (or calling get_corerow_by_id() from
+        # inside one) behaves as expected.
+        return self._iter_core_rows()
+
+    def _iter_core_rows(self) -> Iterator[CoreRow]:
+        extension_files = self.extension_files
+        source_metadata = self.source_metadata
+
+        for row in self.core_file.iter_rows():
+            # Set up linked data so the CoreRow will know about them
+            row.link_extension_files(extension_files)
+            row.link_source_metadata(source_metadata)
+            yield row
 
     def __next__(self):
         return self.next()
 
     def next(self) -> CoreRow:  # NOQA
+        """Return the next core row.
+
+        .. deprecated::
+            Iterate over the reader instead. This method shares a single implicit iterator
+            between all callers.
+        """
+        if self._default_iterator is None:
+            self._default_iterator = self._iter_core_rows()
+
         try:
-            row = self.core_file.get_row_by_position(self._corefile_pointer)
-
-            # Set up linked data so the CoreRow will know about them
-            row.link_extension_files(self.extension_files)
-            row.link_source_metadata(self.source_metadata)
-
-            self._corefile_pointer = self._corefile_pointer + 1
-            return row
-        except IndexError:
-            raise StopIteration
+            return next(self._default_iterator)
+        except StopIteration:
+            self._default_iterator = None
+            raise
