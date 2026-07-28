@@ -330,3 +330,56 @@ class TestLineOffsets(unittest.TestCase):
             ["3", ACCENTED_E * 3, "end"],
         ] == streamed
         assert streamed == seeked
+
+
+class TestIterTerms(unittest.TestCase):
+    def test_matches_the_row_api(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            terms = sorted(dwca.core_file.file_descriptor.terms)
+
+            via_rows = [tuple(row.data[t] for t in terms) for row in dwca]
+            via_terms = list(dwca.core_file.iter_terms(terms))
+
+        assert via_rows == via_terms
+
+    def test_works_on_an_extension_file(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            extension = dwca.extension_files[0]
+            terms = sorted(extension.file_descriptor.terms)
+
+            via_rows = [tuple(r.data[t] for t in terms) for r in extension.iter_rows()]
+            via_terms = list(extension.iter_terms(terms))
+
+        assert via_rows == via_terms
+
+    def test_subset_of_columns(self):
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            values = list(
+                dwca.core_file.iter_terms(["http://rs.tdwg.org/dwc/terms/locality"])
+            )
+
+        assert [("Borneo",), ("Mumbai",)] == values
+
+    def test_unknown_term_raises_before_reading_anything(self):
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            with pytest.raises(ValueError):
+                dwca.core_file.iter_terms(["http://rs.tdwg.org/dwc/terms/nope"])
+
+    def test_default_only_term(self):
+        with DwCAReader(sample_data_path("dwca-test-default.zip")) as dwca:
+            values = list(
+                dwca.core_file.iter_terms(["http://rs.tdwg.org/dwc/terms/country"])
+            )
+
+        assert [("Belgium",), ("Belgium",)] == values
+
+    def test_can_be_nested(self):
+        with DwCAReader(sample_data_path("dwca-ids.zip")) as dwca:
+            term = ["http://rs.tdwg.org/dwc/terms/family"]
+            pairs = [
+                (a, b)
+                for a in dwca.core_file.iter_terms(term)
+                for b in dwca.core_file.iter_terms(term)
+            ]
+
+        assert 16 == len(pairs)

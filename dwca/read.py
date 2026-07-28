@@ -257,6 +257,23 @@ class DwCAReader(object):
 
         return df_or_textreader
 
+    def iter_terms(self, terms: List[str]) -> Iterator[tuple]:
+        """Yield one tuple of values per core row, holding `terms` in the order given.
+
+        A faster alternative to iterating over the reader when only a few terms are needed.
+        See :meth:`dwca.files.CSVDataFile.iter_terms`.
+
+        Usage::
+
+            for identifier, latitude, longitude in dwca.iter_terms(
+                    [qn('occurrenceID'), qn('decimalLatitude'), qn('decimalLongitude')]):
+                pass
+
+        :param terms: a list of full term identifiers.
+        :raises ValueError: if any of `terms` is not present in the core data file.
+        """
+        return self.core_file.iter_terms(terms)
+
     def orphaned_extension_rows(self) -> Dict[str, Dict[str, List[int]]]:
         """Return a dict of the orphaned extension rows.
 

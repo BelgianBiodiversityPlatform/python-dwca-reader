@@ -35,6 +35,9 @@ v0.17.0 (unreleased)
 - Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator made
   random access and iteration disagree, so CoreRow.extensions could return silently truncated
   rows. The line offset index now indexes CSV records rather than physical lines.
+- New: DwCAReader.iter_terms() and CSVDataFile.iter_terms() yield a tuple of values per row
+  for a chosen list of terms, skipping both the Row object and its data dict. Roughly twice
+  as fast as iterating over rows when only a few terms are needed.
 
 v0.16.4 (2024-10-18)
 --------------------

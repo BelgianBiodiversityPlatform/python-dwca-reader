@@ -1100,6 +1100,19 @@ class TestDwCAReader(unittest.TestCase):
         finally:
             dwca.close()
 
+    def test_iter_terms_on_the_reader(self):
+        with DwCAReader(sample_data_path("dwca-simple-test-archive.zip")) as dwca:
+            values = list(
+                dwca.iter_terms(
+                    [
+                        "http://rs.tdwg.org/dwc/terms/locality",
+                        "http://rs.tdwg.org/dwc/terms/family",
+                    ]
+                )
+            )
+
+        assert [("Borneo", "Tetraodontidae"), ("Mumbai", "Osphronemidae")] == values
+
 
 if __name__ == "__main__":
     unittest.main()

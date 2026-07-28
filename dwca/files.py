@@ -60,6 +60,32 @@ class CSVDataFile(object):
 
         self._coreid_index = None  # type: Optional[Dict[str, List[int]]]
 
+    def iter_terms(self, terms: List[str]) -> Iterator[tuple]:
+        """Yield one tuple of values per data row, holding `terms` in the order given.
+
+        This is a faster alternative to iterating over rows for consumers that only need a
+        few of the file's columns: neither a :class:`dwca.rows.Row` object nor its term to
+        value dict is built. A single term still yields a one-element tuple.
+
+        Usage::
+
+            for locality, latitude in data_file.iter_terms([qn('locality'),
+                                                            qn('decimalLatitude')]):
+                pass
+
+        :param terms: a list of full term identifiers.
+        :raises ValueError: if any of `terms` is not present in this data file.
+        """
+        # The getter is resolved eagerly so an unknown term is reported by this call rather
+        # than on first iteration.
+        getter = self.file_descriptor.field_plan.term_getter(terms)
+
+        return self._iter_terms(getter)
+
+    def _iter_terms(self, getter) -> Iterator[tuple]:
+        for fields in self._iter_field_lists():
+            yield getter(fields)
+
     def __str__(self) -> str:
         return self.file_descriptor.file_location
 

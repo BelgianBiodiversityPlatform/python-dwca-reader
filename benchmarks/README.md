@@ -145,3 +145,45 @@ numbers moved by roughly a third, but the ratio held (3.7x-4.0x measured back to
 time, against 3.8x-4.0x recorded above). Do not read the absolute seconds as a target or a
 regression signal in isolation; re-measure both sides back to back before drawing any
 conclusion from them.
+
+## iter_terms
+
+`DwCAReader.iter_terms()` / `CSVDataFile.iter_terms()` skip building both the `Row` object
+and its term-to-value dict, yielding a plain tuple of the requested terms per row instead.
+Measured against the row API on the same 400000-row, 50-column archive generated above
+(`/tmp/dwca-bench`), reading 14 terms per row in both cases, both paths measured back to
+back in one run (rerun twice to check consistency):
+
+    # Row path
+    with DwCAReader(ARCHIVE, skip_metadata=True) as dwca:
+        for row in dwca:
+            data = row.data
+            for term in TERMS:
+                data.get(term)
+
+    # iter_terms path
+    with DwCAReader(ARCHIVE, skip_metadata=True) as dwca:
+        for values in dwca.iter_terms(TERMS):
+            pass
+
+Run 1:
+
+    rows path      2.86s
+    iter_terms     0.98s
+    ratio (rows/iter_terms): 2.93x
+
+Run 2 (immediately after, same process type):
+
+    rows path      2.13s
+    iter_terms     0.75s
+    ratio (rows/iter_terms): 2.85x
+
+Run 3:
+
+    rows path      2.12s
+    iter_terms     0.72s
+    ratio (rows/iter_terms): 2.95x
+
+Consistent at roughly 2.85x-2.95x across three back-to-back runs, comfortably above the
+"roughly half the rows path" (2x) expectation. As with the numbers above, absolute seconds
+vary by session; only the ratio, measured back to back, is meaningful.
