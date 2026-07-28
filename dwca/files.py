@@ -168,9 +168,7 @@ def _get_all_line_offsets(f: IO, encoding: str) -> array:
 
     # We use an array of Longs instead of a list to store the index.
     # It's much more memory efficient, and a few tests w/ 1-4Gb uncompressed archives
-    # didn't show any significant slowdown.
-    #
-    # See mini-benchmark in minibench.py
+    # didn't show any significant slowdown (see benchmarks/ for current measurements).
     line_offsets = array("L")
     offset = 0
     for line in f:
