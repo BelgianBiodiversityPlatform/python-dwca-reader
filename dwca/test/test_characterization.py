@@ -202,3 +202,165 @@ class TestEncodings(unittest.TestCase):
             # ["caf\ufffd", "Mumbai", "Borneo"], which is the whole point of the fix.
             with pytest.raises(InvalidArchive):
                 list(dwca)
+
+
+class TestQuoting(unittest.TestCase):
+    def _read_localities(self, payload):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            fields_terminated_by=",",
+            fields_enclosed_by='"',
+            raw_payload=payload,
+        )
+
+        with DwCAReader(path) as dwca:
+            return [row.data[TERM1] for row in dwca]
+
+    def test_delimiter_inside_a_quoted_field(self):
+        """Regression guard for the v0.11.0 fix. Any hand-rolled parser breaks this."""
+        assert ["plain, with comma"] == self._read_localities(
+            b'"1","plain, with comma"\n'
+        )
+
+    def test_quote_in_the_middle_of_content(self):
+        assert ['say "hi" there'] == self._read_localities(b'"1","say ""hi"" there"\n')
+
+    def test_quote_at_the_edge_of_content_is_eaten(self):
+        # CHARACTERIZATION: wrong, see B3. csv parses this correctly to 'say "hi"', then
+        # the trailing .strip(fields_enclosed_by) removes the legitimate closing quote.
+        assert ['say "hi'] == self._read_localities(b'"1","say ""hi"""\n')
+
+        # Same at the start of the field.
+        assert ['hi" she said'] == self._read_localities(b'"1","""hi"" she said"\n')
+
+    def test_quote_characters_are_kept_when_the_archive_declares_no_enclosure(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b'1\t"betta" splendens\n',
+        )
+
+        with DwCAReader(path) as dwca:
+            assert '"betta" splendens' == list(dwca)[0].data[TERM1]
+
+
+class TestDegenerateRows(unittest.TestCase):
+    def test_row_with_fewer_columns_than_declared(self):
+        path = build_archive(
+            temp_archive_dir(self), rows=[], columns=3, raw_payload=b"1\tBorneo\n"
+        )
+
+        with DwCAReader(path) as dwca:
+            with pytest.raises(InvalidArchive):
+                list(dwca)
+
+    def test_row_with_more_columns_than_declared(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b"1\tBorneo\textra\n",
+        )
+
+        with DwCAReader(path) as dwca:
+            rows = list(dwca)
+
+        # Extra columns are ignored by data but kept in raw_fields.
+        assert "Borneo" == rows[0].data[TERM1]
+        assert ["1", "Borneo", "extra"] == rows[0].raw_fields
+
+    def test_blank_line_in_the_middle(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b"1\tBorneo\n\n2\tMumbai\n",
+        )
+
+        with DwCAReader(path) as dwca:
+            with pytest.raises(InvalidArchive):
+                list(dwca)
+
+    def test_no_trailing_newline_at_eof(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            raw_payload=b"1\tBorneo\n2\tMumbai",
+        )
+
+        with DwCAReader(path) as dwca:
+            assert ["Borneo", "Mumbai"] == [row.data[TERM1] for row in dwca]
+
+    def test_empty_core_file(self):
+        path = build_archive(
+            temp_archive_dir(self), rows=[], columns=2, raw_payload=b""
+        )
+
+        with DwCAReader(path) as dwca:
+            assert [] == list(dwca)
+            assert [] == dwca.rows
+
+    def test_header_only_core_file(self):
+        path = build_archive(
+            temp_archive_dir(self),
+            rows=[],
+            columns=2,
+            ignore_header_lines=1,
+            raw_payload=b"id\tlocality\n",
+        )
+
+        with DwCAReader(path) as dwca:
+            assert [] == list(dwca)
+
+
+class TestIterationSemantics(unittest.TestCase):
+    def _archive(self):
+        return build_archive(
+            temp_archive_dir(self),
+            rows=[["1", "Borneo"], ["2", "Mumbai"], ["3", "Paris"]],
+        )
+
+    def test_sequential_re_iteration(self):
+        with DwCAReader(self._archive()) as dwca:
+            assert 3 == len(list(dwca))
+            assert 3 == len(list(dwca))
+
+    def test_nested_iteration(self):
+        with DwCAReader(self._archive()) as dwca:
+            pairs = []
+            for outer in dwca:
+                for inner in dwca:
+                    pairs.append((outer.id, inner.id))
+                if len(pairs) > 20:
+                    break
+
+        # CHARACTERIZATION: wrong, see B4. DwCAReader is its own iterator with one shared
+        # pointer, so the inner loop consumes it and the outer loop ends after one pass.
+        assert 3 == len(pairs)
+
+    def test_lookup_inside_a_loop(self):
+        seen = []
+        with DwCAReader(self._archive()) as dwca:
+            for row in dwca:
+                seen.append(row.id)
+                dwca.get_corerow_by_id("2")
+                if len(seen) > 8:
+                    break
+
+        # CHARACTERIZATION: wrong, see B4. get_corerow_by_id() resets the shared pointer,
+        # so this never terminates. Without the break it would loop forever.
+        assert len(seen) > 3
+
+    def test_random_access_interleaved_with_iteration_is_safe(self):
+        with DwCAReader(self._archive()) as dwca:
+            seen = []
+            for row in dwca:
+                seen.append(row.id)
+                # This path is offset-based, so it does not disturb iteration.
+                assert "1" == dwca.core_file.get_row_by_position(0).id
+
+        assert ["1", "2", "3"] == seen
