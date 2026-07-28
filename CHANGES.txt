@@ -3,6 +3,8 @@
 
 - Fixed: DataFileDescriptor.headers dropped the column at index 0 for archives without a
   metafile, which also made pd_read() promote that column to the DataFrame index.
+- Fixed: hash() on a CoreRow or an ExtensionRow raised TypeError. Rows have been documented
+  as hashable since 0.3.3 but never were.
 
 v0.16.4 (2024-10-18)
 --------------------

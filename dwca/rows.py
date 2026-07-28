@@ -201,7 +201,10 @@ class CoreRow(Row):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.__key())
+        # __key() embeds the data dict, the raw field list and the lazily-loaded extensions,
+        # none of which are hashable. Equal rows still hash equally because this is a subset
+        # of the equality key.
+        return hash((self.descriptor, self.id, self.rowtype, self.position))
 
 
 class ExtensionRow(Row):
@@ -241,7 +244,7 @@ class ExtensionRow(Row):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.__key())
+        return hash((self.descriptor, self.core_id, self.rowtype, self.position))
 
 
 def csv_line_to_fields(csv_line, line_ending, field_ending, fields_enclosed_by):
