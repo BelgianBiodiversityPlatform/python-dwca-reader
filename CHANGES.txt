@@ -34,10 +34,10 @@ v0.17.0 (unreleased)
 - Fixed: DwCAReader was its own iterator, so nesting two loops over the same reader silently
   ran the inner one once, and calling get_corerow_by_id() or get_corerow_by_position() from
   inside a loop never terminated. Each iteration now gets its own iterator.
-- Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator made
-  iteration raise InvalidArchive and random access (e.g. CoreRow.extensions) silently return
-  a truncated row. Such archives are now read correctly. The line offset index now indexes
-  CSV records rather than physical lines.
+- Fixed: in archives using fieldsEnclosedBy, a field containing the line terminator was read
+  as truncated at that terminator, by iteration and by random access alike, and the rows after
+  it were misaligned (often raising InvalidArchive on an unrelated row). Such archives are now
+  read correctly: the line offset index indexes CSV records rather than physical lines.
 - Changed: removed the undeclared typing_extensions dependency (dwca.star_record now uses
   typing.Literal). Python 3.7, which reached end of life in June 2023, is no longer
   supported; the minimum is now 3.8.
