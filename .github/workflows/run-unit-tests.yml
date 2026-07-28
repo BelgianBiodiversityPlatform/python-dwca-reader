@@ -22,5 +22,18 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
       - run: python -m pip install .
-      - run: pip install -r requirements-dev.txt
+      - name: Install dev dependencies
+        shell: bash
+        run: |
+          if [[ "${{ matrix.python-version }}" == pypy* ]]; then
+            # pandas publishes no PyPy wheels, so pip falls back to building numpy from
+            # source and its C++ fails to compile on these runners. pandas is an optional
+            # dependency of this library and the tests that need it skip themselves, so PyPy
+            # runs the suite without it. That also gives the "pandas is not installed" code
+            # path the only CI coverage it has.
+            grep -v '^pandas' requirements-dev.txt > requirements-ci.txt
+            pip install -r requirements-ci.txt
+          else
+            pip install -r requirements-dev.txt
+          fi
       - run: pytest
