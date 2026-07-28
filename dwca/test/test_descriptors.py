@@ -455,6 +455,102 @@ class TestDataFileDescriptor(unittest.TestCase):
             assert fields == descriptor.core.terms
 
 
+class TestDataFileDescriptorEquality(unittest.TestCase):
+    """Unit tests for DataFileDescriptor equality and hashing.
+
+    Descriptors compare by value (the data file layout they describe) rather than by object
+    identity, so descriptors built twice from the same archive - by two DwCAReader instances,
+    for example - compare equal.
+    """
+
+    CORE_SECTION = """
+    <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy=""
+    ignoreHeaderLines="0" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+            <location>occurrence.txt</location>
+        </files>
+        <id index="0" />
+        <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+        <field default="Belgium" term="http://rs.tdwg.org/dwc/terms/country"/>
+    </core>
+    """
+
+    def _make(self, section=None):
+        return DataFileDescriptor.make_from_metafile_section(
+            ET.fromstring(section if section is not None else self.CORE_SECTION)
+        )
+
+    def test_descriptors_from_identical_sections_are_equal(self):
+        one = self._make()
+        two = self._make()
+
+        assert one is not two
+        # raw_element is an ET.Element, which compares by identity: these two are distinct
+        # objects, so equality can only hold if raw_element is left out of the comparison.
+        assert one.raw_element is not two.raw_element
+        assert one == two
+        assert not (one != two)
+        assert hash(one) == hash(two)
+        assert len({one, two}) == 1
+
+    def test_descriptors_of_the_same_archive_read_twice_are_equal(self):
+        path = sample_data_path("dwca-2extensions.zip")
+
+        with DwCAReader(path) as one, DwCAReader(path) as two:
+            assert one.descriptor.core == two.descriptor.core
+
+            for ext_one, ext_two in zip(
+                one.descriptor.extensions, two.descriptor.extensions
+            ):
+                assert ext_one == ext_two
+
+    def test_core_and_extension_descriptors_differ(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            core = dwca.descriptor.core
+
+            for extension in dwca.descriptor.extensions:
+                assert core != extension
+
+    def test_descriptors_differing_by_ignored_header_lines_differ(self):
+        one = self._make()
+        two = self._make(
+            self.CORE_SECTION.replace('ignoreHeaderLines="0"', 'ignoreHeaderLines="1"')
+        )
+
+        # Everything but the number of header lines to skip is identical here. That number
+        # lives in raw_element, which is excluded from the comparison, so it's only taken into
+        # account through the lines_to_ignore property.
+        assert one.lines_to_ignore != two.lines_to_ignore
+        assert one != two
+
+    def test_descriptors_differing_by_fields_differ(self):
+        one = self._make()
+        two = self._make(
+            self.CORE_SECTION.replace(
+                'term="http://rs.tdwg.org/dwc/terms/scientificName"',
+                'term="http://rs.tdwg.org/dwc/terms/locality"',
+            )
+        )
+
+        assert one != two
+
+    def test_descriptors_differing_by_file_location_differ(self):
+        one = self._make()
+        two = self._make(
+            self.CORE_SECTION.replace("occurrence.txt", "other_occurrences.txt")
+        )
+
+        assert one != two
+
+    def test_comparison_with_other_types_returns_false(self):
+        descriptor = self._make()
+
+        assert descriptor != "not a descriptor"
+        assert descriptor != 42
+        assert descriptor != None  # noqa: E711 - we're testing __eq__, not identity
+        assert not (descriptor == "not a descriptor")
+
+
 class TestArchiveDescriptor(unittest.TestCase):
     """Unit tests for ArchiveDescriptor class."""
 

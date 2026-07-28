@@ -210,6 +210,57 @@ class DataFileDescriptor(object):
             fields_terminated_by=fields_terminated_by,
         )
 
+    def __key(self):
+        """Return a tuple describing the data file layout. Common ground between equality and hash.
+
+        Deliberately excludes `raw_element`: it's an xml.etree.ElementTree.Element, which
+        compares by identity, so including it would make two descriptors built from the same
+        metafile section never compare equal. `lines_to_ignore` stands in for the only part of
+        `raw_element` that affects parsing (the ignoreHeaderLines attribute).
+
+        `created_from_file` is excluded too: it records where the descriptor came from, not how
+        the file is laid out, and its only behavioral effect is already covered by
+        `lines_to_ignore`. `represents_extension` is excluded as it's just the negation of
+        `represents_corefile`.
+        """
+        return (
+            self.file_location,
+            self.file_encoding,
+            self.type,
+            self.id_index,
+            self.coreid_index,
+            self.represents_corefile,
+            self.fields,
+            self.lines_terminated_by,
+            self.fields_enclosed_by,
+            self.fields_terminated_by,
+            self.lines_to_ignore,
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, DataFileDescriptor):
+            return NotImplemented
+
+        return self.__key() == other.__key()
+
+    def __hash__(self):
+        # __key() embeds `fields`, a list of dicts, which isn't hashable. Equal descriptors
+        # still hash equally because this is a subset of the equality key.
+        return hash(
+            (
+                self.file_location,
+                self.file_encoding,
+                self.type,
+                self.id_index,
+                self.coreid_index,
+                self.represents_corefile,
+                self.lines_terminated_by,
+                self.fields_enclosed_by,
+                self.fields_terminated_by,
+                self.lines_to_ignore,
+            )
+        )
+
     @property
     def terms(self) -> Set[str]:
         """Return a Python set containing all the Darwin Core terms appearing in file."""

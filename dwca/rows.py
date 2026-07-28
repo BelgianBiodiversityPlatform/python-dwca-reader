@@ -206,10 +206,13 @@ class CoreRow(Row):
         )
 
     def __eq__(self, other):
-        return self.__key() == other.__key()
+        # The isinstance test is required, not just defensive: __key is name-mangled, so
+        # other.__key() means other._CoreRow__key(), which an ExtensionRow (or any non-row)
+        # doesn't have. Without it, comparing to anything else raises AttributeError.
+        if not isinstance(other, CoreRow):
+            return NotImplemented
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return self.__key() == other.__key()
 
     def __hash__(self):
         # __key() embeds the data dict, the raw field list and the lazily-loaded extensions,
@@ -249,10 +252,12 @@ class ExtensionRow(Row):
         )
 
     def __eq__(self, other):
-        return self.__key() == other.__key()
+        # See the note on CoreRow.__eq__: __key is name-mangled, so this test is what keeps
+        # comparisons against a CoreRow (or anything else) from raising AttributeError.
+        if not isinstance(other, ExtensionRow):
+            return NotImplemented
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return self.__key() == other.__key()
 
     def __hash__(self):
         return hash((self.descriptor, self.core_id, self.rowtype, self.position))

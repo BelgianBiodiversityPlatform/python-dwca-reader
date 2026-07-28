@@ -80,12 +80,7 @@ class TestRowHashing(unittest.TestCase):
             assert len({one, two}) == 1
 
     def test_equal_rows_hash_equally(self):
-        # Uses two independently-fetched (but equal) CoreRow instances from the *same* reader,
-        # rather than from two separate readers. DataFileDescriptor has no __eq__ of its own, so
-        # instances from two separate readers never compare equal (identity-based comparison) -
-        # that is a pre-existing bug unrelated to hashing, out of scope for this fix. Within a
-        # single reader, descriptor is the same shared instance, so this still genuinely exercises
-        # "two distinct objects that compare equal must hash equal".
+        # Two distinct objects that compare equal must hash equal.
         with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
             one = dwca.rows[0]
             two = dwca.rows[0]
@@ -93,3 +88,73 @@ class TestRowHashing(unittest.TestCase):
             assert one is not two
             assert one == two
             assert hash(one) == hash(two)
+
+
+class TestRowEquality(unittest.TestCase):
+    """Rows compare by value, including across readers.
+
+    Row equality used to embed the DataFileDescriptor, which compared by object identity: rows
+    read from two DwCAReader instances over the same archive never compared equal, even with
+    identical data, raw_fields, id, position and rowtype.
+    """
+
+    def test_core_rows_from_two_readers_over_the_same_archive_are_equal(self):
+        path = sample_data_path("dwca-2extensions.zip")
+
+        with DwCAReader(path) as one, DwCAReader(path) as two:
+            row_one = one.rows[0]
+            row_two = two.rows[0]
+
+            assert row_one.descriptor is not row_two.descriptor
+            assert row_one == row_two
+            assert not (row_one != row_two)
+            assert hash(row_one) == hash(row_two)
+            assert len({row_one, row_two}) == 1
+
+    def test_extension_rows_from_two_readers_over_the_same_archive_are_equal(self):
+        path = sample_data_path("dwca-2extensions.zip")
+
+        with DwCAReader(path) as one, DwCAReader(path) as two:
+            row_one = one.rows[0].extensions[0]
+            row_two = two.rows[0].extensions[0]
+
+            assert row_one.descriptor is not row_two.descriptor
+            assert row_one == row_two
+            assert hash(row_one) == hash(row_two)
+            assert len({row_one, row_two}) == 1
+
+    def test_different_core_rows_are_not_equal(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            assert dwca.rows[0] != dwca.rows[1]
+
+    def test_comparing_a_core_row_to_an_extension_row_returns_false(self):
+        """__key() is name-mangled, so CoreRow.__eq__ used to call other._CoreRow__key() on an
+        ExtensionRow, which doesn't have it: the comparison raised AttributeError instead of
+        returning False."""
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            core_row = dwca.rows[0]
+            extension_row = core_row.extensions[0]
+
+            assert core_row != extension_row
+            assert extension_row != core_row
+            assert not (core_row == extension_row)
+
+    def test_comparing_rows_with_other_types_returns_false(self):
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            core_row = dwca.rows[0]
+            extension_row = core_row.extensions[0]
+
+            for row in (core_row, extension_row):
+                assert row != "not a row"
+                assert row != 42
+                assert row != None  # noqa: E711 - we're testing __eq__, not identity
+                assert not (row == "not a row")
+
+    def test_rows_of_different_types_can_share_a_set(self):
+        """A CoreRow and an ExtensionRow landing in the same hash bucket must compare, not
+        raise."""
+        with DwCAReader(sample_data_path("dwca-2extensions.zip")) as dwca:
+            core_row = dwca.rows[0]
+            extension_row = core_row.extensions[0]
+
+            assert len({core_row, extension_row}) == 2

@@ -8,6 +8,12 @@ v0.17.0 (unreleased)
 - Fixed: comparing or hashing a CoreRow obtained without linking to its DwCAReader (e.g. via
   CSVDataFile.get_row_by_position() directly rather than by iterating the reader) raised
   AttributeError instead of comparing successfully.
+- Fixed: rows read from two DwCAReader instances over the same archive never compared equal,
+  even with identical content. Row equality embeds the DataFileDescriptor, which had no
+  __eq__ and therefore compared by object identity. DataFileDescriptor now compares (and
+  hashes) by value: the data file layout it describes.
+- Fixed: comparing a CoreRow to an ExtensionRow (or either to a non-row object) raised
+  AttributeError instead of returning False.
 
 v0.16.4 (2024-10-18)
 --------------------
