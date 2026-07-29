@@ -1,3 +1,19 @@
+v0.17.1 (2026-07-28)
+--------------------
+
+No library changes: this release exists so the packaging and documentation fixes below are
+carried by a tag, since Read the Docs builds `stable` from the most recent one.
+
+- Fixed: the Read the Docs build failed with "No module named 'pkg_resources'". The docs
+  requirements pinned Sphinx 2.2.0, which imports pkg_resources, and setuptools removed it in
+  81.0. Only the two direct documentation dependencies are pinned now, with lower bounds.
+- Fixed: the docstring of dwca.star_record.StarRecordIterator contained invalid
+  reStructuredText, which surfaced as a warning once v0.17.0 added the module to the API
+  reference.
+- Packaging: pyproject.toml now declares the build backend, so builds resolve setuptools in
+  an isolated environment. Building v0.17.0 with an older setuptools produced an sdist
+  filename PyPI rejects.
+
 v0.17.0 (2026-07-28)
 --------------------
 
