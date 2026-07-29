@@ -6,7 +6,7 @@ import itertools
 class StarRecordIterator(object):
     """Object used to iterate over multiple DWCA-files joined on the coreid
 
-    :param files_to_join: a list of the `dwca.files.CSVDataFile`s we'd like to join.
+    :param files_to_join: a list of the :class:`dwca.files.CSVDataFile` objects to join.
         May or may not include the core file (the core is not treated in a special way)
     :param how: indicates the type of join.  "inner" and "outer" correspond vaguely to
         inner and full joins.  The outer join includes rows that don't match on all files,

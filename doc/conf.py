@@ -10,7 +10,6 @@
 # serve to show the default.
 
 import sys, os
-import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -103,8 +102,8 @@ html_theme = "sphinx_rtd_theme"
 # documentation.
 # html_theme_options = {}
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# The theme is discovered through its entry point; sphinx_rtd_theme.get_html_theme_path()
+# was deprecated and setting html_theme_path is no longer needed.
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -125,7 +124,9 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# No custom static assets, and pointing at a directory that does not exist makes Sphinx
+# warn on every build.
+html_static_path = []
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
